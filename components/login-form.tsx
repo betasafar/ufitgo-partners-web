@@ -16,7 +16,7 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [formData, setFormData] = useState({
-    email: "",
+    email: "elite@travels.com",
     password: "user@123",
     remember: false,
   })

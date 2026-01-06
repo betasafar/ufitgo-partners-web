@@ -17,6 +17,7 @@ import {
   TrendingUp,
   FileText,
   History,
+  DollarSign,
 } from "lucide-react"
 import type { Operator } from "@/lib/types"
 import { useState } from "react"
@@ -32,6 +33,7 @@ const navigation = [
     subItems: [
       { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
       { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+      { name: "Financial", href: "/dashboard/financial", icon: DollarSign }, // Added Financial Overview to Dashboard dropdown
       { name: "Reports", href: "/dashboard/reports", icon: FileText },
     ],
   },
