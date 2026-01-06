@@ -1,0 +1,102 @@
+basePath: /
+host: api.betasafar.app/operator
+info:
+  contact: {}
+  description: High-performance analytics and aggregation for operators
+  title: Betasafar Operator API (Go)
+  version: "1.0"
+paths:
+  /analytics/highload:
+    get:
+      description: Revenue trends, conversion rates
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: High-load analytics
+      tags:
+      - analytics
+  /bookings/pending:
+    get:
+      description: List of pending bookings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+      summary: Get pending bookings
+      tags:
+      - bookings
+  /notifications/broadcast:
+    post:
+      consumes:
+      - application/json
+      description: Operator broadcasts update to all booked pilgrims (placeholder)
+      parameters:
+      - description: Package ID
+        in: path
+        name: packageId
+        required: true
+        type: integer
+      - description: Message title
+        in: body
+        name: title
+        required: true
+        schema:
+          type: string
+      - description: Message body
+        in: body
+        name: message
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Broadcast to package pilgrims
+      tags:
+      - notifications
+  /packages/home-aggregation:
+    get:
+      description: Fast stats for operator dashboard
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get home aggregation
+      tags:
+      - dashboard
+  /payments/highload:
+    get:
+      description: Total paid, pending, balance
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Payment aggregates
+      tags:
+      - payments
+swagger: "2.0"
