@@ -121,7 +121,14 @@ export class BookingsService {
   }
 
   async getUrgentTasks(operatorId: number) {
-    const tasks = []
+    const tasks: Array<{
+      id: string
+      title: string
+      description: string
+      count: number
+      priority: string
+      action: string
+    }> = []
 
     // 1. Pending bookings awaiting confirmation
     const pendingCount = await this.bookingRepo.count({

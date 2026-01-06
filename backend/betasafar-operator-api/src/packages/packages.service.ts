@@ -9,15 +9,11 @@ export class CreatePackageDto {
   title: string
   description: string
   type: PackageType
-  durationDays: number
+  duration: number
   capacity: number
   price: number
-  depositAmount?: number
   departureDate: string
   returnDate: string
-  bookingOpensAt?: string
-  bookingClosesAt?: string
-  itinerary: Array<{ day: number; title: string; description: string }>
   images?: string[]
 }
 
@@ -25,15 +21,11 @@ export class UpdatePackageDto {
   title?: string
   description?: string
   type?: PackageType
-  durationDays?: number
+  duration?: number
   capacity?: number
   price?: number
-  depositAmount?: number
   departureDate?: string
   returnDate?: string
-  bookingOpensAt?: string
-  bookingClosesAt?: string
-  itinerary?: Array<{ day: number; title: string; description: string }>
   images?: string[]
   status?: PackageStatus
 }
@@ -59,19 +51,15 @@ export class PackagesService {
       title: dto.title,
       description: dto.description,
       type: dto.type,
-      durationDays: dto.durationDays,
+      duration: dto.duration,
       capacity: dto.capacity,
       price: dto.price,
-      depositAmount: dto.depositAmount,
       departureDate: new Date(dto.departureDate),
       returnDate: new Date(dto.returnDate),
-      bookingOpensAt: dto.bookingOpensAt ? new Date(dto.bookingOpensAt) : undefined,
-      bookingClosesAt: dto.bookingClosesAt ? new Date(dto.bookingClosesAt) : undefined,
-      itinerary: dto.itinerary || [],
       images: imageUrls,
       operatorId,
       status: PackageStatus.DRAFT,
-      bookedSlots: 0,
+      booked: 0,
     })
 
     return this.packageRepo.save(pkg)
@@ -100,21 +88,14 @@ export class PackagesService {
   async update(id: number, operatorId: number, dto: Partial<UpdatePackageDto>) {
     const pkg = await this.findOne(id, operatorId)
 
-    // Manually map only allowed fields
     if (dto.title !== undefined) pkg.title = dto.title
     if (dto.description !== undefined) pkg.description = dto.description
     if (dto.type !== undefined) pkg.type = dto.type
-    if (dto.durationDays !== undefined) pkg.durationDays = dto.durationDays
+    if (dto.duration !== undefined) pkg.duration = dto.duration
     if (dto.capacity !== undefined) pkg.capacity = dto.capacity
     if (dto.price !== undefined) pkg.price = dto.price
-    if (dto.depositAmount !== undefined) pkg.depositAmount = dto.depositAmount
     if (dto.departureDate !== undefined) pkg.departureDate = new Date(dto.departureDate)
     if (dto.returnDate !== undefined) pkg.returnDate = new Date(dto.returnDate)
-    if (dto.bookingOpensAt !== undefined)
-      pkg.bookingOpensAt = dto.bookingOpensAt ? new Date(dto.bookingOpensAt) : undefined
-    if (dto.bookingClosesAt !== undefined)
-      pkg.bookingClosesAt = dto.bookingClosesAt ? new Date(dto.bookingClosesAt) : undefined
-    if (dto.itinerary !== undefined) pkg.itinerary = dto.itinerary
     if (dto.images !== undefined) pkg.images = dto.images
     if (dto.status !== undefined) pkg.status = dto.status
 
@@ -154,7 +135,7 @@ export class PackagesService {
 
     const totalRevenue = pkg.bookings?.reduce((sum, b) => sum + Number(b.amountPaid), 0) || 0
 
-    const occupancyRate = pkg.capacity > 0 ? (pkg.bookedSlots / pkg.capacity) * 100 : 0
+    const occupancyRate = pkg.capacity > 0 ? (pkg.booked / pkg.capacity) * 100 : 0
 
     const averageBookingValue = totalBookings > 0 ? totalRevenue / totalBookings : 0
 
@@ -165,7 +146,7 @@ export class PackagesService {
       confirmedBookings,
       totalRevenue,
       occupancyRate: Math.round(occupancyRate * 10) / 10,
-      availableSlots: pkg.capacity - pkg.bookedSlots,
+      availableSlots: pkg.capacity - pkg.booked,
       averageBookingValue: Math.round(averageBookingValue),
       status: pkg.status,
     }

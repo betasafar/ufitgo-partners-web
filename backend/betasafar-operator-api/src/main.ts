@@ -1,52 +1,54 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from '../../../../../Backend/betasafar-microservice/betasafar-operator-api/src/app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import basicAuth from 'express-basic-auth';
-import { ConfigService } from '@nestjs/config';
+import { NestFactory } from "@nestjs/core"
+import { AppModule } from "./app.module" // Fixed import path to use relative path instead of absolute
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger"
+import basicAuth from "express-basic-auth"
+import { ConfigService } from "@nestjs/config"
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
+  const app = await NestFactory.create(AppModule)
+  const configService = app.get(ConfigService)
 
-  const port = configService.get<number>('PORT') || 3000;
-  const isProd = process.env.NODE_ENV === 'production';
+  const port = configService.get<number>("PORT") || 3000
+  const isProd = process.env.NODE_ENV === "production"
 
   // Render injects this automatically
-  const baseUrl =
-    process.env.RENDER_EXTERNAL_URL ||
-    `http://localhost:${port}`;
+  const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`
 
   app.enableCors({
-    origin: ['http://localhost:3000', `${baseUrl}`, 'https://betasafar.app',],
+    origin: ["http://localhost:3000", `${baseUrl}`, "https://betasafar.app"],
     credentials: true,
-  }); 
+  })
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix("api")
 
-  app.use(['/docs', '/docs-json'], basicAuth({
-    challenge: true,
-    users: { admin: 'supersecret' },
-  }));
+  app.use(
+    ["/docs", "/docs-json"],
+    basicAuth({
+      challenge: true,
+      users: { admin: "supersecret" },
+    }),
+  )
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('betasafar Operator API')
-    .setDescription('API documentation for the betasafar Operator backend')
-    .setVersion('1.0')
+    .setTitle("betasafar Operator API")
+    .setDescription("API documentation for the betasafar Operator backend")
+    .setVersion("1.0")
     // .addBasicAuth()
-    .addBearerAuth(  // ← This shows Bearer token input
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-      'token',  // name
+    .addBearerAuth(
+      // ← This shows Bearer token input
+      { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+      "token", // name
     )
-    .addServer(`${baseUrl}`, isProd ? 'Production' : 'Local')
-    .build();
+    .addServer(`${baseUrl}`, isProd ? "Production" : "Local")
+    .build()
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('docs', app, document);
+  const document = SwaggerModule.createDocument(app, swaggerConfig)
+  SwaggerModule.setup("docs", app, document)
 
-  await app.listen(port, '0.0.0.0');
+  await app.listen(port, "0.0.0.0")
 
-  console.log(`🚀 API running at: ${baseUrl}`);
-  console.log(`📘 Swagger UI: ${baseUrl}/docs`);
+  console.log(`🚀 API running at: ${baseUrl}`)
+  console.log(`📘 Swagger UI: ${baseUrl}/docs`)
 }
 
-bootstrap();
+bootstrap()
