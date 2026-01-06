@@ -5,7 +5,7 @@ import { RevenueChart } from "@/components/revenue-chart"
 import { UrgentTasks } from "@/components/urgent-tasks"
 import { RecentApplicants } from "@/components/recent-applicants"
 import { Suspense } from "react"
-import { mockRevenueFlow, mockApplicants } from "@/lib/mock-data"
+import { apiRequest } from "@/lib/api"
 import { cookies } from "next/headers"
 
 async function getDashboardData() {
@@ -13,32 +13,38 @@ async function getDashboardData() {
   const operatorData = cookieStore.get("operator_data")?.value
   const operator = operatorData ? JSON.parse(operatorData) : null
 
-  const stats: DashboardStats = {
-    totalRevenue: 45000000,
-    totalBookings: 342,
-    outstandingBalance: 2150000,
-    visaSuccessRate: 98.5,
+  try {
+    const stats: DashboardStats = await apiRequest("/operator/analytics/dashboard-stats")
+    const revenueData: { data: RevenueDataPoint[] } = await apiRequest("/operator/analytics/revenue-flow", {
+      params: { period: "30days" },
+    })
+    const recentBookings: Booking[] = await apiRequest("/operator/bookings/recent", {
+      params: { limit: "5" },
+    })
+
+    return { stats, revenueData: revenueData.data, recentBookings, operator }
+  } catch (error) {
+    console.error("[v0] Failed to load dashboard data:", error)
+    return {
+      stats: {
+        totalRevenue: 0,
+        revenueChange: 0,
+        totalBookings: 0,
+        bookingsChange: 0,
+        pendingPayments: 0,
+        paymentsChange: 0,
+        visaExpiring: 0,
+        visaChange: 0,
+        activePackages: 0,
+        seatsFilled: 0,
+        totalSeats: 0,
+        revenueProjected: 0,
+      },
+      revenueData: [],
+      recentBookings: [],
+      operator,
+    }
   }
-
-  const revenueData: RevenueDataPoint[] = mockRevenueFlow.map((item) => ({
-    month: item.month,
-    revenue: item.revenue,
-    expenses: item.revenue * 0.65,
-  }))
-
-  const recentBookings: Booking[] = mockApplicants.slice(0, 5).map((applicant) => ({
-    id: applicant.id,
-    name: applicant.name,
-    passport: applicant.passport,
-    package: applicant.package,
-    bookingDate: applicant.bookingDate,
-    status: applicant.status,
-    visaStatus: applicant.visaStatus,
-    paymentProgress: applicant.paymentProgress,
-    avatar: applicant.avatar,
-  }))
-
-  return { stats, revenueData, recentBookings, operator }
 }
 
 export default async function DashboardPage() {

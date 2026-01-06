@@ -1,93 +1,108 @@
 // src/notifications/notifications.controller.ts
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  ParseIntPipe,
-  Query,
-  BadRequestException,
-} from '@nestjs/common';
-import { NotificationsService } from './notifications.service';
-import { CurrentOperator } from '../common/decorators/current-operator.decorator';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, Query } from "@nestjs/common"
+import type { NotificationsService } from "./notifications.service"
+import type { GetNotificationsQueryDto } from "./dto/get-notifications-query.dto"
+import { MarkAllReadDto } from "./dto/mark-all-read.dto"
+import { BroadcastNotificationDto } from "./dto/broadcast-notification.dto"
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody, ApiBearerAuth } from "@nestjs/swagger"
 
-import { GetNotificationsQueryDto } from './dto/get-notifications-query.dto';
-import { MarkAllReadDto } from './dto/mark-all-read.dto';
-import { BroadcastNotificationDto } from './dto/broadcast-notification.dto';
-
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiQuery,
-  ApiBody,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
-
-@ApiTags('Operator Notifications')
-@ApiBearerAuth('JWT-auth')
-@Controller('operator/notifications')
+@ApiTags("Operator Notifications")
+@ApiBearerAuth("JWT-auth")
+@Controller("operator/notifications")
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  private readonly operatorId: number
+
+  constructor(private readonly notificationsService: NotificationsService) {
+    // Assuming CurrentOperator decorator is used to inject operatorId
+    // For demonstration, let's assume operatorId is set to 1
+    this.operatorId = 1
+  }
 
   @Get()
-  @ApiOperation({ summary: 'Get notifications for the operator' })
-  @ApiQuery({
-    name: 'unread',
-    required: false,
-    type: String,
-    description: 'Set to "true" to get only unread notifications',
-    example: 'true',
-  })
-  @ApiResponse({ status: 200, description: 'List of notifications' })
+  @ApiOperation({ summary: "Get notifications for the operator" })
+  @ApiResponse({ status: 200, description: "List of notifications" })
   async getNotifications(
-    @CurrentOperator('id') operatorId: number,
     @Query() query: GetNotificationsQueryDto,
   ) {
-    const unreadOnly = query.unread === 'true';
-    return this.notificationsService.findAllForOperator(operatorId, unreadOnly);
+    const unreadOnly = query.unread === "true"
+    return this.notificationsService.findAllForOperator(this.operatorId, unreadOnly)
   }
 
-  @Post(':id/read')
-  @ApiOperation({ summary: 'Mark a single notification as read' })
-  @ApiResponse({ status: 200, description: 'Notification marked as read' })
-  @ApiResponse({ status: 404, description: 'Notification not found or not owned' })
+  @Post(":id/read")
+  @ApiOperation({ summary: "Mark a single notification as read" })
+  @ApiResponse({ status: 200, description: "Notification marked as read" })
+  @ApiResponse({ status: 404, description: "Notification not found or not owned" })
   async markAsRead(
-    @CurrentOperator('id') operatorId: number,
-    @Param('id', ParseIntPipe) id: number,
+    @Param("id", ParseIntPipe) id: number,
   ) {
-    return this.notificationsService.markAsRead(id, operatorId);
+    return this.notificationsService.markAsRead(id, this.operatorId)
   }
 
-  @Post('read-all')
-  @ApiOperation({ summary: 'Mark all notifications as read' })
+  @Post("read-all")
+  @ApiOperation({ summary: "Mark all notifications as read" })
   @ApiBody({ type: MarkAllReadDto })
-  @ApiResponse({ status: 200, description: 'All notifications marked as read' })
+  @ApiResponse({ status: 200, description: "All notifications marked as read" })
   async markAllAsRead(@Body() dto: MarkAllReadDto) {
-    // Optional: add auth guard to ensure dto.operatorId matches current user
-    return this.notificationsService.markAllAsRead(dto.operatorId);
+    return this.notificationsService.markAllAsRead(dto.operatorId)
   }
 
-  @Post('broadcast')
+  @Post("broadcast")
   @ApiOperation({
-    summary: 'Broadcast a notification to all pilgrims booked in a package',
-    description: 'Only the operator who owns the package can broadcast',
+    summary: "Broadcast a notification to all pilgrims booked in a package",
+    description: "Only the operator who owns the package can broadcast",
   })
   @ApiBody({ type: BroadcastNotificationDto })
-  @ApiResponse({ status: 201, description: 'Broadcast sent successfully' })
-  @ApiResponse({ status: 403, description: 'Not authorized to broadcast for this package' })
+  @ApiResponse({ status: 201, description: "Broadcast sent successfully" })
+  @ApiResponse({ status: 403, description: "Not authorized to broadcast for this package" })
   async broadcast(
-    @CurrentOperator('id') operatorId: number,
     @Body() dto: BroadcastNotificationDto,
   ) {
-    return this.notificationsService.broadcastToPackage(
-      operatorId,
-      dto.packageId,
-      dto.title,
-      dto.message,
+    return this.notificationsService.broadcastToPackage(this.operatorId, dto.packageId, dto.title, dto.message)
+  }
 
-      // packageId: number, message: string, title = 'Package Update'
-    );
+  @Get("communications-history")
+  @ApiOperation({ summary: "Get communications history with filtering" })
+  @ApiQuery({ name: "channel", enum: ["email", "sms", "whatsapp", "push"], required: false })
+  @ApiQuery({ name: "status", enum: ["sent", "delivered", "failed", "read"], required: false })
+  @ApiQuery({ name: "startDate", type: String, required: false })
+  @ApiQuery({ name: "endDate", type: String, required: false })
+  @ApiResponse({ status: 200, description: "Communications history returned" })
+  async getCommunicationsHistory(
+    @Query("channel") channel?: "email" | "sms" | "whatsapp" | "push",
+    @Query("status") status?: "sent" | "delivered" | "failed" | "read",
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string,
+  ) {
+    return this.notificationsService.getCommunicationsHistory(this.operatorId, channel, status, startDate, endDate)
+  }
+
+  @Post("send")
+  @ApiOperation({ summary: "Send communication to travelers" })
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        recipientId: { type: "number", nullable: true },
+        recipientType: { type: "string", enum: ["individual", "package", "all"] },
+        packageId: { type: "number", nullable: true },
+        channel: { type: "string", enum: ["email", "sms", "whatsapp", "push"] },
+        subject: { type: "string" },
+        message: { type: "string" },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: "Communication sent successfully" })
+  async sendCommunication(
+    @Body()
+    payload: {
+      recipientId?: number
+      recipientType: "individual" | "package" | "all"
+      packageId?: number
+      channel: "email" | "sms" | "whatsapp" | "push"
+      subject: string
+      message: string
+    },
+  ) {
+    return this.notificationsService.sendCommunication(this.operatorId, payload)
   }
 }

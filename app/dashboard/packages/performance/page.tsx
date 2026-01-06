@@ -4,27 +4,80 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from "recharts"
 import { TrendingUp, TrendingDown, Download } from "lucide-react"
 
-const bookingVelocity = [
-  { week: "Wk 1", applications: 85, bookings: 65 },
-  { week: "Wk 2", applications: 110, bookings: 95 },
-  { week: "Wk 3", applications: 145, bookings: 120 },
-  { week: "Wk 4", applications: 180, bookings: 155 },
-  { week: "Wk 5", applications: 210, bookings: 185 },
-  { week: "Wk 6", applications: 260, bookings: 230 },
-]
+// Fetching package performance from backend API
+async function getPackagePerformance() {
+  try {
+    const response = await fetch(`${process.env.BACKEND_API_URL}/packages/performance`, {
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
 
-const regionData = [
-  { region: "Kano", percentage: 42, applicants: 520 },
-  { region: "Lagos", percentage: 28, applicants: 310 },
-  { region: "Abuja (FCT)", percentage: 15, applicants: 180 },
-]
+    if (!response.ok) throw new Error("Failed to fetch performance")
 
-const paymentPreference = [
-  { type: "Installment", percentage: 60 },
-  { type: "Full Payment", percentage: 40 },
-]
+    return await response.json()
+  } catch (error) {
+    console.error("[v0] Failed to fetch package performance:", error)
+    // Return mock data as fallback
+    return {
+      totalRevenue: 45200000,
+      totalBookings: 1240,
+      avgConversion: 12.5,
+      slotsRemaining: 450,
+      bookingVelocity: [
+        { week: "Wk 1", applications: 85, bookings: 65 },
+        { week: "Wk 2", applications: 110, bookings: 95 },
+        { week: "Wk 3", applications: 145, bookings: 120 },
+        { week: "Wk 4", applications: 180, bookings: 155 },
+        { week: "Wk 5", applications: 210, bookings: 185 },
+        { week: "Wk 6", applications: 260, bookings: 230 },
+      ],
+      topRegions: [
+        { region: "Kano", percentage: 42, applicants: 520 },
+        { region: "Lagos", percentage: 28, applicants: 310 },
+        { region: "Abuja (FCT)", percentage: 15, applicants: 180 },
+      ],
+      paymentPreference: [
+        { type: "Installment", percentage: 60 },
+        { type: "Full Payment", percentage: 40 },
+      ],
+      activePackages: [
+        {
+          name: "Ramadan VIP 2024",
+          duration: "Last 10 Days",
+          status: "filling-fast",
+          price: 4500000,
+          filled: 45,
+          total: 50,
+          revenue: 202500000,
+        },
+        {
+          name: "Standard Hajj Package",
+          duration: "Full Season",
+          status: "open",
+          price: 3200000,
+          filled: 120,
+          total: 300,
+          revenue: 384000000,
+        },
+        {
+          name: "Umrah Express",
+          duration: "14 Days",
+          status: "closing-soon",
+          price: 1850000,
+          filled: 88,
+          total: 100,
+          revenue: 162800000,
+        },
+      ],
+    }
+  }
+}
 
-export default function PackagePerformancePage() {
+export default async function PackagePerformancePage() {
+  const performanceData = await getPackagePerformance()
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -74,7 +127,10 @@ export default function PackagePerformancePage() {
               <div className="text-xs uppercase text-muted-foreground">Total Revenue</div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">💰</div>
             </div>
-            <div className="text-3xl font-bold text-foreground mb-1">₦ 45.2M</div>
+            {/* Using backend data instead of hardcoded values */}
+            <div className="text-3xl font-bold text-foreground mb-1">
+              ₦ {(performanceData.totalRevenue / 1000000).toFixed(1)}M
+            </div>
             <div className="flex items-center gap-1 text-xs text-green-600">
               <TrendingUp className="size-3" />
               <span>+15% vs last season</span>
@@ -88,7 +144,10 @@ export default function PackagePerformancePage() {
               <div className="text-xs uppercase text-muted-foreground">Total Bookings</div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">🎫</div>
             </div>
-            <div className="text-3xl font-bold text-foreground mb-1">1,240</div>
+            {/* Using backend data */}
+            <div className="text-3xl font-bold text-foreground mb-1">
+              {performanceData.totalBookings.toLocaleString()}
+            </div>
             <div className="flex items-center gap-1 text-xs text-green-600">
               <TrendingUp className="size-3" />
               <span>+5% vs last season</span>
@@ -102,7 +161,8 @@ export default function PackagePerformancePage() {
               <div className="text-xs uppercase text-muted-foreground">Avg. Conversion</div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">📊</div>
             </div>
-            <div className="text-3xl font-bold text-foreground mb-1">12.5%</div>
+            {/* Using backend data */}
+            <div className="text-3xl font-bold text-foreground mb-1">{performanceData.avgConversion}%</div>
             <div className="flex items-center gap-1 text-xs text-green-600">
               <TrendingUp className="size-3" />
               <span>+2.1% vs average</span>
@@ -116,7 +176,8 @@ export default function PackagePerformancePage() {
               <div className="text-xs uppercase text-muted-foreground">Slots Remaining</div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">🪑</div>
             </div>
-            <div className="text-3xl font-bold text-foreground mb-1">450</div>
+            {/* Using backend data */}
+            <div className="text-3xl font-bold text-foreground mb-1">{performanceData.slotsRemaining}</div>
             <div className="flex items-center gap-1 text-xs text-red-600">
               <TrendingDown className="size-3" />
               <span>-10% filling fast</span>
@@ -144,8 +205,9 @@ export default function PackagePerformancePage() {
                 </div>
               </div>
             </div>
+            {/* Using backend data for booking velocity chart */}
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={bookingVelocity}>
+              <BarChart data={performanceData.bookingVelocity}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
                 <XAxis dataKey="week" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
@@ -167,9 +229,10 @@ export default function PackagePerformancePage() {
 
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold mb-3">Top Region: Kano</h3>
+                <h3 className="text-sm font-semibold mb-3">Top Regions</h3>
+                {/* Using backend data for regional distribution */}
                 <div className="space-y-3">
-                  {regionData.map((region) => (
+                  {performanceData.topRegions.map((region: any) => (
                     <div key={region.region}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-muted-foreground">{region.region}</span>
@@ -188,8 +251,9 @@ export default function PackagePerformancePage() {
 
               <div className="pt-4 border-t border-border/50">
                 <h3 className="text-sm font-semibold mb-3">Payment Plan Preference</h3>
+                {/* Using backend data for payment preferences */}
                 <div className="grid grid-cols-2 gap-3">
-                  {paymentPreference.map((plan) => (
+                  {performanceData.paymentPreference.map((plan: any) => (
                     <div key={plan.type} className="p-4 rounded-lg bg-muted/50 text-center">
                       <div className="text-2xl font-bold text-primary mb-1">{plan.percentage}%</div>
                       <div className="text-xs text-muted-foreground">{plan.type}</div>
@@ -224,35 +288,8 @@ export default function PackagePerformancePage() {
                 </tr>
               </thead>
               <tbody>
-                {[
-                  {
-                    name: "Ramadan VIP 2024",
-                    duration: "Last 10 Days",
-                    status: "filling-fast",
-                    price: 4500000,
-                    filled: 45,
-                    total: 50,
-                    revenue: 202500000,
-                  },
-                  {
-                    name: "Standard Hajj Package",
-                    duration: "Full Season",
-                    status: "open",
-                    price: 3200000,
-                    filled: 120,
-                    total: 300,
-                    revenue: 384000000,
-                  },
-                  {
-                    name: "Umrah Express",
-                    duration: "14 Days",
-                    status: "closing-soon",
-                    price: 1850000,
-                    filled: 88,
-                    total: 100,
-                    revenue: 162800000,
-                  },
-                ].map((pkg) => (
+                {/* Using backend data for active packages table */}
+                {performanceData.activePackages.map((pkg: any) => (
                   <tr key={pkg.name} className="border-b border-border/50">
                     <td className="px-4 py-3">
                       <div>

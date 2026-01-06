@@ -4,27 +4,63 @@ import { PackagesTable } from "@/components/packages-table"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
-import { mockPackages } from "@/lib/mock-data"
 
 async function getPackagesData() {
-  const packages: Package[] = mockPackages
+  try {
+    const response = await fetch(`${process.env.BACKEND_API_URL}/packages`, {
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
 
-  const stats: DashboardStats = {
-    totalRevenue: 45000000,
-    revenueChange: 12.5,
-    totalBookings: 342,
-    bookingsChange: 5.2,
-    pendingPayments: 2150000,
-    paymentsChange: -2.1,
-    visaExpiring: 12,
-    visaChange: 8.0,
-    activePackages: packages.filter((p) => p.status === "active").length,
-    seatsFilled: packages.reduce((sum, p) => sum + p.booked, 0),
-    totalSeats: packages.reduce((sum, p) => sum + p.capacity, 0),
-    revenueProjected: 52000000,
+    if (!response.ok) throw new Error("Failed to fetch packages")
+
+    const packages: Package[] = await response.json()
+
+    // Calculate stats from the packages data
+    const activePackages = packages.filter((p) => p.status === "active")
+    const totalSeats = packages.reduce((sum, p) => sum + p.capacity, 0)
+    const seatsFilled = packages.reduce((sum, p) => sum + p.booked, 0)
+    const revenueProjected = packages.reduce((sum, p) => sum + p.price * p.booked, 0)
+
+    const stats: DashboardStats = {
+      totalRevenue: revenueProjected,
+      revenueChange: 12.5,
+      totalBookings: seatsFilled,
+      bookingsChange: 5.2,
+      pendingPayments: 0,
+      paymentsChange: -2.1,
+      visaExpiring: 0,
+      visaChange: 8.0,
+      activePackages: activePackages.length,
+      seatsFilled,
+      totalSeats,
+      revenueProjected,
+    }
+
+    return { packages, stats }
+  } catch (error) {
+    console.error("[v0] Failed to fetch packages:", error)
+    // Return empty data on error
+    return {
+      packages: [],
+      stats: {
+        totalRevenue: 0,
+        revenueChange: 0,
+        totalBookings: 0,
+        bookingsChange: 0,
+        pendingPayments: 0,
+        paymentsChange: 0,
+        visaExpiring: 0,
+        visaChange: 0,
+        activePackages: 0,
+        seatsFilled: 0,
+        totalSeats: 0,
+        revenueProjected: 0,
+      },
+    }
   }
-
-  return { packages, stats }
 }
 
 export default async function PackagesPage() {
