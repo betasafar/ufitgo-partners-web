@@ -210,11 +210,11 @@
 #### Missing Endpoints:
 
 **a) Update Package**
-```typescript
+\`\`\`typescript
 PUT /api/operator/packages/:id
 Body: UpdatePackageDto (all fields optional)
 Response: Updated Package
-```
+\`\`\`
 
 **Implementation Notes:**
 - Already have service method `update()` - just need controller route
@@ -229,10 +229,10 @@ Response: Updated Package
 ---
 
 **b) Delete Package**
-```typescript
+\`\`\`typescript
 DELETE /api/operator/packages/:id
 Response: { message: "Package deleted successfully" }
-```
+\`\`\`
 
 **Implementation Notes:**
 - Already have service method `delete()` - just need controller route
@@ -247,11 +247,11 @@ Response: { message: "Package deleted successfully" }
 ---
 
 **c) Toggle Package Status**
-```typescript
+\`\`\`typescript
 PATCH /api/operator/packages/:id/status
 Body: { status: 'active' | 'inactive' | 'draft' | 'archived' }
 Response: Updated Package
-```
+\`\`\`
 
 **Implementation Notes:**
 - Quick status toggle without full update
@@ -265,11 +265,11 @@ Response: Updated Package
 ---
 
 **d) Get Package Bookings**
-```typescript
+\`\`\`typescript
 GET /api/operator/packages/:id/bookings
 Query: ?status=confirmed&limit=10
 Response: Booking[]
-```
+\`\`\`
 
 **Implementation Notes:**
 - Already have `getBookingsForPackage()` service method
@@ -283,7 +283,7 @@ Response: Booking[]
 ---
 
 **e) Check Package Availability**
-```typescript
+\`\`\`typescript
 GET /api/operator/packages/:id/availability
 Response: {
   packageId: number
@@ -293,7 +293,7 @@ Response: {
   isAvailable: boolean
   upcomingSeats: number (seats with pending bookings)
 }
-```
+\`\`\`
 
 **Implementation Notes:**
 - Calculate available vs booked slots
@@ -315,7 +315,7 @@ Response: {
 Profile endpoints use `?operatorId=X` query parameter, but operator ID should come from JWT token.
 
 **Required Changes:**
-```typescript
+\`\`\`typescript
 // Current (using query parameter)
 @Get()
 async getProfile(@Query('operatorId', ParseIntPipe) operatorId: number)
@@ -323,7 +323,7 @@ async getProfile(@Query('operatorId', ParseIntPipe) operatorId: number)
 // Should be (using JWT decorator)
 @Get()
 async getProfile(@CurrentOperator() operator: { id: number })
-```
+\`\`\`
 
 **Affected Endpoints:**
 - GET `/operator/profile`
@@ -353,19 +353,19 @@ Analytics endpoints don't accept date range or filter parameters.
 **Required Enhancements:**
 
 **a) Revenue Analytics**
-```typescript
+\`\`\`typescript
 GET /api/operator/analytics/revenue?startDate=2024-01-01&endDate=2024-12-31&packageId=5
-```
+\`\`\`
 
 **b) Bookings Analytics**
-```typescript
+\`\`\`typescript
 GET /api/operator/analytics/bookings?period=monthly&year=2024
-```
+\`\`\`
 
 **c) Popular Packages**
-```typescript
+\`\`\`typescript
 GET /api/operator/analytics/popular-packages?limit=5&sortBy=revenue
-```
+\`\`\`
 
 **Frontend Impact:**
 - Analytics page can filter by date range
@@ -379,12 +379,12 @@ GET /api/operator/analytics/popular-packages?limit=5&sortBy=revenue
 ### 1. Dashboard Statistics API ❌ HIGH PRIORITY
 
 **Endpoint:**
-```typescript
+\`\`\`typescript
 GET /api/operator/dashboard/stats
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "totalRevenue": 45000000,
   "totalBookings": 342,
@@ -402,7 +402,7 @@ GET /api/operator/dashboard/stats
   "visasProcessed": 89,
   "visasPending": 53
 }
-```
+\`\`\`
 
 **Why Needed:**
 - Dashboard page currently uses hardcoded stats
@@ -421,13 +421,13 @@ GET /api/operator/dashboard/stats
 ### 2. Revenue Flow API ❌ HIGH PRIORITY
 
 **Endpoint:**
-```typescript
+\`\`\`typescript
 GET /api/operator/dashboard/revenue-flow
 Query: ?months=6
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "data": [
     { "month": "May", "revenue": 18000000, "expenses": 11700000 },
@@ -437,7 +437,7 @@ Query: ?months=6
   "total": 154000000,
   "average": 25666667
 }
-```
+\`\`\`
 
 **Why Needed:**
 - Dashboard revenue chart needs monthly data
@@ -456,12 +456,12 @@ Query: ?months=6
 ### 3. Urgent Tasks API ❌ HIGH PRIORITY
 
 **Endpoint:**
-```typescript
+\`\`\`typescript
 GET /api/operator/dashboard/urgent-tasks
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "tasks": [
     {
@@ -487,7 +487,7 @@ GET /api/operator/dashboard/urgent-tasks
   ],
   "totalCount": 8
 }
-```
+\`\`\`
 
 **Why Needed:**
 - Dashboard urgent tasks widget is hardcoded
@@ -508,13 +508,13 @@ GET /api/operator/dashboard/urgent-tasks
 ### 4. Recent Bookings API ❌ MEDIUM PRIORITY
 
 **Endpoint:**
-```typescript
+\`\`\`typescript
 GET /api/operator/dashboard/recent-bookings
 Query: ?limit=5
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "bookings": [
     {
@@ -530,7 +530,7 @@ Query: ?limit=5
     }
   ]
 }
-```
+\`\`\`
 
 **Why Needed:**
 - Dashboard shows recent applicants
@@ -549,12 +549,12 @@ Query: ?limit=5
 ### 5. Payments Statistics API ❌ HIGH PRIORITY
 
 **Endpoint:**
-```typescript
+\`\`\`typescript
 GET /api/operator/payments/stats
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "totalRevenue": 154000000,
   "revenueChange": 12,
@@ -573,7 +573,7 @@ GET /api/operator/payments/stats
     { "category": "Initial Deposits", "amount": 38500000, "percentage": 25 }
   ]
 }
-```
+\`\`\`
 
 **Why Needed:**
 - Payments page needs comprehensive financial stats
@@ -592,13 +592,13 @@ GET /api/operator/payments/stats
 ### 6. Recent Transactions API ❌ MEDIUM PRIORITY
 
 **Endpoint:**
-```typescript
+\`\`\`typescript
 GET /api/operator/payments/transactions/recent
 Query: ?limit=20&status=paid&search=Ibrahim
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "transactions": [
     {
@@ -617,7 +617,7 @@ Query: ?limit=20&status=paid&search=Ibrahim
   "page": 1,
   "pageSize": 20
 }
-```
+\`\`\`
 
 **Why Needed:**
 - Payments page transaction table
@@ -636,13 +636,13 @@ Query: ?limit=20&status=paid&search=Ibrahim
 ### 7. Communications History API ❌ HIGH PRIORITY
 
 **Endpoint:**
-```typescript
+\`\`\`typescript
 GET /api/operator/communications/history
 Query: ?page=1&limit=5&channel=email&status=delivered
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "communications": [
     {
@@ -670,7 +670,7 @@ Query: ?page=1&limit=5&channel=email&status=delivered
     "totalPages": 250
   }
 }
-```
+\`\`\`
 
 **Why Needed:**
 - Communications history page exists but has no data source
@@ -689,12 +689,12 @@ Query: ?page=1&limit=5&channel=email&status=delivered
 ### 8. Package Performance Metrics API ❌ MEDIUM PRIORITY
 
 **Endpoint:**
-```typescript
+\`\`\`typescript
 GET /api/operator/packages/:id/performance
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "packageId": 1,
   "title": "Hajj Premium 2024",
@@ -715,7 +715,7 @@ GET /api/operator/packages/:id/performance
     { "week": "Week 2", "bookings": 12 }
   ]
 }
-```
+\`\`\`
 
 **Why Needed:**
 - Package performance page shows detailed analytics
@@ -734,13 +734,13 @@ GET /api/operator/packages/:id/performance
 ### 9. Package Availability Calendar API ❌ MEDIUM PRIORITY
 
 **Endpoint:**
-```typescript
+\`\`\`typescript
 GET /api/operator/packages/:id/availability/calendar
 Query: ?startDate=2024-01-01&endDate=2024-12-31
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "packageId": 1,
   "capacity": 50,
@@ -763,7 +763,7 @@ Query: ?startDate=2024-01-01&endDate=2024-12-31
     }
   ]
 }
-```
+\`\`\`
 
 **Why Needed:**
 - Package availability page needs calendar view
@@ -787,7 +787,7 @@ Query: ?startDate=2024-01-01&endDate=2024-12-31
 Include complete traveler profile with documents, payment history, visa details.
 
 **Response:**
-```json
+\`\`\`json
 {
   "id": "APP-001",
   "personalInfo": {
@@ -838,7 +838,7 @@ Include complete traveler profile with documents, payment history, visa details.
     }
   ]
 }
-```
+\`\`\`
 
 **Why Needed:**
 - Applicant detail page shows comprehensive info
@@ -857,12 +857,12 @@ Include complete traveler profile with documents, payment history, visa details.
 ### 11. Applicant Payment History API ❌ LOW PRIORITY
 
 **Endpoint:**
-```typescript
+\`\`\`typescript
 GET /api/operator/applicants/:id/payments
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "applicantId": "APP-001",
   "totalAmount": 4500000,
@@ -887,7 +887,7 @@ GET /api/operator/applicants/:id/payments
     "nextDueAmount": 1000000
   }
 }
-```
+\`\`\`
 
 **Why Needed:**
 - Applicant payment tab shows transaction history
@@ -908,7 +908,7 @@ GET /api/operator/applicants/:id/payments
 **Multiple Endpoints for Settings Sections:**
 
 **a) Update Theme/Preferences**
-```typescript
+\`\`\`typescript
 PUT /api/operator/settings/preferences
 Body: {
   theme: 'dark' | 'light' | 'system'
@@ -920,23 +920,23 @@ Body: {
     visaUpdates: boolean
   }
 }
-```
+\`\`\`
 
 **b) Update Security Settings**
-```typescript
+\`\`\`typescript
 PUT /api/operator/settings/security
 Body: {
   currentPassword: string
   newPassword: string
 }
-```
+\`\`\`
 
 **c) Enable 2FA**
-```typescript
+\`\`\`typescript
 POST /api/operator/settings/security/2fa/enable
 POST /api/operator/settings/security/2fa/verify
 DELETE /api/operator/settings/security/2fa/disable
-```
+\`\`\`
 
 **Why Needed:**
 - Settings page has forms but no save functionality
@@ -954,11 +954,11 @@ DELETE /api/operator/settings/security/2fa/disable
 ### 13. Reports & Export APIs ❌ LOW PRIORITY
 
 **Endpoints:**
-```typescript
+\`\`\`typescript
 GET /api/operator/reports/bookings?format=csv&startDate=2024-01-01&endDate=2024-12-31
 GET /api/operator/reports/payments?format=excel
 GET /api/operator/reports/applicants?format=pdf&packageId=5
-```
+\`\`\`
 
 **Why Needed:**
 - Export buttons in Payments, Applicants, Packages pages
@@ -1045,7 +1045,7 @@ GET /api/operator/reports/applicants?format=pdf&packageId=5
 
 **Add Missing Routes:**
 
-```typescript
+\`\`\`typescript
 @Put(':id')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(FileInterceptor('images'))
@@ -1104,7 +1104,7 @@ async checkAvailability(
     status: pkg.status,
   };
 }
-```
+\`\`\`
 
 **Service Layer Updates Needed:**
 - `update()` - Already exists, may need to handle file uploads
@@ -1121,7 +1121,7 @@ async checkAvailability(
 
 **Create Dashboard Module with endpoints:**
 
-```typescript
+\`\`\`typescript
 @Controller('operator/dashboard')
 export class DashboardController {
   @Get('stats')
@@ -1194,7 +1194,7 @@ export class DashboardController {
     return this.bookingsService.findRecent(operator.id, limit);
   }
 }
-```
+\`\`\`
 
 **Dependencies:**
 - Inject existing services (bookings, payments, packages)
@@ -1206,7 +1206,7 @@ export class DashboardController {
 #### 3. Payments Statistics
 
 **Option A:** Add to Wallet Module
-```typescript
+\`\`\`typescript
 // File: backend/betasafar-operator-api/src/wallet/wallet.controller.ts
 
 @Get('stats')
@@ -1214,13 +1214,13 @@ export class DashboardController {
 async getPaymentStats(@CurrentOperator() operator: { id: number }) {
   return this.walletService.getPaymentStatistics(operator.id);
 }
-```
+\`\`\`
 
 **Option B:** Use Go Service (Recommended)
 The Go service already has `/payments/highload` endpoint. Frontend should use this directly.
 
 **Service Implementation:**
-```typescript
+\`\`\`typescript
 // File: backend/betasafar-operator-api/src/wallet/wallet.service.ts
 
 async getPaymentStatistics(operatorId: number) {
@@ -1246,7 +1246,7 @@ async getPaymentStatistics(operatorId: number) {
     // ... more stats
   };
 }
-```
+\`\`\`
 
 ---
 
@@ -1255,7 +1255,7 @@ async getPaymentStatistics(operatorId: number) {
 **New Module:** `backend/betasafar-operator-api/src/communications/communications.module.ts`
 
 **Create Entity:**
-```typescript
+\`\`\`typescript
 // File: backend/betasafar-operator-api/src/communications/entities/communication.entity.ts
 
 @Entity('communications')
@@ -1296,10 +1296,10 @@ export class Communication {
   @Column({ nullable: true })
   failureReason: string;
 }
-```
+\`\`\`
 
 **Controller:**
-```typescript
+\`\`\`typescript
 @Controller('operator/communications')
 export class CommunicationsController {
   @Get('history')
@@ -1330,7 +1330,7 @@ export class CommunicationsController {
     };
   }
 }
-```
+\`\`\`
 
 **Integration with Notifications:**
 When a broadcast is sent via `/notifications/broadcast`, also log it in the communications table.
@@ -1345,7 +1345,7 @@ When a broadcast is sent via `/notifications/broadcast`, also log it in the comm
 **File:** `backend/betasafar-operator-api/src/profile/profile.controller.ts`
 
 **Changes:**
-```typescript
+\`\`\`typescript
 // BEFORE
 @Get()
 async getProfile(@Query('operatorId', ParseIntPipe) operatorId: number) {
@@ -1358,7 +1358,7 @@ async getProfile(@Query('operatorId', ParseIntPipe) operatorId: number) {
 async getProfile(@CurrentOperator() operator: { id: number }) {
   return this.profileService.getProfile(operator.id);
 }
-```
+\`\`\`
 
 **Apply to all profile endpoints:**
 - GET `/operator/profile`
@@ -1375,17 +1375,17 @@ async getProfile(@CurrentOperator() operator: { id: number }) {
 **File:** `app/dashboard/page.tsx`
 
 **Current Implementation:**
-```typescript
+\`\`\`typescript
 // Using mock data
 const stats: DashboardStats = {
   totalRevenue: 45000000,
   totalBookings: 342,
   // ... hardcoded
 }
-```
+\`\`\`
 
 **Updated Implementation:**
-```typescript
+\`\`\`typescript
 async function getDashboardData() {
   const cookieStore = await cookies()
   const token = cookieStore.get("auth_token")?.value
@@ -1433,7 +1433,7 @@ async function getDashboardData() {
   
   return { stats, revenueData, recentBookings, operator }
 }
-```
+\`\`\`
 
 **Error Handling Pattern:**
 - Try to fetch from API
@@ -1448,15 +1448,15 @@ async function getDashboardData() {
 **File:** `app/dashboard/packages/page.tsx`
 
 **Current Implementation:**
-```typescript
+\`\`\`typescript
 async function getPackagesData() {
   const packages: Package[] = mockPackages
   // ...
 }
-```
+\`\`\`
 
 **Updated Implementation:**
-```typescript
+\`\`\`typescript
 async function getPackagesData() {
   const cookieStore = await cookies()
   const token = cookieStore.get("auth_token")?.value
@@ -1498,7 +1498,7 @@ function calculatePackageStats(packages: Package[]) {
     // ...
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -1507,14 +1507,14 @@ function calculatePackageStats(packages: Package[]) {
 **File:** `app/dashboard/applicants/page.tsx`
 
 **Current Implementation:**
-```typescript
+\`\`\`typescript
 // Directly using mockApplicants
 {mockApplicants.map((applicant) => (
   <TableRow key={applicant.id}>
-```
+\`\`\`
 
 **Updated Implementation:**
-```typescript
+\`\`\`typescript
 async function getApplicantsData() {
   const cookieStore = await cookies()
   const token = cookieStore.get("auth_token")?.value
@@ -1565,7 +1565,7 @@ function mapBookingToApplicant(booking: any) {
     avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${booking.pilgrimName}`,
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -1574,7 +1574,7 @@ function mapBookingToApplicant(booking: any) {
 **File:** `app/dashboard/payments/page.tsx`
 
 **Updated Implementation:**
-```typescript
+\`\`\`typescript
 async function getPaymentsData() {
   const cookieStore = await cookies()
   const token = cookieStore.get("auth_token")?.value
@@ -1613,7 +1613,7 @@ async function getPaymentsData() {
     }
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -1622,7 +1622,7 @@ async function getPaymentsData() {
 **File:** `app/dashboard/communications/page.tsx`
 
 **Add Broadcast Handler:**
-```typescript
+\`\`\`typescript
 "use client"
 
 export default function CommunicationsPage() {
@@ -1667,10 +1667,10 @@ export default function CommunicationsPage() {
     // ... form with onSubmit={handleBroadcast}
   )
 }
-```
+\`\`\`
 
 **Create API Route:**
-```typescript
+\`\`\`typescript
 // File: app/api/communications/broadcast/route.ts
 
 export async function POST(request: Request) {
@@ -1712,7 +1712,7 @@ export async function POST(request: Request) {
     )
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -1721,7 +1721,7 @@ export async function POST(request: Request) {
 **File:** `app/dashboard/settings/page.tsx`
 
 **Make it Client Component and Add Handlers:**
-```typescript
+\`\`\`typescript
 "use client"
 
 import { useState, useEffect } from "react"
@@ -1807,10 +1807,10 @@ export default function SettingsPage() {
   
   // ... render form with profile data and handlers
 }
-```
+\`\`\`
 
 **Create API Routes:**
-```typescript
+\`\`\`typescript
 // File: app/api/profile/route.ts
 
 export async function GET(request: Request) {
@@ -1886,9 +1886,9 @@ export async function PUT(request: Request) {
     )
   }
 }
-```
+\`\`\`
 
-```typescript
+\`\`\`typescript
 // File: app/api/profile/logo/route.ts
 
 export async function POST(request: Request) {
@@ -1929,7 +1929,7 @@ export async function POST(request: Request) {
     )
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -1948,7 +1948,7 @@ export async function POST(request: Request) {
 - Test error handling
 
 **Example Test (Jest):**
-```typescript
+\`\`\`typescript
 // File: backend/betasafar-operator-api/src/dashboard/dashboard.controller.spec.ts
 
 describe('DashboardController', () => {
@@ -1989,7 +1989,7 @@ describe('DashboardController', () => {
     });
   });
 });
-```
+\`\`\`
 
 ---
 
@@ -2006,7 +2006,7 @@ describe('DashboardController', () => {
 - Test data fetching and display
 
 **Example Test (React Testing Library):**
-```typescript
+\`\`\`typescript
 // File: app/dashboard/__tests__/page.test.tsx
 
 import { render, screen, waitFor } from '@testing-library/react'
@@ -2046,7 +2046,7 @@ describe('DashboardPage', () => {
     })
   })
 })
-```
+\`\`\`
 
 ---
 
