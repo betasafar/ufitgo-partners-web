@@ -18,6 +18,8 @@ import {
   FileText,
   History,
   DollarSign,
+  UserCheck,
+  Clock,
 } from "lucide-react"
 import type { Operator } from "@/lib/types"
 import { useState } from "react"
@@ -33,7 +35,7 @@ const navigation = [
     subItems: [
       { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
       { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-      { name: "Financial", href: "/dashboard/financial", icon: DollarSign }, // Added Financial Overview to Dashboard dropdown
+      { name: "Financial", href: "/dashboard/financial", icon: DollarSign },
       { name: "Reports", href: "/dashboard/reports", icon: FileText },
     ],
   },
@@ -45,7 +47,15 @@ const navigation = [
       { name: "Performance", href: "/dashboard/packages/performance", icon: TrendingUp },
     ],
   },
-  { name: "Travelers", href: "/dashboard/applicants", icon: Users },
+  {
+    name: "Applicants",
+    icon: Users,
+    subItems: [
+      { name: "All Travelers", href: "/dashboard/applicants", icon: Users },
+      { name: "Pending Review", href: "/dashboard/applicants?status=pending", icon: Clock },
+      { name: "Verified", href: "/dashboard/applicants?status=verified", icon: UserCheck },
+    ],
+  },
   { name: "Payments", href: "/dashboard/payments", icon: CreditCard },
   {
     name: "Communications",

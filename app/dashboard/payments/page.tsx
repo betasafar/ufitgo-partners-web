@@ -1,4 +1,6 @@
-import { mockPaymentStats, mockRevenueFlow, mockPaymentTypes, mockRecentTransactions } from "@/lib/mock-data"
+"use client"
+
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -6,8 +8,94 @@ import { Download, Search, Filter, Calendar } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts"
 
+interface PaymentStats {
+  totalRevenue: number
+  totalDeposits: number
+  pendingBalance: number
+  successRate: number
+  revenueChange: number
+  depositsChange: number
+  paymentsDue: number
+  successChange: number
+}
+
+interface Transaction {
+  id: string
+  applicant: string
+  applicantId: string
+  package: string
+  date: string
+  amount: number
+  status: string
+}
+
 export default function PaymentsPage() {
-  const stats = mockPaymentStats
+  const [stats, setStats] = useState<PaymentStats | null>(null)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchPaymentData = async () => {
+      try {
+        // Fetch payment statistics
+        const statsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/operator/wallet/payment-stats`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json()
+          setStats(statsData)
+        }
+
+        // Fetch transaction history
+        const transactionsResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/operator/wallet/transactions/filtered?limit=20`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          },
+        )
+
+        if (transactionsResponse.ok) {
+          const transactionsData = await transactionsResponse.json()
+          setTransactions(transactionsData)
+        }
+      } catch (error) {
+        console.error("Error fetching payment data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPaymentData()
+  }, [])
+
+  // Mock data for revenue flow chart (will be replaced with real API data later)
+  const mockRevenueFlow = [
+    { month: "May", revenue: 18500000 },
+    { month: "Jun", revenue: 22000000 },
+    { month: "Jul", revenue: 25000000 },
+    { month: "Aug", revenue: 28000000 },
+    { month: "Sep", revenue: 30500000 },
+    { month: "Oct", revenue: 30000000 },
+  ]
+
+  const mockPaymentTypes = [
+    { category: "Full Payment", percentage: 45, amount: 69300000, color: "hsl(var(--primary))" },
+    { category: "Installments", percentage: 40, amount: 61600000, color: "#3b82f6" },
+    { category: "Deposits", percentage: 15, amount: 23100000, color: "#f59e0b" },
+  ]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -32,104 +120,106 @@ export default function PaymentsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-card border border-border rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <span className="text-sm text-muted-foreground">TOTAL REVENUE</span>
             </div>
-            <span className="text-sm text-muted-foreground">TOTAL REVENUE</span>
+            <div className="text-3xl font-bold mb-1">₦ {(stats.totalRevenue / 1000000).toFixed(0)}M</div>
+            <div className="flex items-center gap-1 text-xs text-green-500">
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+              <span>+{stats.revenueChange}% vs last month</span>
+            </div>
           </div>
-          <div className="text-3xl font-bold mb-1">₦ {(stats.totalRevenue / 1000000).toFixed(0)}M</div>
-          <div className="flex items-center gap-1 text-xs text-green-500">
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-            </svg>
-            <span>+{stats.revenueChange}% vs last month</span>
-          </div>
-        </div>
 
-        <div className="bg-card border border-border rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-500/10 rounded-lg">
-              <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <span className="text-sm text-muted-foreground">TOTAL DEPOSITS</span>
             </div>
-            <span className="text-sm text-muted-foreground">TOTAL DEPOSITS</span>
+            <div className="text-3xl font-bold mb-1">₦ {(stats.totalDeposits / 1000000).toFixed(0)}M</div>
+            <div className="flex items-center gap-1 text-xs text-green-500">
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+              <span>+{stats.depositsChange}% new applicants</span>
+            </div>
           </div>
-          <div className="text-3xl font-bold mb-1">₦ {(stats.totalDeposits / 1000000).toFixed(0)}M</div>
-          <div className="flex items-center gap-1 text-xs text-green-500">
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-            </svg>
-            <span>+{stats.depositsChange}% new applicants</span>
-          </div>
-        </div>
 
-        <div className="bg-card border border-border rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-orange-500/10 rounded-lg">
-              <svg className="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-orange-500/10 rounded-lg">
+                <svg className="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <span className="text-sm text-muted-foreground">PENDING BALANCE</span>
+            </div>
+            <div className="text-3xl font-bold mb-1">₦ {(stats.pendingBalance / 1000000).toFixed(1)}M</div>
+            <div className="flex items-center gap-1 text-xs text-orange-500">
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
+              <span>{stats.paymentsDue} payments due</span>
             </div>
-            <span className="text-sm text-muted-foreground">PENDING BALANCE</span>
           </div>
-          <div className="text-3xl font-bold mb-1">₦ {(stats.pendingBalance / 1000000).toFixed(1)}M</div>
-          <div className="flex items-center gap-1 text-xs text-orange-500">
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <span>{stats.paymentsDue} payments due</span>
-          </div>
-        </div>
 
-        <div className="bg-card border border-border rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-green-500/10 rounded-lg">
-              <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <span className="text-sm text-muted-foreground">SUCCESS RATE</span>
             </div>
-            <span className="text-sm text-muted-foreground">SUCCESS RATE</span>
-          </div>
-          <div className="text-3xl font-bold mb-1">{stats.successRate}%</div>
-          <div className="flex items-center gap-1 text-xs text-green-500">
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-            </svg>
-            <span>+{stats.successChange}% improvement</span>
+            <div className="text-3xl font-bold mb-1">{stats.successRate}%</div>
+            <div className="flex items-center gap-1 text-xs text-green-500">
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+              <span>+{stats.successChange}% improvement</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -221,46 +311,61 @@ export default function PaymentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockRecentTransactions.map((txn) => (
-              <TableRow key={txn.id} className="border-b border-border">
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                      <span className="text-sm font-semibold">
-                        {txn.applicant
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </span>
+            {transactions.length > 0 ? (
+              transactions.map((txn) => (
+                <TableRow key={txn.id} className="border-b border-border">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                        <span className="text-sm font-semibold">
+                          {txn.applicant
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-semibold">{txn.applicant}</p>
+                        <p className="text-xs text-muted-foreground">ID: {txn.applicantId}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold">{txn.applicant}</p>
-                      <p className="text-xs text-muted-foreground">ID: {txn.applicantId}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>{txn.package}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{txn.date}</TableCell>
-                <TableCell className="font-semibold">₦ {(txn.amount / 1000000).toFixed(1)}M</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                    Paid
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="icon">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                      />
-                    </svg>
-                  </Button>
+                  </TableCell>
+                  <TableCell>{txn.package}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{txn.date}</TableCell>
+                  <TableCell className="font-semibold">₦ {(txn.amount / 1000000).toFixed(1)}M</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
+                        txn.status === "completed"
+                          ? "bg-green-500/10 text-green-500 border-green-500/20"
+                          : "bg-orange-500/10 text-orange-500 border-orange-500/20"
+                      }
+                    >
+                      {txn.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                        />
+                      </svg>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  No transactions found
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>
