@@ -1,12 +1,92 @@
-import { mockApplicants, mockDocuments } from "@/lib/mock-data"
+"use client"
+
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { ChevronRight, CheckCircle2, FileText, ImageIcon, Download, Upload, Plus } from "lucide-react"
+import { ChevronRight, CheckCircle2, Plus } from "lucide-react"
 import Link from "next/link"
 
+interface BookingDetails {
+  id: number
+  userId: number
+  packageId: number
+  status: string
+  totalAmount: number
+  amountPaid: number
+  travelDate: string
+  bookingDate: string
+  user?: {
+    name: string
+    email: string
+    phone: string
+    dateOfBirth?: string
+    nationality?: string
+    passportNumber?: string
+  }
+  package?: {
+    name: string
+    duration: number
+    departure: string
+  }
+  paymentProgress?: number
+  relatedBookingsCount?: number
+}
+
 export default function ApplicantDetailPage({ params }: { params: { id: string } }) {
-  const applicant = mockApplicants[0] // Mock data
+  const [booking, setBooking] = useState<BookingDetails | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchBookingDetails()
+  }, [params.id])
+
+  const fetchBookingDetails = async () => {
+    try {
+      const response = await fetch(`/api/bookings/${params.id}/detailed`, {
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setBooking(data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch booking details:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading traveler details...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!booking) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-xl font-semibold mb-2">Booking not found</p>
+          <p className="text-muted-foreground mb-4">
+            The booking you're looking for doesn't exist or you don't have access to it.
+          </p>
+          <Link href="/dashboard/applicants">
+            <Button>Back to Travelers</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  const paymentProgress = booking.paymentProgress || Math.round((booking.amountPaid / booking.totalAmount) * 100)
+  const outstandingBalance = booking.totalAmount - booking.amountPaid
 
   return (
     <div className="space-y-6">
@@ -20,7 +100,7 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
           Applicants
         </Link>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground">Abdul Ibrahim</span>
+        <span className="text-foreground">{booking.user?.name || "Traveler"}</span>
       </div>
 
       {/* Header */}
@@ -29,10 +109,10 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold">Applicant Details</h1>
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-              PENDING REVIEW
+              {booking.status.toUpperCase()}
             </Badge>
           </div>
-          <p className="text-muted-foreground">Application ID: #NG-KAN-2024-892</p>
+          <p className="text-muted-foreground">Application ID: #BK-{booking.id}</p>
         </div>
         <div className="flex items-center gap-3">
           <Button className="bg-primary hover:bg-primary/90">
@@ -44,17 +124,6 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
             Reject
-          </Button>
-          <Button variant="outline">
-            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-              />
-            </svg>
-            Refund
           </Button>
         </div>
       </div>
@@ -68,15 +137,14 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
               <div className="relative">
                 <div className="w-32 h-32 rounded-2xl overflow-hidden bg-muted">
                   <img
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Abdul"
-                    alt="Abdul Ibrahim"
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${booking.user?.name || "user"}`}
+                    alt={booking.user?.name || "User"}
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="absolute bottom-2 right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-card"></div>
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold mb-3">Abdul Ibrahim</h2>
+                <h2 className="text-2xl font-bold mb-3">{booking.user?.name || "Unknown Traveler"}</h2>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                   <div className="flex items-center gap-2 text-sm">
                     <svg
@@ -93,7 +161,7 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
                       />
                     </svg>
                     <span className="text-muted-foreground">PP:</span>
-                    <span className="font-semibold">A09876543</span>
+                    <span className="font-semibold">{booking.user?.passportNumber || "N/A"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <svg
@@ -109,55 +177,7 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
                         d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
                       />
                     </svg>
-                    <span className="text-muted-foreground">Nigerian</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <svg
-                      className="h-4 w-4 text-muted-foreground"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span className="text-muted-foreground">Kano State</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <svg
-                      className="h-4 w-4 text-muted-foreground"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                    <span className="text-muted-foreground">Gender:</span>
-                    <span className="font-semibold">Male</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Male</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Age: 45</span>
-                  </div>
-                  <div className="col-span-2 flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Occupation: Merchant</span>
+                    <span className="text-muted-foreground">{booking.user?.nationality || "N/A"}</span>
                   </div>
                 </div>
               </div>
@@ -178,49 +198,26 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
                 </svg>
                 <h3 className="text-lg font-semibold">Personal Information</h3>
               </div>
-              <Button variant="ghost" size="sm" className="text-primary">
-                Edit Details
-              </Button>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <p className="text-xs text-muted-foreground mb-1">EMAIL ADDRESS</p>
-                <p className="text-sm font-medium">abdul.ibrahim@example.com</p>
+                <p className="text-sm font-medium">{booking.user?.email || "N/A"}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">PHONE NUMBER</p>
-                <p className="text-sm font-medium">+234 803 123 4567</p>
+                <p className="text-sm font-medium">{booking.user?.phone || "N/A"}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">DATE OF BIRTH</p>
-                <p className="text-sm font-medium">12 Aug 1978</p>
+                <p className="text-sm font-medium">
+                  {booking.user?.dateOfBirth ? new Date(booking.user.dateOfBirth).toLocaleDateString() : "N/A"}
+                </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">MARITAL STATUS</p>
-                <p className="text-sm font-medium">Married</p>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-6 border-t border-border">
-              <p className="text-xs text-muted-foreground mb-3">NEXT OF KIN</p>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Full Name</p>
-                  <p className="text-sm font-medium">Fatima Ibrahim</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Relationship</p>
-                  <p className="text-sm font-medium">Spouse</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Phone</p>
-                  <p className="text-sm font-medium">+234 803 987 6543</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Address</p>
-                  <p className="text-sm font-medium">No 5, Emir Road, Kano</p>
-                </div>
+                <p className="text-xs text-muted-foreground mb-1">BOOKING DATE</p>
+                <p className="text-sm font-medium">{new Date(booking.bookingDate).toLocaleDateString()}</p>
               </div>
             </div>
           </div>
@@ -239,9 +236,6 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
                 </svg>
                 <h3 className="text-lg font-semibold">Package & Booking</h3>
               </div>
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                Hajj 2024
-              </Badge>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
@@ -258,8 +252,10 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Selected Package</p>
-                  <p className="font-semibold text-sm">Gold Umrah Package 2024</p>
-                  <p className="text-xs text-muted-foreground mt-1">Includes: 5-Star Hotel, Visa, Transport</p>
+                  <p className="font-semibold text-sm">{booking.package?.name || "N/A"}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Duration: {booking.package?.duration || "N/A"} days
+                  </p>
                 </div>
               </div>
 
@@ -276,8 +272,7 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Travel Date</p>
-                  <p className="font-semibold text-sm">15 Nov 2024</p>
-                  <p className="text-xs text-muted-foreground mt-1">Duration: 14 Days</p>
+                  <p className="font-semibold text-sm">{new Date(booking.travelDate).toLocaleDateString()}</p>
                 </div>
               </div>
 
@@ -294,7 +289,7 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Departure From</p>
-                  <p className="font-semibold text-sm">Lagos (LOS)</p>
+                  <p className="font-semibold text-sm">{booking.package?.departure || "N/A"}</p>
                 </div>
               </div>
             </div>
@@ -308,70 +303,21 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
             <h3 className="text-lg font-semibold mb-4">PAYMENT STATUS</h3>
             <div className="text-center space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground">₦ 2,500,000</p>
-                <p className="text-3xl font-bold">/ ₦ 4,500,000</p>
+                <p className="text-sm text-muted-foreground">₦ {booking.amountPaid.toLocaleString()}</p>
+                <p className="text-3xl font-bold">/ ₦ {booking.totalAmount.toLocaleString()}</p>
               </div>
-              <Progress value={55} className="h-3" />
-              <p className="text-sm text-primary">55% Paid</p>
-              <p className="text-xs text-muted-foreground">45% Remaining</p>
+              <Progress value={paymentProgress} className="h-3" />
+              <p className="text-sm text-primary">{paymentProgress}% Paid</p>
+              <p className="text-xs text-muted-foreground">{100 - paymentProgress}% Remaining</p>
               <div className="pt-4">
                 <p className="text-sm text-muted-foreground mb-2">Outstanding Balance</p>
-                <p className="text-2xl font-bold">₦ 2,000,000</p>
+                <p className="text-2xl font-bold">₦ {outstandingBalance.toLocaleString()}</p>
               </div>
               <Button className="w-full bg-primary hover:bg-primary/90">
                 <Plus className="h-4 w-4 mr-2" />
                 Record Payment
               </Button>
             </div>
-          </div>
-
-          {/* Documents */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                  />
-                </svg>
-                <h3 className="text-lg font-semibold">Documents</h3>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {mockDocuments.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    {doc.type === "pdf" ? (
-                      <div className="p-2 bg-red-500/10 rounded">
-                        <FileText className="h-5 w-5 text-red-500" />
-                      </div>
-                    ) : (
-                      <div className="p-2 bg-blue-500/10 rounded">
-                        <ImageIcon className="h-5 w-5 text-blue-500" />
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm font-medium">{doc.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {doc.size} • Uploaded {doc.uploadedAt}
-                      </p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="icon">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            <Button variant="outline" className="w-full mt-4 bg-transparent">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload New Document
-            </Button>
           </div>
 
           {/* Transactions */}

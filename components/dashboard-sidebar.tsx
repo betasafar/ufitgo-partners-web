@@ -13,6 +13,10 @@ import {
   HelpCircle,
   LogOut,
   MessageSquare,
+  ChevronDown,
+  TrendingUp,
+  FileText,
+  History,
 } from "lucide-react"
 import type { Operator } from "@/lib/types"
 import { useState } from "react"
@@ -22,18 +26,40 @@ interface DashboardSidebarProps {
 }
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Packages", href: "/dashboard/packages", icon: Package },
+  {
+    name: "Dashboard",
+    icon: LayoutDashboard,
+    subItems: [
+      { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+      { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+      { name: "Reports", href: "/dashboard/reports", icon: FileText },
+    ],
+  },
+  {
+    name: "Packages",
+    icon: Package,
+    subItems: [
+      { name: "All Packages", href: "/dashboard/packages", icon: Package },
+      { name: "Performance", href: "/dashboard/packages/performance", icon: TrendingUp },
+    ],
+  },
   { name: "Travelers", href: "/dashboard/applicants", icon: Users },
   { name: "Payments", href: "/dashboard/payments", icon: CreditCard },
-  { name: "Communications", href: "/dashboard/communications", icon: MessageSquare },
-  { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
+  {
+    name: "Communications",
+    icon: MessageSquare,
+    subItems: [
+      { name: "Compose", href: "/dashboard/communications", icon: MessageSquare },
+      { name: "History", href: "/dashboard/communications/history", icon: History },
+    ],
+  },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
 export function DashboardSidebar({ operator }: DashboardSidebarProps) {
   const pathname = usePathname()
   const [loggingOut, setLoggingOut] = useState(false)
+  const [expandedItems, setExpandedItems] = useState<string[]>(["Dashboard"])
 
   const handleLogout = async () => {
     setLoggingOut(true)
@@ -44,6 +70,19 @@ export function DashboardSidebar({ operator }: DashboardSidebarProps) {
       console.error("Logout failed:", error)
       setLoggingOut(false)
     }
+  }
+
+  const toggleExpanded = (itemName: string) => {
+    setExpandedItems((prev) =>
+      prev.includes(itemName) ? prev.filter((name) => name !== itemName) : [...prev, itemName],
+    )
+  }
+
+  const isParentActive = (item: (typeof navigation)[0]) => {
+    if (item.subItems) {
+      return item.subItems.some((sub) => pathname === sub.href)
+    }
+    return pathname === item.href
   }
 
   return (
@@ -68,16 +107,65 @@ export function DashboardSidebar({ operator }: DashboardSidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
-          const isActive = pathname === item.href
+          const hasSubItems = "subItems" in item && item.subItems
+          const isExpanded = expandedItems.includes(item.name)
+          const isActive = isParentActive(item)
+
+          if (hasSubItems) {
+            return (
+              <div key={item.name} className="space-y-1">
+                <button
+                  onClick={() => toggleExpanded(item.name)}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors",
+                    isActive ? "bg-primary/10 text-primary" : "text-sidebar-foreground hover:bg-sidebar-accent",
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon className="h-5 w-5" />
+                    <span className="font-medium">{item.name}</span>
+                  </div>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "transform rotate-180")} />
+                </button>
+
+                {isExpanded && (
+                  <div className="ml-4 space-y-1 border-l-2 border-sidebar-border pl-4">
+                    {item.subItems.map((subItem) => {
+                      const isSubActive = pathname === subItem.href
+                      return (
+                        <Link
+                          key={subItem.href}
+                          href={subItem.href}
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-sm",
+                            isSubActive
+                              ? "bg-primary text-primary-foreground"
+                              : "text-sidebar-foreground hover:bg-sidebar-accent",
+                          )}
+                        >
+                          <subItem.icon className="h-4 w-4" />
+                          <span>{subItem.name}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          // Single item without submenu
           return (
             <Link
               key={item.name}
-              href={item.href}
+              href={item.href!}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                isActive ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent",
+                pathname === item.href
+                  ? "bg-primary text-primary-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent",
               )}
             >
               <item.icon className="h-5 w-5" />

@@ -1,4 +1,6 @@
-import { mockApplicants } from "@/lib/mock-data"
+"use client"
+
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, Filter, UserPlus, Download } from "lucide-react"
@@ -7,10 +9,103 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 
+interface Booking {
+  id: number
+  userId: number
+  packageId: number
+  status: string
+  totalAmount: number
+  amountPaid: number
+  travelDate: string
+  bookingDate: string
+  user?: {
+    name: string
+    email: string
+    phone: string
+  }
+}
+
 export default function ApplicantsPage() {
-  const totalApplicants = 142
-  const visasProcessed = 89
-  const pendingPayments = 15400000
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    total: 0,
+    visasProcessed: 0,
+    pendingPayments: 0,
+  })
+
+  useEffect(() => {
+    fetchBookings()
+  }, [])
+
+  const fetchBookings = async () => {
+    try {
+      const response = await fetch("/api/bookings", {
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setBookings(data.bookings || [])
+
+        // Calculate stats from bookings
+        const total = data.bookings?.length || 0
+        const visasProcessed = data.bookings?.filter((b: Booking) => b.status === "confirmed").length || 0
+        const pendingPayments =
+          data.bookings?.reduce((sum: number, b: Booking) => sum + (b.totalAmount - b.amountPaid), 0) || 0
+
+        setStats({
+          total,
+          visasProcessed,
+          pendingPayments,
+        })
+      }
+    } catch (error) {
+      console.error("Failed to fetch bookings:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "confirmed":
+        return (
+          <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+            Confirmed
+          </Badge>
+        )
+      case "pending":
+        return (
+          <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+            Pending
+          </Badge>
+        )
+      case "cancelled":
+        return (
+          <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">
+            Cancelled
+          </Badge>
+        )
+      default:
+        return (
+          <Badge variant="outline" className="bg-gray-500/10 text-gray-500 border-gray-500/20">
+            {status}
+          </Badge>
+        )
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading travelers...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -43,14 +138,7 @@ export default function ApplicantsPage() {
             </div>
             <span className="text-sm text-muted-foreground">TOTAL TRAVELERS</span>
           </div>
-          <div className="text-3xl font-bold">{totalApplicants}</div>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-xs text-green-500">+12% vs last week</span>
-          </div>
-          <div className="mt-3">
-            <Progress value={32} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-1">45/50 Seats Filled</p>
-          </div>
+          <div className="text-3xl font-bold">{stats.total}</div>
         </div>
 
         <div className="bg-card border border-border rounded-lg p-6">
@@ -68,12 +156,8 @@ export default function ApplicantsPage() {
             <span className="text-sm text-muted-foreground">VISAS PROCESSED</span>
           </div>
           <div className="flex items-baseline gap-2">
-            <div className="text-3xl font-bold">{visasProcessed}</div>
-            <span className="text-muted-foreground">of {totalApplicants} total</span>
-          </div>
-          <div className="mt-3">
-            <Progress value={63} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-1">12 Pending Submission</p>
+            <div className="text-3xl font-bold">{stats.visasProcessed}</div>
+            <span className="text-muted-foreground">of {stats.total} total</span>
           </div>
         </div>
 
@@ -91,12 +175,7 @@ export default function ApplicantsPage() {
             </div>
             <span className="text-sm text-muted-foreground">PENDING PAYMENTS</span>
           </div>
-          <div className="text-3xl font-bold">₦{(pendingPayments / 1000000).toFixed(1)}M</div>
-          <div className="text-xs text-muted-foreground mt-1">outstanding</div>
-          <div className="mt-3">
-            <span className="text-xs text-orange-500">85 payments due</span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Next due date: Oct 15</p>
+          <div className="text-3xl font-bold">₦{(stats.pendingPayments / 1000000).toFixed(1)}M</div>
         </div>
       </div>
 
@@ -108,12 +187,6 @@ export default function ApplicantsPage() {
         </div>
         <Button variant="outline" className="gap-2 bg-transparent">
           <span>All Statuses</span>
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </Button>
-        <Button variant="outline" className="gap-2 bg-transparent">
-          <span>Payment: All</span>
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
@@ -140,146 +213,100 @@ export default function ApplicantsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockApplicants.map((applicant) => (
-              <TableRow key={applicant.id} className="border-b border-border">
-                <TableCell>
-                  <Link
-                    href={`/dashboard/applicants/${applicant.id}`}
-                    className="flex items-center gap-3 hover:text-primary"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold">
-                      {applicant.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </div>
-                    <div>
-                      <p className="font-semibold">{applicant.name}</p>
-                      <p className="text-xs text-muted-foreground">Pass: {applicant.passport}</p>
-                    </div>
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <div className="text-sm">
-                    <p>{applicant.phone}</p>
-                    <p className="text-xs text-muted-foreground">{applicant.email}</p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <p className="font-mono text-sm">{applicant.bookingId}</p>
-                    <p className="text-xs text-muted-foreground">{applicant.bookingDate}</p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {applicant.status === "approved" && (
-                    <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                      Approved
-                    </Badge>
-                  )}
-                  {applicant.status === "confirmed" && (
-                    <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                      Visa Issued
-                    </Badge>
-                  )}
-                  {applicant.status === "reviewing" && (
-                    <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                      Pending Info
-                    </Badge>
-                  )}
-                  {applicant.status === "issue_flagged" && (
-                    <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">
-                      Issue Flagged
-                    </Badge>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold">₦{(applicant.amountPaid / 1000000).toFixed(1)}M</span>
-                      <span className="text-muted-foreground">of ₦{(applicant.totalAmount / 1000000).toFixed(1)}M</span>
-                    </div>
-                    <Progress value={applicant.paymentProgress} className="h-2" />
-                    <p className="text-xs text-muted-foreground">{applicant.paymentProgress}% Paid</p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Link href={`/dashboard/applicants/${applicant.id}`}>
-                      <Button variant="ghost" size="icon">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                      </Button>
-                    </Link>
-                    <Link href={`/dashboard/applicants/${applicant.id}`}>
-                      <Button variant="ghost" size="icon">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                      </Button>
-                    </Link>
-                    <Button variant="ghost" size="icon">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                        />
-                      </svg>
-                    </Button>
-                  </div>
+            {bookings.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  No bookings found
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              bookings.map((booking) => {
+                const paymentProgress = Math.round((booking.amountPaid / booking.totalAmount) * 100)
+                return (
+                  <TableRow key={booking.id} className="border-b border-border">
+                    <TableCell>
+                      <Link
+                        href={`/dashboard/applicants/${booking.id}`}
+                        className="flex items-center gap-3 hover:text-primary"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold">
+                          {booking.user?.name
+                            ?.split(" ")
+                            .map((n) => n[0])
+                            .join("") || "NA"}
+                        </div>
+                        <div>
+                          <p className="font-semibold">{booking.user?.name || "Unknown"}</p>
+                          <p className="text-xs text-muted-foreground">ID: {booking.id}</p>
+                        </div>
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <p>{booking.user?.phone || "N/A"}</p>
+                        <p className="text-xs text-muted-foreground">{booking.user?.email || "N/A"}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-mono text-sm">BK-{booking.id}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(booking.bookingDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(booking.status)}</TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-semibold">₦{(booking.amountPaid / 1000000).toFixed(1)}M</span>
+                          <span className="text-muted-foreground">
+                            of ₦{(booking.totalAmount / 1000000).toFixed(1)}M
+                          </span>
+                        </div>
+                        <Progress value={paymentProgress} className="h-2" />
+                        <p className="text-xs text-muted-foreground">{paymentProgress}% Paid</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/dashboard/applicants/${booking.id}`}>
+                          <Button variant="ghost" size="icon">
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                          </Button>
+                        </Link>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            )}
           </TableBody>
         </Table>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border">
-          <p className="text-sm text-muted-foreground">
-            Showing <span className="font-semibold">1</span> to <span className="font-semibold">10</span> of{" "}
-            <span className="font-semibold">142</span> results
-          </p>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled>
-              Previous
-            </Button>
-            <Button variant="outline" size="sm" className="bg-primary text-primary-foreground">
-              1
-            </Button>
-            <Button variant="outline" size="sm">
-              2
-            </Button>
-            <Button variant="outline" size="sm">
-              3
-            </Button>
-            <span className="px-2">...</span>
-            <Button variant="outline" size="sm">
-              14
-            </Button>
-            <Button variant="outline" size="sm" className="bg-primary text-primary-foreground">
-              Next
-            </Button>
+        {bookings.length > 0 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-border">
+            <p className="text-sm text-muted-foreground">
+              Showing <span className="font-semibold">1</span> to{" "}
+              <span className="font-semibold">{bookings.length}</span> of{" "}
+              <span className="font-semibold">{stats.total}</span> results
+            </p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

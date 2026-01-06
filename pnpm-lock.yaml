@@ -18,40 +18,40 @@ importers:
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.60.0(react@19.2.0))
       '@nestjs/axios':
-        specifier: latest
+        specifier: 4.0.1
         version: 4.0.1(@nestjs/common@11.1.11(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.13.2)(rxjs@7.8.2)
       '@nestjs/common':
-        specifier: latest
+        specifier: 11.1.11
         version: 11.1.11(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/config':
-        specifier: latest
+        specifier: 4.0.2
         version: 4.0.2(@nestjs/common@11.1.11(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
       '@nestjs/core':
-        specifier: latest
+        specifier: 11.1.11
         version: 11.1.11(@nestjs/common@11.1.11(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.11)(@nestjs/platform-express@11.1.11)(@nestjs/websockets@11.1.11)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/jwt':
-        specifier: latest
+        specifier: 11.0.2
         version: 11.0.2(@nestjs/common@11.1.11(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@nestjs/mapped-types':
-        specifier: latest
+        specifier: 2.1.0
         version: 2.1.0(@nestjs/common@11.1.11(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)
       '@nestjs/microservices':
         specifier: latest
         version: 11.1.11(@grpc/grpc-js@1.14.3)(@nestjs/common@11.1.11(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.11)(@nestjs/websockets@11.1.11)(ioredis@5.9.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/passport':
-        specifier: latest
+        specifier: 11.0.5
         version: 11.0.5(@nestjs/common@11.1.11(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)
       '@nestjs/platform-express':
-        specifier: latest
+        specifier: 11.1.11
         version: 11.1.11(@nestjs/common@11.1.11(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.11)
       '@nestjs/swagger':
-        specifier: latest
+        specifier: 11.2.3
         version: 11.2.3(@fastify/static@9.0.0)(@nestjs/common@11.1.11(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.11)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)
       '@nestjs/throttler':
-        specifier: latest
+        specifier: 6.5.0
         version: 6.5.0(@nestjs/common@11.1.11(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.11)(reflect-metadata@0.2.2)
       '@nestjs/typeorm':
-        specifier: latest
+        specifier: 11.0.0
         version: 11.0.0(@nestjs/common@11.1.11(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.11)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(@google-cloud/spanner@8.3.1(encoding@0.1.13))(@sap/hana-client@2.27.19)(better-sqlite3@12.5.0)(ioredis@5.9.0)(mongodb@7.0.0(@aws-sdk/credential-providers@3.962.0)(@mongodb-js/zstd@7.0.0)(kerberos@7.0.0)(mongodb-client-encryption@7.0.0)(snappy@7.3.3)(socks@2.8.7))(mssql@12.2.0)(mysql2@3.16.0)(oracledb@6.10.0)(pg-native@3.5.2)(pg-query-stream@4.10.3(pg@8.16.3(pg-native@3.5.2)))(pg@8.16.3(pg-native@3.5.2))(redis@5.10.0)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.8)(@swc/wasm@1.15.8)(@types/node@22.0.0)(typescript@5.0.2))(typeorm-aurora-data-api-driver@3.0.2(@aws-sdk/client-rds-data@3.962.0)))
       '@nestjs/websockets':
         specifier: latest
@@ -180,7 +180,7 @@ importers:
         specifier: 8.5.1
         version: 8.5.1(react@19.2.0)
       express-basic-auth:
-        specifier: latest
+        specifier: 1.2.1
         version: 1.2.1
       input-otp:
         specifier: 1.4.1
@@ -213,7 +213,7 @@ importers:
         specifier: latest
         version: 0.7.0
       passport-jwt:
-        specifier: latest
+        specifier: 4.0.1
         version: 4.0.1
       pg:
         specifier: latest
@@ -249,7 +249,7 @@ importers:
         specifier: latest
         version: 0.2.2
       rxjs:
-        specifier: latest
+        specifier: 7.8.2
         version: 7.8.2
       sonner:
         specifier: ^1.7.4
@@ -270,7 +270,7 @@ importers:
         specifier: latest
         version: 10.9.2(@swc/core@1.15.8)(@swc/wasm@1.15.8)(@types/node@22.0.0)(typescript@5.0.2)
       typeorm:
-        specifier: latest
+        specifier: 0.3.28
         version: 0.3.28(@google-cloud/spanner@8.3.1(encoding@0.1.13))(@sap/hana-client@2.27.19)(better-sqlite3@12.5.0)(ioredis@5.9.0)(mongodb@7.0.0(@aws-sdk/credential-providers@3.962.0)(@mongodb-js/zstd@7.0.0)(kerberos@7.0.0)(mongodb-client-encryption@7.0.0)(snappy@7.3.3)(socks@2.8.7))(mssql@12.2.0)(mysql2@3.16.0)(oracledb@6.10.0)(pg-native@3.5.2)(pg-query-stream@4.10.3(pg@8.16.3(pg-native@3.5.2)))(pg@8.16.3(pg-native@3.5.2))(redis@5.10.0)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.8)(@swc/wasm@1.15.8)(@types/node@22.0.0)(typescript@5.0.2))(typeorm-aurora-data-api-driver@3.0.2(@aws-sdk/client-rds-data@3.962.0))
       typeorm-aurora-data-api-driver:
         specifier: latest
