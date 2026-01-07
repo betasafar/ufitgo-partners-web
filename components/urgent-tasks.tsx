@@ -1,47 +1,52 @@
 import { Card } from "@/components/ui/card"
 import { AlertTriangle, CreditCard, UserPlus, Clock } from "lucide-react"
 import { apiRequest } from "@/lib/api"
+import Link from "next/link"
 
 interface UrgentTask {
-  type: "pending_bookings" | "incomplete_payments" | "upcoming_departures"
+  id: string
+  title: string
+  description: string
   count: number
-  details: string
   priority: "high" | "medium" | "low"
+  action?: string
 }
 
 async function getUrgentTasks() {
   try {
-    const data: { tasks: UrgentTask[] } = await apiRequest("/operator/bookings/urgent-tasks")
-    return data.tasks
+    const data: { tasks: UrgentTask[]; totalUrgent: number } = await apiRequest("/operator/bookings/urgent-tasks")
+    return { tasks: data.tasks || [], totalUrgent: data.totalUrgent || 0 }
   } catch (error) {
     console.error("[v0] Failed to load urgent tasks:", error)
-    return []
+    return { tasks: [], totalUrgent: 0 }
   }
 }
 
 export async function UrgentTasks() {
-  const tasks = await getUrgentTasks()
+  const { tasks, totalUrgent } = await getUrgentTasks()
 
-  const getTaskDisplay = (task: UrgentTask) => {
-    switch (task.type) {
-      case "pending_bookings":
-        return { icon: UserPlus, color: "text-info", title: "Pending Bookings" }
-      case "incomplete_payments":
-        return { icon: CreditCard, color: "text-warning", title: "Incomplete Payments" }
-      case "upcoming_departures":
-        return { icon: Clock, color: "text-destructive", title: "Upcoming Departures" }
+  const getTaskIcon = (taskId: string) => {
+    switch (taskId) {
+      case "incomplete-payments":
+        return CreditCard
+      case "pending-approvals":
+        return UserPlus
+      case "visa-expiring":
+        return AlertTriangle
+      case "upcoming-departures":
+        return Clock
       default:
-        return { icon: AlertTriangle, color: "text-muted-foreground", title: "Task" }
+        return AlertTriangle
     }
   }
 
   return (
     <Card className="p-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold">Urgent Tasks</h3>
-        {tasks.length > 0 && (
-          <span className="text-xs bg-destructive text-destructive-foreground px-2 py-1 rounded-full">
-            {tasks.length} New
+        {totalUrgent > 0 && (
+          <span className="text-xs bg-destructive text-destructive-foreground px-3 py-1 rounded-full font-medium">
+            {totalUrgent} New
           </span>
         )}
       </div>
@@ -53,17 +58,18 @@ export async function UrgentTasks() {
             <p className="text-sm">No urgent tasks at the moment</p>
           </div>
         ) : (
-          tasks.map((task, index) => {
-            const display = getTaskDisplay(task)
+          tasks.map((task) => {
+            const Icon = getTaskIcon(task.id)
             return (
-              <div key={index} className="flex gap-3">
-                <div className={`mt-1 ${display.color}`}>
-                  <display.icon className="h-5 w-5" />
+              <div key={task.id} className="flex gap-4 items-start">
+                <div className="mt-0.5 text-warning">
+                  <Icon className="h-5 w-5" />
                 </div>
                 <div className="flex-1 space-y-1">
-                  <div className="font-medium">{display.title}</div>
-                  <p className="text-sm text-muted-foreground">{task.details}</p>
-                  <div className="text-xs text-muted-foreground">{task.count} items</div>
+                  <div className="font-medium text-sm">{task.title}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {task.count} {task.count === 1 ? "item" : "items"}
+                  </p>
                 </div>
               </div>
             )
@@ -71,7 +77,12 @@ export async function UrgentTasks() {
         )}
       </div>
 
-      <button className="mt-4 w-full text-center text-sm text-primary hover:underline">View All Tasks</button>
+      <Link
+        href="/dashboard/tasks"
+        className="mt-6 block w-full text-center text-sm text-[#F5A623] hover:underline font-medium"
+      >
+        View All Tasks
+      </Link>
     </Card>
   )
 }

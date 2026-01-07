@@ -75,28 +75,29 @@ export function RecentApplicants({ bookings }: RecentApplicantsProps) {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarImage src={`/.jpg?height=40&width=40&query=${booking.name}`} />
+                      <AvatarImage src={`/.jpg?height=40&width=40&query=${booking.pilgrimName || "user"}`} />
                       <AvatarFallback>
-                        {booking.name
+                        {(booking.pilgrimName || "U")
                           .split(" ")
                           .map((n) => n[0])
-                          .join("")}
+                          .join("")
+                          .toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="font-medium">{booking.name}</div>
-                      <div className="text-sm text-muted-foreground">{booking.passport}</div>
+                      <div className="font-medium">{booking.pilgrimName || "Unknown"}</div>
+                      <div className="text-sm text-muted-foreground">{booking.pilgrimEmail || "N/A"}</div>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{booking.package}</TableCell>
-                <TableCell>{booking.bookingDate}</TableCell>
+                <TableCell>{booking.packageTitle || "N/A"}</TableCell>
+                <TableCell>{new Date(booking.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell>
-                  <span className={`text-sm font-medium ${getStatusColor(booking.status)}`}>
-                    ● {getStatusLabel(booking.status)}
+                  <span className={`text-sm font-medium ${getStatusColor(booking.paymentStatus)}`}>
+                    ● {getStatusLabel(booking.paymentStatus)}
                   </span>
                 </TableCell>
-                <TableCell>₦ {booking.paymentProgress}%</TableCell>
+                <TableCell>₦ {booking.amount?.toLocaleString() || "0"}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Button variant="ghost" size="icon">

@@ -1,27 +1,98 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Legend } from "recharts"
 import { TrendingUp, TrendingDown, Download } from "lucide-react"
 
-const revenueData = [
-  { month: "Jan", revenue: 25000000, expenses: 18000000 },
-  { month: "Feb", revenue: 28000000, expenses: 19000000 },
-  { month: "Mar", revenue: 32000000, expenses: 21000000 },
-  { month: "Apr", revenue: 29000000, expenses: 20000000 },
-  { month: "May", revenue: 38000000, expenses: 23000000 },
-  { month: "Jun", revenue: 45000000, expenses: 25000000 },
-]
+interface DashboardStats {
+  totalRevenue: number
+  revenueChange: number
+  totalBookings: number
+  bookingsChange: number
+  pendingPayments: number
+  paymentsDue: number
+  visaSuccessRate: number
+  upcomingDeparture: string
+}
 
-const topPackages = [
-  { name: "Hajj Deluxe 2024", slots: "45/50", booked: 45, total: 50, revenue: 4500000 },
-  { name: "Umrah Premium", slots: "120/200", booked: 120, total: 200, revenue: 2200000 },
-  { name: "Ramadan Special", slots: "40/40", booked: 40, total: 40, revenue: 3800000 },
-]
+interface RevenueFlowData {
+  month: string
+  revenue: number
+  expenses: number
+}
 
-export default function AnalyticsPage() {
+interface TopPackage {
+  id: string
+  name: string
+  booked: number
+  total: number
+  revenue: number
+}
+
+interface Transaction {
+  id: string
+  applicantName: string
+  applicantId: string
+  packageName: string
+  date: string
+  status: string
+  amount: number
+}
+
+export default function FinancialPage() {
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [revenueData, setRevenueData] = useState<RevenueFlowData[]>([])
+  const [topPackages, setTopPackages] = useState<TopPackage[]>([])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
+  const [timePeriod, setTimePeriod] = useState("this-month")
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:3001"
+
+        // Fetch dashboard stats
+        const statsRes = await fetch(`${apiUrl}/operator/reports/dashboard-stats`)
+        const statsData = await statsRes.json()
+        setStats(statsData)
+
+        // Fetch revenue flow data
+        const revenueRes = await fetch(`${apiUrl}/operator/reports/revenue-flow?period=monthly`)
+        const revenueFlowData = await revenueRes.json()
+        setRevenueData(revenueFlowData)
+
+        // Fetch popular packages
+        const packagesRes = await fetch(`${apiUrl}/operator/reports/popular-packages?limit=3`)
+        const packagesData = await packagesRes.json()
+        setTopPackages(packagesData)
+
+        // Fetch recent transactions (using wallet endpoint)
+        const transactionsRes = await fetch(`${apiUrl}/operator/wallet/transactions?limit=5`)
+        const transactionsData = await transactionsRes.json()
+        setTransactions(transactionsData)
+      } catch (error) {
+        console.error("[v0] Failed to fetch financial data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [timePeriod])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-muted-foreground">Loading financial data...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -30,7 +101,7 @@ export default function AnalyticsPage() {
           <h1 className="text-3xl font-bold text-foreground">Financial Overview</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Select defaultValue="this-month">
+          <Select value={timePeriod} onValueChange={setTimePeriod}>
             <SelectTrigger className="w-[140px]">
               <SelectValue />
             </SelectTrigger>
@@ -54,10 +125,12 @@ export default function AnalyticsPage() {
               <div className="text-xs uppercase text-muted-foreground">Total Revenue</div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">💰</div>
             </div>
-            <div className="text-2xl font-bold text-foreground mb-1">₦45,000,000</div>
+            <div className="text-2xl font-bold text-foreground mb-1">
+              ₦{stats?.totalRevenue?.toLocaleString() || "0"}
+            </div>
             <div className="flex items-center gap-1 text-xs text-green-600">
-              <TrendingUp className="size-3" />
-              <span>+12.5% from last month</span>
+              <TrendingUp className="size-4" />
+              <span>+{stats?.revenueChange || 0}% from last month</span>
             </div>
           </CardContent>
         </Card>
@@ -68,10 +141,10 @@ export default function AnalyticsPage() {
               <div className="text-xs uppercase text-muted-foreground">Total Bookings</div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">👥</div>
             </div>
-            <div className="text-2xl font-bold text-foreground mb-1">342</div>
+            <div className="text-2xl font-bold text-foreground mb-1">{stats?.totalBookings || 0}</div>
             <div className="flex items-center gap-1 text-xs text-green-600">
               <TrendingUp className="size-3" />
-              <span>+5% new applicants</span>
+              <span>+{stats?.bookingsChange || 0}% new applicants</span>
             </div>
           </CardContent>
         </Card>
@@ -82,10 +155,12 @@ export default function AnalyticsPage() {
               <div className="text-xs uppercase text-muted-foreground">Outstanding Balance</div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">📊</div>
             </div>
-            <div className="text-2xl font-bold text-foreground mb-1">₦2,150,000</div>
+            <div className="text-2xl font-bold text-foreground mb-1">
+              ₦{stats?.pendingPayments?.toLocaleString() || "0"}
+            </div>
             <div className="flex items-center gap-1 text-xs text-red-600">
               <TrendingDown className="size-3" />
-              <span>24 payments overdue</span>
+              <span>{stats?.paymentsDue || 0} payments overdue</span>
             </div>
           </CardContent>
         </Card>
@@ -96,10 +171,10 @@ export default function AnalyticsPage() {
               <div className="text-xs uppercase text-muted-foreground">Visa Success Rate</div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">✈</div>
             </div>
-            <div className="text-2xl font-bold text-foreground mb-1">98.5%</div>
+            <div className="text-2xl font-bold text-foreground mb-1">{stats?.visaSuccessRate || 0}%</div>
             <div className="flex items-center gap-1 text-xs text-green-600">
               <TrendingUp className="size-3" />
-              <span>Next flight in 14 days</span>
+              <span>{stats?.upcomingDeparture || "Next flight soon"}</span>
             </div>
           </CardContent>
         </Card>
@@ -135,11 +210,13 @@ export default function AnalyticsPage() {
             <h2 className="text-lg font-semibold mb-4">Top Packages</h2>
             <div className="space-y-4">
               {topPackages.map((pkg) => (
-                <div key={pkg.name}>
+                <div key={pkg.id}>
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <div className="text-sm font-medium text-foreground">{pkg.name}</div>
-                      <div className="text-xs text-muted-foreground">{pkg.slots} slots booked</div>
+                      <div className="text-xs text-muted-foreground">
+                        {pkg.booked}/{pkg.total} slots booked
+                      </div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-bold text-primary">₦{(pkg.revenue / 1000000).toFixed(1)}M</div>
@@ -186,28 +263,41 @@ export default function AnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-border/50">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
-                        IM
+                {transactions.map((txn) => (
+                  <tr key={txn.id} className="border-b border-border/50">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                          {txn.applicantName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium">{txn.applicantName}</div>
+                          <div className="text-xs text-muted-foreground">ID: {txn.applicantId}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-sm font-medium">Musa Ibrahim</div>
-                        <div className="text-xs text-muted-foreground">ID: HAJJ-24-001</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm">Hajj Premium 2024</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">Oct 24, 2024</td>
-                  <td className="px-4 py-3 text-right">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/10 text-green-600 text-xs">
-                      <span className="size-1.5 rounded-full bg-green-600" />
-                      Paid
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-semibold">₦2,500,000</td>
-                </tr>
+                    </td>
+                    <td className="px-4 py-3 text-sm">{txn.packageName}</td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">{txn.date}</td>
+                    <td className="px-4 py-3 text-right">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs ${
+                          txn.status === "paid" ? "bg-green-500/10 text-green-600" : "bg-yellow-500/10 text-yellow-600"
+                        }`}
+                      >
+                        <span
+                          className={`size-1.5 rounded-full ${
+                            txn.status === "paid" ? "bg-green-600" : "bg-yellow-600"
+                          }`}
+                        />
+                        {txn.status === "paid" ? "Paid" : "Pending"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold">₦{txn.amount.toLocaleString()}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

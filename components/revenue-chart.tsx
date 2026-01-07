@@ -9,11 +9,15 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ data }: RevenueChartProps) {
-  const totalRevenue = data.reduce((sum, point) => sum + point.revenue, 0)
+  const safeData = data || []
+
+  const totalRevenue = safeData.reduce((sum, point) => sum + point.revenue, 0)
   const formattedTotal = (totalRevenue / 1000000).toFixed(1)
 
   const growth =
-    data.length > 1 ? (((data[data.length - 1].revenue - data[0].revenue) / data[0].revenue) * 100).toFixed(1) : "0"
+    safeData.length > 1
+      ? (((safeData[safeData.length - 1].revenue - safeData[0].revenue) / safeData[0].revenue) * 100).toFixed(1)
+      : "0"
 
   return (
     <Card className="p-6">
@@ -32,9 +36,9 @@ export function RevenueChart({ data }: RevenueChartProps) {
           </div>
         </div>
 
-        {data.length > 0 ? (
+        {safeData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data}>
+            <LineChart data={safeData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="week" stroke="hsl(var(--muted-foreground))" fontSize={12} />
               <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />

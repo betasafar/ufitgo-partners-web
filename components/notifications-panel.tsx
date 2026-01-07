@@ -18,7 +18,7 @@ export function NotificationsPanel() {
   }, [])
 
   const fetchNotifications = async () => {
-    try {
+    try { 
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/notifications?limit=10`, {
         credentials: "include",
       })

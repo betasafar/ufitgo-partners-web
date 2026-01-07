@@ -1,4 +1,4 @@
-import type { DashboardStats, RevenueDataPoint, Booking } from "@/lib/types"
+import type { DashboardStats, Booking } from "@/lib/types"
 import { StatsCards } from "@/components/stats-cards"
 import { VerificationBanner } from "@/components/verification-banner"
 import { RevenueChart } from "@/components/revenue-chart"
@@ -14,15 +14,48 @@ async function getDashboardData() {
   const operator = operatorData ? JSON.parse(operatorData) : null
 
   try {
-    const stats: DashboardStats = await apiRequest("/operator/analytics/dashboard-stats")
-    const revenueData: { data: RevenueDataPoint[] } = await apiRequest("/operator/analytics/revenue-flow", {
+    const stats: DashboardStats = await apiRequest("/operator/reports/dashboard-stats")
+    const revenueDataResponse = await apiRequest("/operator/reports/revenue-flow", {
       params: { period: "30days" },
     })
+
+    // Handle both formats: direct array or wrapped in {data: []}
+    const revenueData = Array.isArray(revenueDataResponse) ? revenueDataResponse : (revenueDataResponse as any)?.data || []
+
     const recentBookings: Booking[] = await apiRequest("/operator/bookings/recent", {
       params: { limit: "5" },
     })
 
-    return { stats, revenueData: revenueData.data, recentBookings, operator }
+    const mappedStats: DashboardStats = {
+      totalRevenue: stats.totalRevenue || 0,
+      revenueChange: stats.revenueChange || 0,
+      totalBookings: stats.totalBookings || 0,
+      bookingsChange: stats.bookingsChange || 0,
+      pendingPayments: stats.pendingPayments || 0,
+      paymentsChange: 0, // Backend doesn't provide this yet
+      visaExpiring: 0, // Backend doesn't provide this yet
+      visaChange: 0, // Backend doesn't provide this yet
+      activePackages: 0,
+      seatsFilled: 0,
+      totalSeats: 0,
+      revenueProjected: 0,
+    }
+
+    const mappedBookings: Booking[] = recentBookings.map((booking: any) => ({
+      id: String(booking.id),
+      packageId: String(booking.packageId || booking.package?.id || ""),
+      pilgrimId: String(booking.pilgrimId || booking.userId || ""),
+      pilgrimName: booking.pilgrimName || "Unknown",
+      pilgrimEmail: booking.pilgrimEmail || "",
+      packageTitle: booking.package?.title || "Unknown Package",
+      amount: Number(booking.totalAmount || booking.amount || 0),
+      paymentStatus:
+        booking.status === "fully_paid" ? "completed" : booking.status === "deposit_paid" ? "partial" : "pending",
+      travelDate: booking.travelDate || booking.package?.startDate || new Date().toISOString(),
+      createdAt: booking.createdAt || new Date().toISOString(),
+    }))
+
+    return { stats: mappedStats, revenueData: revenueData, recentBookings: mappedBookings, operator }
   } catch (error) {
     console.error("[v0] Failed to load dashboard data:", error)
     return {
