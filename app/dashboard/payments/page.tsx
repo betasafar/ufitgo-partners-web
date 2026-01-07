@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Download, Search, Filter, Calendar } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { apiRequest } from "@/lib/api-server"
+import { apiRequest } from "@/lib/api-proxy"
 import { RevenueFlowChart } from "@/components/revenue-flow-chart"
 
 interface PaymentStats {
@@ -49,8 +49,12 @@ const formatCurrency = (amount: number) => {
 
 async function getPaymentData() {
   try {
-    const statsData = await apiRequest<PaymentStats>("/operator/wallet/payment-stats")
-    const txData = await apiRequest<Transaction[]>("/operator/wallet/transactions/filtered?limit=20&type=credit")
+    const statsData = await apiRequest<PaymentStats>("/operator/wallet/payment-stats", {
+      next: { revalidate: 60 },
+    })
+    const txData = await apiRequest<Transaction[]>("/operator/wallet/transactions/filtered?limit=20&type=credit", {
+      next: { revalidate: 30 },
+    })
 
     return {
       stats: statsData,

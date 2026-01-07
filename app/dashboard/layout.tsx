@@ -2,7 +2,8 @@ import type React from "react"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { SessionTimeoutDialog } from "@/components/session-timeout-dialog"
-import { cookies } from "next/headers"
+import { getCurrentUser } from "@/lib/api-proxy"
+import { Suspense } from "react"
 import type { Operator } from "@/lib/types"
 
 export const metadata = {
@@ -12,27 +13,24 @@ export const metadata = {
 
 async function getOperator(): Promise<Operator> {
   try {
-    const cookieStore = await cookies()
-    const operatorDataCookie = cookieStore.get("operator_data")?.value
+    const userData = await getCurrentUser()
 
-    if (operatorDataCookie) {
-      const operatorData = JSON.parse(operatorDataCookie)
-      // Map backend response to our Operator type
+    if (userData) {
       return {
-        id: String(operatorData.id),
-        companyName: operatorData.companyName || "Travel Agency",
-        email: operatorData.email,
-        phone: operatorData.phone || "",
-        logo: operatorData.logo,
-        verified: operatorData.verificationStatus === "approved",
-        verificationStatus: operatorData.verificationStatus || "pending",
-        cacRegistration: operatorData.cacRegistration || "",
-        nahconLicense: operatorData.nahconLicense || "",
+        id: String(userData.id),
+        companyName: userData.companyName || "Travel Agency",
+        email: userData.email,
+        phone: userData.phone || "",
+        logo: userData.logo,
+        verified: userData.verificationStatus === "approved",
+        verificationStatus: userData.verificationStatus || "pending",
+        cacRegistration: userData.cacRegistration || "",
+        nahconLicense: userData.nahconLicense || "",
         role: "operator",
       }
     }
 
-    // Fallback to default operator if no session data
+    // Fallback
     return {
       id: "1",
       companyName: "Travel Agency",
@@ -45,8 +43,8 @@ async function getOperator(): Promise<Operator> {
       role: "operator",
     }
   } catch (error) {
-    console.error("[v0] Failed to get operator from session:", error)
-    // Return default operator on error
+    console.error("[v0] Failed to load operator:", error)
+    // Silent fallback
     return {
       id: "1",
       companyName: "Travel Agency",
@@ -73,7 +71,9 @@ export default async function DashboardLayout({
       <DashboardSidebar operator={operator} />
       <div className="flex-1 flex flex-col">
         <DashboardHeader operator={operator} />
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-6 lg:p-8">
+          <Suspense fallback={<div className="animate-pulse h-full bg-muted/10 rounded-lg" />}>{children}</Suspense>
+        </main>
       </div>
       <SessionTimeoutDialog />
     </div>

@@ -4,17 +4,14 @@ import { PackagesTable } from "@/components/packages-table"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
-import { apiRequest } from "@/lib/api"
+import { apiRequest } from "@/lib/api-proxy"
 
 async function getPackagesData() {
   try {
     const packages: Package[] = await apiRequest<Package[]>("/operator/packages", {
-      cache: "no-store",
+      next: { revalidate: 60 },
     })
 
-    console.log("[v0] Successfully fetched packages:", packages.length)
-
-    // Calculate stats from the packages data
     const activePackages = packages.filter((p) => p.status === "active")
     const totalSeats = packages.reduce((sum, p) => sum + p.capacity, 0)
     const seatsFilled = packages.reduce((sum, p) => sum + p.booked, 0)
@@ -37,7 +34,6 @@ async function getPackagesData() {
 
     return { packages, stats }
   } catch (error) {
-    console.error("[v0] Failed to fetch packages:", error)
     return {
       packages: [],
       stats: {

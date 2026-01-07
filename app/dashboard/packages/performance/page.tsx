@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from "recharts"
 import { TrendingUp, TrendingDown, Download } from "lucide-react"
-import { apiRequest } from "@/lib/api-client"
+import { apiClientRequest } from "@/lib/api-client-secure"
 import { useEffect, useState } from "react"
 
 // Define proper types
@@ -15,9 +15,10 @@ interface PerformanceData {
   slotsRemaining: number
   conversionRate: number
   cancellationRate: number
-  activePackagesCount: number        // ← number: how many are active
+  activePackagesCount: number // ← number: how many are active
   totalPackages: number
-  activePackages: Array<{            // ← array: for the table
+  activePackages: Array<{
+    // ← array: for the table
     id: number
     name: string
     duration: string
@@ -55,7 +56,7 @@ export default function PackagePerformancePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await apiRequest<any>("/operator/packages/performance")
+        const data = await apiClientRequest<any>("/operator/packages/performance")
 
         if (!data || !data.summary || !data.packages) {
           setPerformanceData(initialPerformanceData)
@@ -150,22 +151,25 @@ export default function PackagePerformancePage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Package Performance</h1>
           <p className="text-sm text-muted-foreground">
-            Insights for Hajj & Umrah 2024 Season •{" "}
-            <strong>{performanceData.activePackagesCount}</strong> of{" "}
+            Insights for Hajj & Umrah 2024 Season • <strong>{performanceData.activePackagesCount}</strong> of{" "}
             <strong>{performanceData.totalPackages}</strong> Active
           </p>
         </div>
         {/* Filters remain the same */}
         <div className="flex items-center gap-3">
           <Select defaultValue="this-season">
-            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="this-season">This Season</SelectItem>
               <SelectItem value="last-season">Last Season</SelectItem>
             </SelectContent>
           </Select>
           <Select defaultValue="all">
-            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Package Type: All</SelectItem>
               <SelectItem value="hajj">Hajj Only</SelectItem>
@@ -173,7 +177,9 @@ export default function PackagePerformancePage() {
             </SelectContent>
           </Select>
           <Select defaultValue="active">
-            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="active">Status: Active</SelectItem>
               <SelectItem value="closed">Status: Closed</SelectItem>

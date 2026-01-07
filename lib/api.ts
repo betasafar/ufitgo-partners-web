@@ -10,13 +10,9 @@ interface ApiOptions extends RequestInit {
 export async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
   const { params, ...fetchOptions } = options
 
-  // Get JWT token from cookies (server-side)
   const cookieStore = await cookies()
   const token = cookieStore.get("auth_token")?.value
 
-  console.log("[v0] API Request:", endpoint, "Token exists:", !!token)
-
-  // Build URL with params
   const url = new URL(`${API_BASE_URL}${endpoint}`)
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -24,7 +20,6 @@ export async function apiRequest<T>(endpoint: string, options: ApiOptions = {}):
     })
   }
 
-  // Add Authorization header if token exists
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
@@ -35,26 +30,24 @@ export async function apiRequest<T>(endpoint: string, options: ApiOptions = {}):
   }
 
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 5000) // Reduced timeout from 10s to 5s
 
   try {
     const response = await fetch(url.toString(), {
       ...fetchOptions,
       headers,
       signal: controller.signal,
+      next: { revalidate: 30 }, // Added cache control
     })
 
     clearTimeout(timeoutId)
 
     if (!response.ok) {
-      const errorText = await response.text()
-      console.log("[v0] API Error Response:", response.status, errorText)
-
       if (response.status === 401) {
         throw new Error("Unauthorized")
       }
 
-      const error = errorText ? JSON.parse(errorText) : { message: "Request failed" }
+      const error = await response.json().catch(() => ({ message: "Request failed" }))
       throw new Error(error.message || `Request failed with status ${response.status}`)
     }
 
@@ -63,11 +56,9 @@ export async function apiRequest<T>(endpoint: string, options: ApiOptions = {}):
     clearTimeout(timeoutId)
 
     if (error.name === "AbortError") {
-      console.log("[v0] API Request Timeout:", endpoint)
       throw new Error("Request timeout")
     }
 
-    console.log("[v0] API Request Failed:", endpoint, error.message)
     throw error
   }
 }

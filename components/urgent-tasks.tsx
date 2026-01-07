@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card"
 import { AlertTriangle, CreditCard, UserPlus, Clock } from "lucide-react"
-import { apiRequest } from "@/lib/api"
+import { apiRequest } from "@/lib/api-proxy"
 import Link from "next/link"
 
 interface UrgentTask {

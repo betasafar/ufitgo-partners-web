@@ -5,7 +5,7 @@ import { RevenueChart } from "@/components/revenue-chart"
 import { UrgentTasks } from "@/components/urgent-tasks"
 import { RecentApplicants } from "@/components/recent-applicants"
 import { Suspense } from "react"
-import { apiRequest } from "@/lib/api"
+import { apiRequest } from "@/lib/api-proxy"
 import { cookies } from "next/headers"
 
 async function getDashboardData() {
@@ -14,34 +14,36 @@ async function getDashboardData() {
   const operator = operatorData ? JSON.parse(operatorData) : null
 
   try {
-    const stats: DashboardStats = await apiRequest("/operator/reports/dashboard-stats")
-    const revenueDataResponse = await apiRequest("/operator/reports/revenue-flow", {
-      params: { period: "30days" },
-    })
+    const [statsResult, revenueResult, bookingsResult] = await Promise.allSettled([
+      apiRequest("/operator/reports/dashboard-stats"),
+      apiRequest("/operator/reports/revenue-flow", { next: { revalidate: 60 } }),
+      apiRequest("/operator/bookings/recent", { next: { revalidate: 30 } }),
+    ])
 
-    // Handle both formats: direct array or wrapped in {data: []}
-    const revenueData = Array.isArray(revenueDataResponse) ? revenueDataResponse : (revenueDataResponse as any)?.data || []
+    const stats = statsResult.status === "fulfilled" ? statsResult.value : null
+    const revenueDataResponse = revenueResult.status === "fulfilled" ? revenueResult.value : []
+    const recentBookings = bookingsResult.status === "fulfilled" ? bookingsResult.value : []
 
-    const recentBookings: Booking[] = await apiRequest("/operator/bookings/recent", {
-      params: { limit: "5" },
-    })
+    const revenueData = Array.isArray(revenueDataResponse)
+      ? revenueDataResponse
+      : (revenueDataResponse as any)?.data || []
 
     const mappedStats: DashboardStats = {
-      totalRevenue: stats.totalRevenue || 0,
-      revenueChange: stats.revenueChange || 0,
-      totalBookings: stats.totalBookings || 0,
-      bookingsChange: stats.bookingsChange || 0,
-      pendingPayments: stats.pendingPayments || 0,
-      paymentsChange: 0, // Backend doesn't provide this yet
-      visaExpiring: 0, // Backend doesn't provide this yet
-      visaChange: 0, // Backend doesn't provide this yet
+      totalRevenue: stats?.totalRevenue || 0,
+      revenueChange: stats?.revenueChange || 0,
+      totalBookings: stats?.totalBookings || 0,
+      bookingsChange: stats?.bookingsChange || 0,
+      pendingPayments: stats?.pendingPayments || 0,
+      paymentsChange: 0,
+      visaExpiring: 0,
+      visaChange: 0,
       activePackages: 0,
       seatsFilled: 0,
       totalSeats: 0,
       revenueProjected: 0,
     }
 
-    const mappedBookings: Booking[] = recentBookings.map((booking: any) => ({
+    const mappedBookings: Booking[] = (recentBookings as any[]).map((booking: any) => ({
       id: String(booking.id),
       packageId: String(booking.packageId || booking.package?.id || ""),
       pilgrimId: String(booking.pilgrimId || booking.userId || ""),
@@ -55,9 +57,9 @@ async function getDashboardData() {
       createdAt: booking.createdAt || new Date().toISOString(),
     }))
 
-    return { stats: mappedStats, revenueData: revenueData, recentBookings: mappedBookings, operator }
+    return { stats: mappedStats, revenueData, recentBookings: mappedBookings, operator }
   } catch (error) {
-    console.error("[v0] Failed to load dashboard data:", error)
+    console.error("[v0] Dashboard data fetch error:", error)
     return {
       stats: {
         totalRevenue: 0,
@@ -75,7 +77,7 @@ async function getDashboardData() {
       },
       revenueData: [],
       recentBookings: [],
-      operator,
+      operator: null,
     }
   }
 }
