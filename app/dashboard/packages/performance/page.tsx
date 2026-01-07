@@ -8,7 +8,8 @@ import { TrendingUp, TrendingDown, Download } from "lucide-react"
 // Fetching package performance from backend API
 async function getPackagePerformance() {
   try {
-    const response = await fetch(`${process.env.BACKEND_API_URL}/packages/performance`, {
+    const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.BACKEND_API_URL || "http://localhost:5000/api"
+    const response = await fetch(`${apiUrl}/packages/performance`, {
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",

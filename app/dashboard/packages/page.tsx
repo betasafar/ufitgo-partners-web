@@ -7,7 +7,8 @@ import Link from "next/link"
 
 async function getPackagesData() {
   try {
-    const response = await fetch(`${process.env.BACKEND_API_URL}/packages`, {
+    const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.BACKEND_API_URL || "http://localhost:5000/api"
+    const response = await fetch(`${apiUrl}/packages`, {
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",
