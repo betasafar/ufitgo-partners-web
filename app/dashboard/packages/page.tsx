@@ -4,28 +4,14 @@ import { PackagesTable } from "@/components/packages-table"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
+import { apiRequest } from "@/lib/api"
 
 async function getPackagesData() {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.BACKEND_API_URL || "http://localhost:5000/api"
-    console.log("[v0] Fetching packages from:", `${apiUrl}/operator/packages`)
-
-    const response = await fetch(`${apiUrl}/operator/packages`, {
+    const packages: Package[] = await apiRequest<Package[]>("/operator/packages", {
       cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
     })
 
-    console.log("[v0] Response status:", response.status, response.statusText)
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error("[v0] Response error body:", errorText)
-      throw new Error(`Failed to fetch packages: ${response.status} ${response.statusText}`)
-    }
-
-    const packages: Package[] = await response.json()
     console.log("[v0] Successfully fetched packages:", packages.length)
 
     // Calculate stats from the packages data
