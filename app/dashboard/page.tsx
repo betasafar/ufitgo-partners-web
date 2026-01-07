@@ -4,20 +4,28 @@ import { VerificationBanner } from "@/components/verification-banner"
 import { RevenueChart } from "@/components/revenue-chart"
 import { UrgentTasks } from "@/components/urgent-tasks"
 import { RecentApplicants } from "@/components/recent-applicants"
+import { TierOverviewCard } from "@/components/tier-overview-card"
 import { Suspense } from "react"
-import { apiRequest } from "@/lib/api-proxy"
+import { apiRequest, getCurrentUser, getTierInfo, getOperatorMetrics } from "@/lib/api-proxy"
 
 async function getDashboardData() {
   try {
-    const [statsResult, revenueResult, bookingsResult] = await Promise.allSettled([
-      apiRequest("/operator/reports/dashboard-stats", { next: { revalidate: 60 } }),
-      apiRequest("/operator/reports/revenue-flow", { next: { revalidate: 120 } }),
-      apiRequest("/operator/bookings/recent", { next: { revalidate: 90 } }),
-    ])
+    const [statsResult, revenueResult, bookingsResult, userResult, tierResult, metricsResult] =
+      await Promise.allSettled([
+        apiRequest("/operator/reports/dashboard-stats", { next: { revalidate: 60 } }),
+        apiRequest("/operator/reports/revenue-flow", { next: { revalidate: 120 } }),
+        apiRequest("/operator/bookings/recent", { next: { revalidate: 90 } }),
+        getCurrentUser(),
+        getTierInfo(),
+        getOperatorMetrics(),
+      ])
 
     const stats = statsResult.status === "fulfilled" ? statsResult.value : null
     const revenueDataResponse = revenueResult.status === "fulfilled" ? revenueResult.value : []
     const recentBookings = bookingsResult.status === "fulfilled" ? bookingsResult.value : []
+    const userData = userResult.status === "fulfilled" ? userResult.value : null
+    const tierData = tierResult.status === "fulfilled" ? tierResult.value : null
+    const metrics = metricsResult.status === "fulfilled" ? metricsResult.value : null
 
     const revenueData = Array.isArray(revenueDataResponse)
       ? revenueDataResponse
@@ -52,7 +60,33 @@ async function getDashboardData() {
       createdAt: booking.createdAt || new Date().toISOString(),
     }))
 
-    return { stats: mappedStats, revenueData, recentBookings: mappedBookings }
+    const operatorWithTier = userData
+      ? {
+          ...userData,
+          tier: tierData?.tier || userData.tier || "BRONZE",
+          tierInfo: tierData?.tierInfo || {
+            level: userData.tier || "BRONZE",
+            maxPilgrimsPerBooking: 50,
+            maxActivePackages: 5,
+            maxMonthlyBookings: 50,
+            requiresEscrow: true,
+            canCreateCustomPackages: false,
+            hasAnalyticsAccess: false,
+            hasPrioritySupport: false,
+            features: [],
+          },
+          trustScore: metrics?.trustScore || tierData?.trustScore || 0,
+          trustBadges: tierData?.badges || [],
+          documents: tierData?.documents || [],
+          totalBookings: metrics?.totalBookings || 0,
+          successfulBookings: metrics?.successfulBookings || 0,
+          cancelledBookings: metrics?.cancelledBookings || 0,
+          monthlyBookingsCount: metrics?.monthlyBookingsCount || 0,
+          activePackagesCount: metrics?.activePackagesCount || 0,
+        }
+      : null
+
+    return { stats: mappedStats, revenueData, recentBookings: mappedBookings, operator: operatorWithTier }
   } catch (error) {
     console.error("[v0] Dashboard data fetch error:", error)
     return {
@@ -72,12 +106,13 @@ async function getDashboardData() {
       },
       revenueData: [],
       recentBookings: [],
+      operator: null,
     }
   }
 }
 
 export default async function DashboardPage() {
-  const { stats, revenueData, recentBookings } = await getDashboardData()
+  const { stats, revenueData, recentBookings, operator } = await getDashboardData()
 
   return (
     <div className="space-y-6">
@@ -92,18 +127,18 @@ export default async function DashboardPage() {
         <VerificationBanner />
       </Suspense>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3 space-y-6">
           <RevenueChart data={revenueData} />
+          <RecentApplicants bookings={recentBookings} />
         </div>
-        <div>
+        <div className="space-y-6">
+          {operator && <TierOverviewCard operator={operator} />}
           <Suspense fallback={<div className="animate-pulse h-48 bg-muted/10 rounded-lg" />}>
             <UrgentTasks />
           </Suspense>
         </div>
       </div>
-
-      <RecentApplicants bookings={recentBookings} />
     </div>
   )
 }

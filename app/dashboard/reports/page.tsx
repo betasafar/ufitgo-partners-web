@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FileText, DollarSign, RotateCcw, Bed, History, Download } from "lucide-react"
+import { ENDPOINTS } from "@/lib/api-endpoints"
 
 const reportTypes = [
   {
@@ -65,12 +66,10 @@ export default function ReportsPage() {
         includePhotos: params.includePhotos.toString(),
       })
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/reports/export?${queryParams}`,
-        {
-          credentials: "include",
-        },
-      )
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || ""
+      const response = await fetch(`${apiUrl}${ENDPOINTS.REPORTS.EXPORT}?${queryParams}`, {
+        credentials: "include",
+      })
 
       if (!response.ok) throw new Error("Export failed")
 

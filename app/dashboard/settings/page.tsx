@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Building2, Mail, Phone, MapPin, Upload, Shield, Bell, HelpCircle, Eye, EyeOff, Check } from "lucide-react"
+import { ENDPOINTS } from "@/lib/api-endpoints"
 
 export default function SettingsPage() {
   const [theme, setTheme] = useState("dark")
@@ -31,7 +32,8 @@ export default function SettingsPage() {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/profile`, {
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || ""
+      const response = await fetch(`${apiUrl}${ENDPOINTS.PROFILE.GET}`, {
         credentials: "include",
       })
       if (response.ok) {
@@ -47,7 +49,8 @@ export default function SettingsPage() {
 
   const fetchBankAccount = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/bank-account`, {
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || ""
+      const response = await fetch(`${apiUrl}${ENDPOINTS.BANK_ACCOUNT.GET}`, {
         credentials: "include",
       })
       if (response.ok) {
@@ -61,7 +64,8 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/profile`, {
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || ""
+      const response = await fetch(`${apiUrl}${ENDPOINTS.PROFILE.UPDATE}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -81,7 +85,8 @@ export default function SettingsPage() {
     formData.append("logo", file)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/profile/logo`, {
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || ""
+      const response = await fetch(`${apiUrl}${ENDPOINTS.PROFILE.UPLOAD_LOGO}`, {
         method: "POST",
         credentials: "include",
         body: formData,

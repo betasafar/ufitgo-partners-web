@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
+import { ENDPOINTS } from "@/lib/api-endpoints"
 
 export async function GET() {
   try {
@@ -10,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const response = await fetch(`${process.env.BACKEND_API_URL}/operator/bookings`, {
+    const response = await fetch(`${process.env.BACKEND_API_URL}${ENDPOINTS.BOOKINGS.LIST}`, {
       headers: {
         Authorization: `Bearer ${token.value}`,
       },

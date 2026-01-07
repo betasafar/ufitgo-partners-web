@@ -15,7 +15,7 @@
 **Location**: `lib/types.ts`, `lib/api-proxy.ts`
 
 **Deliverables**:
-```typescript
+\`\`\`typescript
 // Add tier-related types
 export type TierLevel = 'BRONZE' | 'SILVER' | 'GOLD'
 export type VerificationStatus = 'pending' | 'under_review' | 'approved' | 'rejected'
@@ -56,7 +56,7 @@ export interface OperatorWithTier extends Operator {
   completedTrips: number
   activeBookings: number
 }
-```
+\`\`\`
 
 **API Endpoints to Add**:
 - `GET /api/proxy/operator/tier` - Get current tier info
@@ -78,7 +78,7 @@ export interface OperatorWithTier extends Operator {
 **Location**: `components/tier-badge.tsx`
 
 **Deliverables**:
-```typescript
+\`\`\`typescript
 // Visual tier indicator with hover tooltip
 <TierBadge 
   tier="SILVER" 
@@ -86,7 +86,7 @@ export interface OperatorWithTier extends Operator {
   showLabel={true}
   interactive={true} // Shows tooltip on hover
 />
-```
+\`\`\`
 
 **Design Specs**:
 - **BRONZE**: Amber/brown color (#CD7F32), bronze medal icon
@@ -109,13 +109,13 @@ export interface OperatorWithTier extends Operator {
 **Location**: `components/trust-badges.tsx`
 
 **Deliverables**:
-```typescript
+\`\`\`typescript
 <TrustBadges 
   badges={operator.trustBadges}
   maxVisible={5}
   expandable={true}
 />
-```
+\`\`\`
 
 **Badge Types**:
 - Early Adopter (bronze badge)
@@ -144,7 +144,7 @@ export interface OperatorWithTier extends Operator {
 - Feature usage indicator (e.g., "3/5 active packages used")
 
 **Layout**:
-```
+\`\`\`
 ┌─────────────────────────────────────────┐
 │  🥈 SILVER TIER        Trust Score: 78  │
 │                        ████████░░ 78/100│
@@ -157,7 +157,7 @@ export interface OperatorWithTier extends Operator {
 │                                         │
 │  [📄 Upload Docs] [🎯 View Benefits]   │
 └─────────────────────────────────────────┘
-```
+\`\`\`
 
 ### 3.2 Tier Comparison Modal
 **Location**: `components/tier-comparison-modal.tsx`
@@ -224,7 +224,7 @@ export interface OperatorWithTier extends Operator {
 **Location**: `app/dashboard/verification/page.tsx`
 
 **Deliverables**:
-```typescript
+\`\`\`typescript
 // Document upload interface
 ┌─────────────────────────────────────────────────┐
 │ Verification Documents                    2/4 ✓ │
@@ -245,7 +245,7 @@ export interface OperatorWithTier extends Operator {
 │    Required for GOLD tier                       │
 │                                                 │
 └─────────────────────────────────────────────────┘
-```
+\`\`\`
 
 **Features**:
 - Document type cards with status indicators
@@ -267,11 +267,11 @@ export interface OperatorWithTier extends Operator {
 - Admin feedback display for rejections
 
 **Visual Design**:
-```
+\`\`\`
 Upload → Under Review → Approved
   ●━━━━━━━●━━━━━━━○
   ✓       ⏳       
-```
+\`\`\`
 
 ---
 
@@ -324,7 +324,7 @@ Upload → Under Review → Approved
 **Location**: `app/dashboard/upgrade/page.tsx`
 
 **Deliverables**:
-```
+\`\`\`
 Your Path to SILVER Tier
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -337,7 +337,7 @@ Your Path to SILVER Tier
 Progress: 40% ████░░░░░░
 
 [📄 Upload Documents] [💬 Contact Support]
-```
+\`\`\`
 
 **Features**:
 - Checklist with real-time progress updates
@@ -527,7 +527,7 @@ Progress: 40% ████░░░░░░
 ## Technical Implementation Notes
 
 ### State Management
-```typescript
+\`\`\`typescript
 // Use React Context for tier info across the app
 const TierContext = createContext<TierContextValue | null>(null)
 
@@ -552,10 +552,10 @@ export function useTier() {
   if (!context) throw new Error('useTier must be used within TierProvider')
   return context
 }
-```
+\`\`\`
 
 ### Feature Gating Utility
-```typescript
+\`\`\`typescript
 // Reusable hook for feature access checks
 export function useFeatureAccess(featureName: string) {
   const { tierInfo } = useTier()
@@ -584,7 +584,7 @@ function CreatePackageButton() {
   
   return <Button>Create Custom Package</Button>
 }
-```
+\`\`\`
 
 ### Caching Strategy
 - **Tier Info**: Cache in React Context, revalidate every 5 minutes
@@ -593,13 +593,13 @@ function CreatePackageButton() {
 - **Tier Configuration**: Cache for 1 hour, invalidate on admin change
 
 ### Analytics Tracking
-```typescript
+\`\`\`typescript
 // Track tier-related events
 trackEvent('tier_upgrade_started', { from: 'BRONZE', to: 'SILVER' })
 trackEvent('document_uploaded', { type: 'HAJJ_LICENSE', tier: 'BRONZE' })
 trackEvent('tier_limit_reached', { limit: 'max_packages', tier: 'SILVER' })
 trackEvent('feature_locked_clicked', { feature: 'custom_pricing', tier: 'BRONZE' })
-```
+\`\`\`
 
 ---
 

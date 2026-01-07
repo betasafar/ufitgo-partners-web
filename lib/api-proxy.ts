@@ -1,5 +1,6 @@
 import { cookies } from "next/headers"
 import { cache } from "react"
+import { ENDPOINTS } from "./api-endpoints"
 
 const API_BASE_URL = process.env.BACKEND_API_URL || "http://localhost:3001/api"
 
@@ -38,7 +39,7 @@ export const getCurrentUser = cache(async () => {
     const token = cookieStore.get("auth_token")?.value
     if (token) {
       console.log("[v0] No cookie data, attempting to fetch from API")
-      return await apiRequest("/operator/profile", {
+      return await apiRequest(ENDPOINTS.OPERATOR.PROFILE, {
         next: { revalidate: 300 }, // Cache for 5 minutes
       })
     }
@@ -108,3 +109,91 @@ export const apiRequest = cache(async (endpoint: string, options: RequestInit = 
     throw new APIError("Network request failed", 500)
   }
 })
+
+export const getTierInfo = cache(async (): Promise<any | null> => {
+  try {
+    return await apiRequest(ENDPOINTS.TIER.INFO, {
+      next: { revalidate: 300 }, // Cache for 5 minutes
+    })
+  } catch (error) {
+    console.error("[v0] Failed to get tier info:", error)
+    return null
+  }
+})
+
+export const getVerificationDocuments = cache(async (): Promise<any[]> => {
+  try {
+    const response = await apiRequest(ENDPOINTS.DOCUMENTS.LIST, {
+      next: { revalidate: 60 },
+    })
+    return response.documents || []
+  } catch (error) {
+    console.error("[v0] Failed to get verification documents:", error)
+    return []
+  }
+})
+
+export const getTrustBadges = cache(async (): Promise<any[]> => {
+  try {
+    const response = await apiRequest(ENDPOINTS.METRICS.BADGES, {
+      next: { revalidate: 300 },
+    })
+    return response.badges || []
+  } catch (error) {
+    console.error("[v0] Failed to get trust badges:", error)
+    return []
+  }
+})
+
+export const getOperatorMetrics = cache(async () => {
+  try {
+    return await apiRequest(ENDPOINTS.METRICS.OVERVIEW, {
+      next: { revalidate: 120 },
+    })
+  } catch (error) {
+    console.error("[v0] Failed to get operator metrics:", error)
+    return {
+      totalBookings: 0,
+      successfulBookings: 0,
+      cancelledBookings: 0,
+      monthlyBookingsCount: 0,
+      activePackagesCount: 0,
+      trustScore: 0,
+    }
+  }
+})
+
+export const getTierComparison = cache(async () => {
+  try {
+    return await apiRequest(ENDPOINTS.TIER.COMPARISON, {
+      next: { revalidate: 3600 }, // Cache for 1 hour
+    })
+  } catch (error) {
+    console.error("[v0] Failed to get tier comparison:", error)
+    return null
+  }
+})
+
+export const getUpgradeEligibility = cache(async () => {
+  try {
+    return await apiRequest(ENDPOINTS.TIER.UPGRADE_ELIGIBILITY, {
+      next: { revalidate: 300 },
+    })
+  } catch (error) {
+    console.error("[v0] Failed to get upgrade eligibility:", error)
+    return null
+  }
+})
+
+export const getTierRestrictions = cache(async () => {
+  try {
+    return await apiRequest(ENDPOINTS.TIER.RESTRICTIONS, {
+      next: { revalidate: 300 },
+    })
+  } catch (error) {
+    console.error("[v0] Failed to get tier restrictions:", error)
+    return null
+  }
+})
+
+export { buildEndpoint, ENDPOINTS } from "./api-endpoints"

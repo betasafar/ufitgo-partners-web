@@ -9,6 +9,16 @@ export interface Operator {
   cacRegistration: string
   nahconLicense: string
   role: "operator"
+  tier: TierLevel
+  tierInfo: TierInfo
+  trustScore: number
+  trustBadges: TrustBadge[]
+  documents: VerificationDocument[]
+  totalBookings: number
+  successfulBookings: number
+  cancelledBookings: number
+  monthlyBookingsCount: number
+  activePackagesCount: number
 }
 
 export interface Package {
@@ -66,7 +76,6 @@ export interface DashboardStats {
   seatsFilled: number
   totalSeats: number
   revenueProjected: number
-  
 }
 
 export interface RevenueDataPoint {
@@ -126,4 +135,60 @@ export interface PaymentStats {
   paymentsDue: number
   successRate: number
   successChange: number
+}
+
+export type TierLevel = "BRONZE" | "SILVER" | "GOLD"
+export type VerificationStatus = "pending" | "under_review" | "approved" | "rejected"
+
+export interface TierInfo {
+  level: TierLevel
+  maxPilgrimsPerBooking: number
+  maxActivePackages: number
+  maxMonthlyBookings: number
+  requiresEscrow: boolean
+  canCreateCustomPackages: boolean
+  hasAnalyticsAccess: boolean
+  hasPrioritySupport: boolean
+  features: string[]
+}
+
+export interface VerificationDocument {
+  id: number
+  type: "HAJJ_LICENSE" | "CAC_CERTIFICATE" | "TAX_CLEARANCE" | "BANK_STATEMENT"
+  status: VerificationStatus
+  fileUrl: string
+  uploadedAt: string
+  reviewedAt?: string
+  reviewedBy?: string
+  rejectionReason?: string
+}
+
+export interface TrustBadge {
+  id: string
+  name: string
+  description: string
+  icon: string
+  earnedAt: string
+  category: "performance" | "milestone" | "special"
+}
+
+export interface OperatorWithTier extends Operator {
+  tier: TierLevel
+  tierInfo: TierInfo
+  trustScore: number
+  trustBadges: TrustBadge[]
+  documents: VerificationDocument[]
+  totalBookings: number
+  successfulBookings: number
+  cancelledBookings: number
+  monthlyBookingsCount: number
+  activePackagesCount: number
+}
+
+export interface TierUpgradeRequirement {
+  id: string
+  description: string
+  completed: boolean
+  progress?: number
+  total?: number
 }

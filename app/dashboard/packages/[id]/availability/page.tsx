@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { CalendarIcon, Clock, HelpCircle } from "lucide-react"
+import { buildEndpoint, ENDPOINTS } from "@/lib/api-endpoints"
 
 export default function PackageAvailabilityPage({ params }: { params: { id: string } }) {
   const [packageData, setPackageData] = useState<any>(null)
@@ -23,9 +24,12 @@ export default function PackageAvailabilityPage({ params }: { params: { id: stri
 
   const fetchPackageDetails = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/packages/${params.id}`, {
-        credentials: "include",
-      })
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}${buildEndpoint(ENDPOINTS.PACKAGES.BY_ID, { id: params.id })}`,
+        {
+          credentials: "include",
+        },
+      )
       if (response.ok) {
         const data = await response.json()
         setPackageData(data)
@@ -45,7 +49,7 @@ export default function PackageAvailabilityPage({ params }: { params: { id: stri
   const handleUpdateAvailability = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/packages/${params.id}/availability`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}${buildEndpoint(ENDPOINTS.PACKAGES.BY_ID, { id: params.id })}/availability`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

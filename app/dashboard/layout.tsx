@@ -2,16 +2,16 @@ import type React from "react"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { SessionTimeoutDialog } from "@/components/session-timeout-dialog"
-import { getCurrentUser } from "@/lib/api-proxy"
+import { getCurrentUser, getTierInfo, getOperatorMetrics } from "@/lib/api-proxy"
 import { Suspense } from "react"
-import type { Operator } from "@/lib/types"
+import type { OperatorWithTier, TierLevel } from "@/lib/types"
 
 export const metadata = {
   title: "Dashboard - TravelOps",
   description: "Operator dashboard",
 }
 
-async function getOperator(): Promise<Operator> {
+async function getOperator(): Promise<OperatorWithTier> {
   try {
     const userData = await getCurrentUser()
 
@@ -27,8 +27,33 @@ async function getOperator(): Promise<Operator> {
         cacRegistration: "",
         nahconLicense: "",
         role: "operator",
+        tier: "BRONZE" as TierLevel,
+        tierInfo: {
+          level: "BRONZE" as TierLevel,
+          maxPilgrimsPerBooking: 50,
+          maxActivePackages: 5,
+          maxMonthlyBookings: 50,
+          requiresEscrow: true,
+          canCreateCustomPackages: false,
+          hasAnalyticsAccess: false,
+          hasPrioritySupport: false,
+          features: [],
+        },
+        trustScore: 0,
+        trustBadges: [],
+        documents: [],
+        totalBookings: 0,
+        successfulBookings: 0,
+        cancelledBookings: 0,
+        monthlyBookingsCount: 0,
+        activePackagesCount: 0,
       }
     }
+
+    const [tierResult, metricsResult] = await Promise.allSettled([getTierInfo(), getOperatorMetrics()])
+
+    const tierData = tierResult.status === "fulfilled" ? tierResult.value : null
+    const metrics = metricsResult.status === "fulfilled" ? metricsResult.value : null
 
     return {
       id: String(userData.id),
@@ -41,6 +66,26 @@ async function getOperator(): Promise<Operator> {
       cacRegistration: userData.cacRegistration || userData.cac_registration || "",
       nahconLicense: userData.nahconLicense || userData.nahcon_license || "",
       role: "operator",
+      tier: tierData?.tier || userData.tier || "BRONZE",
+      tierInfo: tierData?.tierInfo || {
+        level: userData.tier || "BRONZE",
+        maxPilgrimsPerBooking: 50,
+        maxActivePackages: 5,
+        maxMonthlyBookings: 50,
+        requiresEscrow: true,
+        canCreateCustomPackages: false,
+        hasAnalyticsAccess: false,
+        hasPrioritySupport: false,
+        features: [],
+      },
+      trustScore: metrics?.trustScore || tierData?.trustScore || 0,
+      trustBadges: tierData?.badges || [],
+      documents: tierData?.documents || [],
+      totalBookings: metrics?.totalBookings || 0,
+      successfulBookings: metrics?.successfulBookings || 0,
+      cancelledBookings: metrics?.cancelledBookings || 0,
+      monthlyBookingsCount: metrics?.monthlyBookingsCount || 0,
+      activePackagesCount: metrics?.activePackagesCount || 0,
     }
   } catch (error) {
     console.error("[v0] Failed to load operator:", error)
@@ -54,6 +99,26 @@ async function getOperator(): Promise<Operator> {
       cacRegistration: "",
       nahconLicense: "",
       role: "operator",
+      tier: "BRONZE" as TierLevel,
+      tierInfo: {
+        level: "BRONZE" as TierLevel,
+        maxPilgrimsPerBooking: 50,
+        maxActivePackages: 5,
+        maxMonthlyBookings: 50,
+        requiresEscrow: true,
+        canCreateCustomPackages: false,
+        hasAnalyticsAccess: false,
+        hasPrioritySupport: false,
+        features: [],
+      },
+      trustScore: 0,
+      trustBadges: [],
+      documents: [],
+      totalBookings: 0,
+      successfulBookings: 0,
+      cancelledBookings: 0,
+      monthlyBookingsCount: 0,
+      activePackagesCount: 0,
     }
   }
 }

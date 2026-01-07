@@ -21,6 +21,7 @@ import {
   Clock,
 } from "lucide-react"
 import type { Operator } from "@/lib/types"
+import { TierBadge } from "@/components/tier-badge"
 import { useState } from "react"
 
 interface DashboardSidebarProps {
@@ -103,7 +104,7 @@ export function DashboardSidebar({ operator }: DashboardSidebarProps) {
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
             <span className="text-xl">✈️</span>
           </div>
-          <div>
+          <div className="flex-1">
             <div className="font-bold text-sidebar-foreground">{operator.companyName}</div>
             <div className="text-xs text-muted-foreground">
               {operator.verified ? (
@@ -114,6 +115,11 @@ export function DashboardSidebar({ operator }: DashboardSidebarProps) {
             </div>
           </div>
         </div>
+        {"tier" in operator && operator.tier && (
+          <div className="mt-3">
+            <TierBadge tier={operator.tier} size="sm" showLabel={true} interactive={true} />
+          </div>
+        )}
       </div>
 
       {/* Navigation */}

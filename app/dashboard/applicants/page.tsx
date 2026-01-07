@@ -8,6 +8,7 @@ import Link from "next/link"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { ENDPOINTS } from "@/lib/api-endpoints"
 
 interface Booking {
   id: number
@@ -40,9 +41,8 @@ export default function ApplicantsPage() {
 
   const fetchBookings = async () => {
     try {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.BACKEND_API_URL || "http://localhost:5000/api"
-      const response = await fetch(`${apiUrl}/operator/bookings`, {
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.BACKEND_API_URL || "http://localhost:5000"
+      const response = await fetch(`${apiUrl}${ENDPOINTS.BOOKINGS.LIST}`, {
         credentials: "include",
       })
 

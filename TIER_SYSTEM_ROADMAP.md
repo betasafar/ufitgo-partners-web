@@ -14,7 +14,7 @@
 
 **File:** `backend/src/operators/entities/operator.entity.ts`
 
-```typescript
+\`\`\`typescript
 // New fields to add
 tier: OperatorTier // ENUM: BRONZE, SILVER, GOLD
 verificationStatus: VerificationStatus // ENUM: pending, under_review, approved, rejected, suspended
@@ -30,7 +30,7 @@ suspensionReason: string | null
 licenseNumber: string | null
 licenseExpiryDate: Date | null
 escrowAccountStatus: EscrowStatus // ENUM: not_required, pending, active, suspended
-```
+\`\`\`
 
 **Indexes to create:**
 - `tier` + `verificationStatus` (for fast filtering)
@@ -41,7 +41,7 @@ escrowAccountStatus: EscrowStatus // ENUM: not_required, pending, active, suspen
 
 **File:** `backend/src/operators/entities/operator-document.entity.ts`
 
-```typescript
+\`\`\`typescript
 OperatorDocument {
   id: number
   operatorId: number
@@ -57,13 +57,13 @@ OperatorDocument {
   rejectionReason: string | null
   expiryDate: Date | null // For licenses
 }
-```
+\`\`\`
 
 ### 1.3 Create Trust Badge Entity
 
 **File:** `backend/src/operators/entities/operator-badge.entity.ts`
 
-```typescript
+\`\`\`typescript
 OperatorBadge {
   id: number
   operatorId: number
@@ -72,13 +72,13 @@ OperatorBadge {
   expiresAt: Date | null
   isVisible: boolean
 }
-```
+\`\`\`
 
 ### 1.4 Create Tier Configuration Entity
 
 **File:** `backend/src/config/entities/tier-config.entity.ts`
 
-```typescript
+\`\`\`typescript
 TierConfiguration {
   id: number
   tier: OperatorTier
@@ -92,14 +92,14 @@ TierConfiguration {
   updatedAt: Date
   updatedBy: number // Admin ID
 }
-```
+\`\`\`
 
 **Default values:**
-```
+\`\`\`
 BRONZE: { maxBookingsPerMonth: 50, maxPilgrimsPerBooking: 100, escrowRequired: true, escrowPercentage: 100 }
 SILVER: { maxBookingsPerMonth: 200, maxPilgrimsPerBooking: 500, escrowRequired: false }
 GOLD: { maxBookingsPerMonth: null, maxPilgrimsPerBooking: null, escrowRequired: false }
-```
+\`\`\`
 
 ---
 
@@ -109,7 +109,7 @@ GOLD: { maxBookingsPerMonth: null, maxPilgrimsPerBooking: null, escrowRequired: 
 
 **File:** `backend/src/common/guards/tier.guard.ts`
 
-```typescript
+\`\`\`typescript
 @Injectable()
 export class TierGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
@@ -119,7 +119,7 @@ export class TierGuard implements CanActivate {
     // Return true/false with detailed error messages
   }
 }
-```
+\`\`\`
 
 ### 2.2 Create Booking Limit Service
 
@@ -137,7 +137,7 @@ export class TierGuard implements CanActivate {
 **File:** `backend/src/bookings/bookings.service.ts`
 
 **Add checks before creating booking:**
-```typescript
+\`\`\`typescript
 async create(createBookingDto) {
   // 1. Check operator tier restrictions
   const canBook = await this.tierRestrictionService.canCreateBooking(operatorId)
@@ -159,7 +159,7 @@ async create(createBookingDto) {
   
   // 4. Proceed with booking creation
 }
-```
+\`\`\`
 
 ### 2.4 Create Verification Workflow Service
 
@@ -179,7 +179,7 @@ async create(createBookingDto) {
 
 ### 3.1 Operator Onboarding Endpoints
 
-```
+\`\`\`
 POST   /api/operator/auth/register
   - Creates operator with BRONZE tier by default
   - verificationStatus = 'pending'
@@ -192,11 +192,11 @@ GET    /api/operator/tier/restrictions
   
 GET    /api/operator/tier/upgrade-requirements
   - Returns what's needed to upgrade to next tier
-```
+\`\`\`
 
 ### 3.2 Document Management Endpoints
 
-```
+\`\`\`
 POST   /api/operator/documents/upload
   - Body: { documentType, file }
   - Stores in cloud storage (Vercel Blob)
@@ -210,11 +210,11 @@ DELETE /api/operator/documents/:id
 POST   /api/operator/verification/submit
   - Submits all documents for admin review
   - Changes verificationStatus to 'under_review'
-```
+\`\`\`
 
 ### 3.3 Admin Review Endpoints
 
-```
+\`\`\`
 GET    /api/admin/operators/pending-verification
   - List operators awaiting review
   
@@ -232,11 +232,11 @@ POST   /api/admin/operators/:id/tier/upgrade
 POST   /api/admin/operators/:id/suspend
   - Body: { reason: string }
   - Suspends operator
-```
+\`\`\`
 
 ### 3.4 Escrow Management Endpoints
 
-```
+\`\`\`
 POST   /api/operator/escrow/activate
   - Initiates escrow account setup
   
@@ -248,7 +248,7 @@ POST   /api/operator/escrow/deposit
   
 POST   /api/operator/escrow/release/:bookingId
   - Releases escrow after trip completion
-```
+\`\`\`
 
 ---
 
@@ -259,7 +259,7 @@ POST   /api/operator/escrow/release/:bookingId
 **File:** `backend/src/operators/services/trust-score.service.ts`
 
 **Algorithm:**
-```typescript
+\`\`\`typescript
 trustScore = (
   completedTrips * 10 +                    // 10 points per completed trip
   totalPilgrims * 0.1 +                    // 0.1 point per pilgrim
@@ -268,7 +268,7 @@ trustScore = (
   verificationBonus +                       // +20 if GOLD, +10 if SILVER
   badgeCount * 5                            // +5 per badge
 ) / 100 * 100 // Normalize to 0-100
-```
+\`\`\`
 
 **Update triggers:**
 - After trip completion
@@ -292,7 +292,7 @@ trustScore = (
 **File:** `backend/src/operators/services/tier-upgrade.service.ts`
 
 **Criteria for auto-upgrade:**
-```typescript
+\`\`\`typescript
 BRONZE → SILVER:
   - completedTrips >= 10
   - trustScore >= 60
@@ -305,7 +305,7 @@ SILVER → GOLD:
   - avgRating >= 4.5
   - License verified
   - No disputes in last 6 months
-```
+\`\`\`
 
 **Cron job:** Runs daily at 2 AM to check upgrade eligibility
 
@@ -409,12 +409,12 @@ SILVER → GOLD:
 
 **File:** `backend/src/config/feature-flags.ts`
 
-```typescript
+\`\`\`typescript
 TIER_SYSTEM_ENABLED: boolean
 AUTO_UPGRADE_ENABLED: boolean
 ESCROW_REQUIRED_FOR_BRONZE: boolean
 STRICT_VERIFICATION_MODE: boolean
-```
+\`\`\`
 
 ### 7.3 Analytics & Metrics
 
@@ -442,7 +442,7 @@ STRICT_VERIFICATION_MODE: boolean
 - Week 5+: Full system active
 
 ### Step 3: Data Migration
-```sql
+\`\`\`sql
 -- Set existing operators to GOLD tier with verified status
 UPDATE operators 
 SET tier = 'GOLD', 
@@ -454,7 +454,7 @@ WHERE joinedAt < '2025-01-01';
 -- New operators default to BRONZE
 ALTER TABLE operators 
 ALTER COLUMN tier SET DEFAULT 'BRONZE';
-```
+\`\`\`
 
 ---
 

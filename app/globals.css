@@ -95,3 +95,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Adding shine animation for GOLD tier badge */
+@keyframes shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shine {
+  animation: shine 3s ease-in-out infinite;
+}

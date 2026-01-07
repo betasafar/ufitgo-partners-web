@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Legend } from "recharts"
 import { TrendingUp, TrendingDown, Download } from "lucide-react"
+import { ENDPOINTS } from "@/lib/api-endpoints"
 
 interface DashboardStats {
   totalRevenue: number
@@ -57,22 +58,22 @@ export default function FinancialPage() {
         const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:3001"
 
         // Fetch dashboard stats
-        const statsRes = await fetch(`${apiUrl}/operator/reports/dashboard-stats`)
+        const statsRes = await fetch(`${apiUrl}${ENDPOINTS.REPORTS.DASHBOARD_STATS}`)
         const statsData = await statsRes.json()
         setStats(statsData)
 
         // Fetch revenue flow data
-        const revenueRes = await fetch(`${apiUrl}/operator/reports/revenue-flow?period=monthly`)
+        const revenueRes = await fetch(`${apiUrl}${ENDPOINTS.REPORTS.REVENUE_FLOW}?period=monthly`)
         const revenueFlowData = await revenueRes.json()
         setRevenueData(Array.isArray(revenueFlowData) ? revenueFlowData : [])
 
         // Fetch popular packages
-        const packagesRes = await fetch(`${apiUrl}/operator/reports/popular-packages?limit=3`)
+        const packagesRes = await fetch(`${apiUrl}${ENDPOINTS.REPORTS.POPULAR_PACKAGES}?limit=3`)
         const packagesData = await packagesRes.json()
         setTopPackages(Array.isArray(packagesData) ? packagesData : packagesData?.packages || [])
 
         // Fetch recent transactions (using wallet endpoint)
-        const transactionsRes = await fetch(`${apiUrl}/operator/wallet/transactions?limit=5`)
+        const transactionsRes = await fetch(`${apiUrl}${ENDPOINTS.WALLET.TRANSACTIONS}?limit=5`)
         const transactionsData = await transactionsRes.json()
         setTransactions(Array.isArray(transactionsData) ? transactionsData : transactionsData?.transactions || [])
       } catch (error) {
