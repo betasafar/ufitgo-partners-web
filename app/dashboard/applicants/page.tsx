@@ -9,6 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { ENDPOINTS } from "@/lib/api-endpoints"
+import { TierLimitIndicator } from "@/components/tier-limit-indicator"
+import { getTierInfo } from "@/lib/api-proxy"
+import type { TierInfo } from "@/lib/types"
 
 interface Booking {
   id: number
@@ -29,6 +32,7 @@ interface Booking {
 export default function ApplicantsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
+  const [tierInfo, setTierInfo] = useState<TierInfo | null>(null)
   const [stats, setStats] = useState({
     total: 0,
     visasProcessed: 0,
@@ -37,6 +41,7 @@ export default function ApplicantsPage() {
 
   useEffect(() => {
     fetchBookings()
+    fetchTierInfo()
   }, [])
 
   const fetchBookings = async () => {
@@ -66,6 +71,15 @@ export default function ApplicantsPage() {
       console.error("Failed to fetch bookings:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchTierInfo = async () => {
+    try {
+      const data = await getTierInfo()
+      setTierInfo(data.tierInfo)
+    } catch (error) {
+      console.error("Failed to fetch tier info:", error)
     }
   }
 
@@ -181,6 +195,16 @@ export default function ApplicantsPage() {
         </div>
       </div>
 
+      {/* Booking Limit Indicator */}
+      {tierInfo && (
+        <TierLimitIndicator
+          current={tierInfo.monthlyBookingsCount || 0}
+          limit={tierInfo.maxMonthlyBookings}
+          label="Monthly Bookings"
+          type="bookings"
+        />
+      )}
+
       {/* Search and Filters */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
@@ -196,7 +220,12 @@ export default function ApplicantsPage() {
         <Button variant="outline" size="icon">
           <Filter className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="icon">
+        <Button
+          variant="outline"
+          size="icon"
+          disabled={tierInfo?.level === "BRONZE"}
+          title={tierInfo?.level === "BRONZE" ? "Upgrade to SILVER for export" : "Export data"}
+        >
           <Download className="h-4 w-4" />
         </Button>
       </div>

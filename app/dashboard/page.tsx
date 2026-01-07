@@ -4,7 +4,7 @@ import { VerificationBanner } from "@/components/verification-banner"
 import { RevenueChart } from "@/components/revenue-chart"
 import { UrgentTasks } from "@/components/urgent-tasks"
 import { RecentApplicants } from "@/components/recent-applicants"
-import { TierOverviewCard } from "@/components/tier-overview-card"
+import { AccountStatusCard } from "@/components/account-status-card"
 import { Suspense } from "react"
 import { apiRequest, getCurrentUser, getTierInfo, getOperatorMetrics } from "@/lib/api-proxy"
 
@@ -133,7 +133,7 @@ export default async function DashboardPage() {
           <RecentApplicants bookings={recentBookings} />
         </div>
         <div className="space-y-6">
-          {operator && <TierOverviewCard operator={operator} />}
+          {operator && <AccountStatusCard operator={operator} />}
           <Suspense fallback={<div className="animate-pulse h-48 bg-muted/10 rounded-lg" />}>
             <UrgentTasks />
           </Suspense>
