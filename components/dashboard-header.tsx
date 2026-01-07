@@ -37,12 +37,10 @@ export function DashboardHeader({ operator }: DashboardHeaderProps) {
       })
 
       if (response.ok) {
-        // Clear any client-side storage
         if (typeof window !== "undefined") {
           localStorage.clear()
           sessionStorage.clear()
         }
-        // Redirect to login
         router.push("/login")
         router.refresh()
       } else {

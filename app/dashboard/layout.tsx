@@ -18,9 +18,9 @@ async function getOperator(): Promise<Operator> {
     if (!userData) {
       console.warn("[v0] No user data available, using fallback")
       return {
-        id: "guest",
-        companyName: "Loading...",
-        email: "operator@travelops.com",
+        id: "0",
+        companyName: "Guest User",
+        email: "guest@travelops.com",
         phone: "",
         verified: false,
         verificationStatus: "pending",
@@ -32,20 +32,20 @@ async function getOperator(): Promise<Operator> {
 
     return {
       id: String(userData.id),
-      companyName: userData.companyName || "Travel Agency",
+      companyName: userData.companyName || userData.company_name || "Travel Agency",
       email: userData.email,
-      phone: userData.phone || "",
-      logo: userData.logo,
-      verified: userData.verificationStatus === "approved",
-      verificationStatus: userData.verificationStatus || "pending",
-      cacRegistration: userData.cacRegistration || "",
-      nahconLicense: userData.nahconLicense || "",
+      phone: userData.phone || userData.phoneNumber || "",
+      logo: userData.logo || userData.logoUrl,
+      verified: userData.verificationStatus === "approved" || userData.verified === true,
+      verificationStatus: userData.verificationStatus || userData.verification_status || "pending",
+      cacRegistration: userData.cacRegistration || userData.cac_registration || "",
+      nahconLicense: userData.nahconLicense || userData.nahcon_license || "",
       role: "operator",
     }
   } catch (error) {
     console.error("[v0] Failed to load operator:", error)
     return {
-      id: "error",
+      id: "0",
       companyName: "Travel Agency",
       email: "operator@travelops.com",
       phone: "",

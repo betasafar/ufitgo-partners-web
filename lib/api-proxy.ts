@@ -14,6 +14,43 @@ class APIError extends Error {
   }
 }
 
+export const getCurrentUser = cache(async () => {
+  try {
+    const cookieStore = await cookies()
+
+    // First, try to get operator data from cookie (stored during login)
+    const operatorDataCookie = cookieStore.get("operator_data")?.value
+
+    if (operatorDataCookie) {
+      try {
+        const operatorData = JSON.parse(operatorDataCookie)
+        console.log("[v0] User loaded from cookie:", {
+          email: operatorData.email,
+          company: operatorData.companyName,
+        })
+        return operatorData
+      } catch (parseError) {
+        console.error("[v0] Failed to parse operator_data cookie:", parseError)
+      }
+    }
+
+    // Fallback: Try to fetch from API if cookie not available
+    const token = cookieStore.get("auth_token")?.value
+    if (token) {
+      console.log("[v0] No cookie data, attempting to fetch from API")
+      return await apiRequest("/operator/profile", {
+        next: { revalidate: 300 }, // Cache for 5 minutes
+      })
+    }
+
+    console.warn("[v0] No authentication token or operator data found")
+    return null
+  } catch (error) {
+    console.error("[v0] Failed to get current user:", error)
+    return null
+  }
+})
+
 export const apiRequest = cache(async (endpoint: string, options: RequestInit = {}): Promise<any> => {
   try {
     const cookieStore = await cookies()
@@ -69,16 +106,5 @@ export const apiRequest = cache(async (endpoint: string, options: RequestInit = 
     })
 
     throw new APIError("Network request failed", 500)
-  }
-})
-
-export const getCurrentUser = cache(async () => {
-  try {
-    return await apiRequest("/operator/profile", {
-      next: { revalidate: 300 }, // Cache for 5 minutes
-    })
-  } catch (error) {
-    console.error("[v0] Failed to get current user:", error)
-    return null
   }
 })
