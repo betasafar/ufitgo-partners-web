@@ -3,7 +3,6 @@
 import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useLoading } from "@/contexts/loading-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,7 +11,6 @@ import { Eye, EyeOff, User, Lock } from "lucide-react"
 
 export function LoginForm() {
   const router = useRouter()
-  const { startLoading, stopLoading } = useLoading()
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -26,9 +24,6 @@ export function LoginForm() {
     e.preventDefault()
     setLoading(true)
     setError("")
-    startLoading()
-
-    console.log("[v0] Login attempt started")
 
     try {
       const response = await fetch("/api/auth/login", {
@@ -40,28 +35,19 @@ export function LoginForm() {
         }),
       })
 
-      console.log("[v0] Login response status:", response.status)
       const data = await response.json()
-      console.log("[v0] Login response data:", data)
 
       if (!response.ok) {
         throw new Error(data.message || "Login failed")
       }
 
       if (data.success) {
-        console.log("[v0] Login successful, redirecting to dashboard")
         router.push("/dashboard")
-        setTimeout(() => {
-          stopLoading()
-          setLoading(false)
-        }, 500)
       } else {
         throw new Error("Login failed - no success flag")
       }
     } catch (err) {
-      console.error("[v0] Login error:", err)
       setError(err instanceof Error ? err.message : "Login failed")
-      stopLoading()
       setLoading(false)
     }
   }

@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-import { useLoading } from "@/contexts/loading-context"
 import type { Operator } from "@/lib/types"
 
 interface DashboardHeaderProps {
@@ -23,7 +22,6 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ operator }: DashboardHeaderProps) {
   const router = useRouter()
-  const { startLoading, stopLoading } = useLoading()
 
   const initials = operator.companyName
     .split(" ")
@@ -33,7 +31,6 @@ export function DashboardHeader({ operator }: DashboardHeaderProps) {
     .slice(0, 2)
 
   const handleLogout = async () => {
-    startLoading()
     try {
       const response = await fetch("/api/auth/logout", {
         method: "POST",
@@ -44,16 +41,11 @@ export function DashboardHeader({ operator }: DashboardHeaderProps) {
           localStorage.clear()
         }
         router.push("/login")
-        setTimeout(() => {
-          stopLoading()
-        }, 500)
       } else {
         console.error("Logout failed")
-        stopLoading()
       }
     } catch (error) {
       console.error("Logout error:", error)
-      stopLoading()
     }
   }
 

@@ -1,11 +1,8 @@
 "use client"
 
-import type React from "react"
-
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { useLoading } from "@/contexts/loading-context"
 import {
   LayoutDashboard,
   Package,
@@ -71,27 +68,17 @@ const navigation = [
 
 export function DashboardSidebar({ operator }: DashboardSidebarProps) {
   const pathname = usePathname()
-  const { startLoading, stopLoading } = useLoading()
   const [loggingOut, setLoggingOut] = useState(false)
   const [expandedItems, setExpandedItems] = useState<string[]>(["Dashboard"])
 
   const handleLogout = async () => {
     setLoggingOut(true)
-    startLoading()
     try {
       await fetch("/api/auth/logout", { method: "POST" })
       window.location.href = "/login"
     } catch (error) {
       console.error("Logout failed:", error)
       setLoggingOut(false)
-      stopLoading()
-    }
-  }
-
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const href = e.currentTarget.getAttribute("href")
-    if (href && href !== pathname) {
-      startLoading()
     }
   }
 
@@ -161,7 +148,6 @@ export function DashboardSidebar({ operator }: DashboardSidebarProps) {
                         <Link
                           key={subItem.href}
                           href={subItem.href}
-                          onClick={handleNavClick}
                           className={cn(
                             "flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-sm",
                             isSubActive
@@ -180,12 +166,10 @@ export function DashboardSidebar({ operator }: DashboardSidebarProps) {
             )
           }
 
-          // Single item without submenu
           return (
             <Link
               key={item.name}
               href={item.href!}
-              onClick={handleNavClick}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
                 pathname === item.href
