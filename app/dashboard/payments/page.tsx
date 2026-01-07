@@ -1,16 +1,14 @@
-"use client"
-
-import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Download, Search, Filter, Calendar } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts"
+import { apiRequest } from "@/lib/api-server"
+import { RevenueFlowChart } from "@/components/revenue-flow-chart"
 
 interface PaymentStats {
-  monthlyCollected: number // This month's revenue from completed credits
-  pendingWithdrawals: number // Pending payout requests
+  monthlyCollected: number
+  pendingWithdrawals: number
   totalTransactions: number
   averageTransaction: number
 }
@@ -49,108 +47,41 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-export default function PaymentsPage() {
-  const [stats, setStats] = useState<PaymentStats | null>(null)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+async function getPaymentData() {
+  try {
+    const statsData = await apiRequest<PaymentStats>("/operator/wallet/payment-stats")
+    const txData = await apiRequest<Transaction[]>("/operator/wallet/transactions/filtered?limit=20&type=credit")
 
-  const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:5000/api"
-
-  useEffect(() => {
-    const fetchPaymentData = async () => {
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("auth_token="))
-        ?.split("=")[1]
-
-      console.log("[v0] Payments page - Token exists:", !!token)
-
-      if (!token) {
-        setError("Please log in to view payments")
-        setLoading(false)
-        return
-      }
-
-      try {
-        // 1. Fetch payment stats
-        const statsRes = await fetch(`${apiUrl}/operator/wallet/payment-stats`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
-
-        let monthlyCollected = 0
-        let pendingWithdrawals = 0
-        let totalTransactions = 0
-        let averageTransaction = 0
-
-        if (statsRes.ok) {
-          const data = await statsRes.json()
-          monthlyCollected = data.monthlyCollected || 0
-          pendingWithdrawals = data.pendingWithdrawals || 0
-          totalTransactions = data.totalTransactions || 0
-          averageTransaction = data.averageTransaction || 0
-        } else {
-          console.warn("Failed to fetch stats:", statsRes.status)
-        }
-
-        // 2. Fetch recent transactions
-        const txRes = await fetch(`${apiUrl}/operator/wallet/transactions/filtered?limit=20&type=credit`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        let txData: Transaction[] = []
-        if (txRes.ok) {
-          txData = await txRes.json()
-        }
-
-        setStats({
-          monthlyCollected,
-          pendingWithdrawals,
-          totalTransactions,
-          averageTransaction,
-        })
-        setTransactions(txData)
-      } catch (err) {
-        console.error("Error fetching payment data:", err)
-        setError("Failed to load payment data")
-      } finally {
-        setLoading(false)
-      }
+    return {
+      stats: statsData,
+      transactions: Array.isArray(txData) ? txData : [],
     }
+  } catch (error) {
+    console.error("[v0] Failed to load payment data:", error)
+    return {
+      stats: {
+        monthlyCollected: 0,
+        pendingWithdrawals: 0,
+        totalTransactions: 0,
+        averageTransaction: 0,
+      },
+      transactions: [],
+    }
+  }
+}
 
-    fetchPaymentData()
-  }, [apiUrl])
+export default async function PaymentsPage() {
+  const { stats, transactions } = await getPaymentData()
 
-  // Revenue flow mock (you can later add a real endpoint for historical data)
+  // Revenue flow mock
   const revenueFlow = [
     { month: "May", revenue: 18500000 },
     { month: "Jun", revenue: 22000000 },
     { month: "Jul", revenue: 25000000 },
     { month: "Aug", revenue: 28000000 },
     { month: "Sep", revenue: 30500000 },
-    { month: "Oct", revenue: stats?.monthlyCollected || 30000000 },
+    { month: "Oct", revenue: stats.monthlyCollected || 30000000 },
   ]
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-red-500">{error}</p>
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6">
@@ -183,13 +114,13 @@ export default function PaymentsPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
             </div>
             <span className="text-sm text-muted-foreground">THIS MONTH REVENUE</span>
           </div>
-          <div className="text-3xl font-bold mb-1">₦ {(stats?.monthlyCollected || 0) / 1000000}M</div>
+          <div className="text-3xl font-bold mb-1">₦ {(stats.monthlyCollected / 1000000).toFixed(1)}M</div>
           <div className="flex items-center gap-1 text-xs text-green-500">
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -213,7 +144,7 @@ export default function PaymentsPage() {
             </div>
             <span className="text-sm text-muted-foreground">PENDING PAYOUTS</span>
           </div>
-          <div className="text-3xl font-bold mb-1">₦ {(stats?.pendingWithdrawals || 0) / 1000000}M</div>
+          <div className="text-3xl font-bold mb-1">₦ {(stats.pendingWithdrawals / 1000000).toFixed(1)}M</div>
           <div className="flex items-center gap-1 text-xs text-orange-500">
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -242,7 +173,7 @@ export default function PaymentsPage() {
             </div>
             <span className="text-sm text-muted-foreground">TOTAL TRANSACTIONS</span>
           </div>
-          <div className="text-3xl font-bold mb-1">{stats?.totalTransactions || 0}</div>
+          <div className="text-3xl font-bold mb-1">{stats.totalTransactions}</div>
           <div className="text-xs text-muted-foreground">All time</div>
         </div>
 
@@ -256,7 +187,7 @@ export default function PaymentsPage() {
             </div>
             <span className="text-sm text-muted-foreground">AVG TRANSACTION</span>
           </div>
-          <div className="text-3xl font-bold mb-1">₦ {((stats?.averageTransaction || 0) / 1000).toFixed(0)}k</div>
+          <div className="text-3xl font-bold mb-1">₦ {((stats.averageTransaction || 0) / 1000).toFixed(0)}k</div>
           <div className="text-xs text-muted-foreground">Per booking payment</div>
         </div>
       </div>
@@ -264,40 +195,11 @@ export default function PaymentsPage() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Revenue Flow */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-lg p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-semibold">Revenue Flow</h2>
-              <p className="text-sm text-muted-foreground">Monthly earnings trend</p>
-            </div>
-            <div className="text-right">
-              <p className="text-3xl font-bold">₦ {((stats?.monthlyCollected || 0) / 1000000).toFixed(0)}M</p>
-              <p className="text-sm text-muted-foreground">This month</p>
-            </div>
-          </div>
-
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={revenueFlow}>
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                tickFormatter={(value) => `₦${value / 1000000}M`}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                }}
-                formatter={(value: number) => [`₦${(value / 1000000).toFixed(1)}M`, "Revenue"]}
-              />
-              <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="lg:col-span-2">
+          <RevenueFlowChart data={revenueFlow} currentMonthRevenue={stats.monthlyCollected} />
         </div>
 
-        {/* Payment Types - Still mock until you add breakdown endpoint */}
+        {/* Payment Types */}
         <div className="bg-card border border-border rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-2">Payment Types</h2>
           <p className="text-sm text-muted-foreground mb-6">Estimated distribution</p>
