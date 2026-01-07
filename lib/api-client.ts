@@ -1,15 +1,16 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:5000/api"
 
-export async function apiRequest<T>(endpoint: string, options: RequestInit = {}, showLoading = false): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`
+function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null
 
-  const token =
-    typeof window !== "undefined"
-      ? document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("auth_token="))
-          ?.split("=")[1]
-      : null
+  const cookies = document.cookie.split("; ")
+  const authCookie = cookies.find((row) => row.startsWith("auth_token="))
+  return authCookie ? authCookie.split("=")[1] : null
+}
+
+export async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint}`
+  const token = getAuthToken()
 
   console.log("[v0] Client API Request:", endpoint, "Token exists:", !!token)
 
@@ -30,13 +31,15 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {},
 
   if (!response.ok) {
     if (response.status === 401) {
+      console.error("[v0] Unauthorized - redirecting to login")
       if (typeof window !== "undefined") {
         window.location.href = "/login"
       }
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized - Please log in again")
     }
+
     const error = await response.json().catch(() => ({ message: "Request failed" }))
-    throw new Error(error.message || "Request failed")
+    throw new Error(error.message || `Request failed with status ${response.status}`)
   }
 
   return response.json()
