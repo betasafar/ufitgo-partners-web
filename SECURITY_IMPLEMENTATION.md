@@ -34,7 +34,7 @@ Benefits:
 - Automatic revalidation with `next: { revalidate: X }`
 
 ### 4. Request Caching Strategy
-```typescript
+\`\`\`typescript
 // User profile: 5 minutes cache (rarely changes)
 getCurrentUser() → revalidate: 300
 
@@ -43,7 +43,7 @@ getCurrentUser() → revalidate: 300
 
 // Transactions: 30 seconds cache (real-time needs)
 /transactions → revalidate: 30
-```
+\`\`\`
 
 ### 5. Error Handling
 - API errors don't expose sensitive information
@@ -59,7 +59,7 @@ getCurrentUser() → revalidate: 300
 
 ## File Structure
 
-```
+\`\`\`
 lib/
   ├── api-proxy.ts           # Server-side API with auth (uses next/headers)
   ├── api-client-secure.ts   # Client-side API through proxy
@@ -70,12 +70,12 @@ app/
   │   └── proxy/[...path]/   # Secure API proxy for client
   
   └── dashboard/             # All pages use server-side auth
-```
+\`\`\`
 
 ## Usage Examples
 
 ### Server Component (Recommended)
-```typescript
+\`\`\`typescript
 import { apiRequest } from "@/lib/api-proxy"
 
 export default async function Page() {
@@ -84,10 +84,10 @@ export default async function Page() {
   })
   return <div>{data}</div>
 }
-```
+\`\`\`
 
 ### Client Component (When needed)
-```typescript
+\`\`\`typescript
 "use client"
 import { apiClientRequest } from "@/lib/api-client-secure"
 
@@ -102,7 +102,7 @@ export function Component() {
   
   return <div>{data}</div>
 }
-```
+\`\`\`
 
 ## Security Checklist
 

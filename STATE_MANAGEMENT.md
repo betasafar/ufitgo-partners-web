@@ -6,7 +6,7 @@ This application uses a **cookie-based authentication** system with HTTP-only co
 
 ### Architecture Overview
 
-```
+\`\`\`
 ┌─────────────┐
 │   Login     │
 │   (POST)    │
@@ -29,7 +29,7 @@ This application uses a **cookie-based authentication** system with HTTP-only co
 │  Header & Sidebar       │
 │  (Display User Info)    │
 └─────────────────────────┘
-```
+\`\`\`
 
 ### State Management Rules
 
@@ -43,9 +43,9 @@ This application uses a **cookie-based authentication** system with HTTP-only co
    - NEVER used to store authentication tokens or user data
 
 3. **Data Flow**
-   ```
+   \`\`\`
    Login → Store in Cookie → Read from Cookie → Display in UI
-   ```
+   \`\`\`
 
 4. **Consistency**
    - All components receive operator data from the server layout
@@ -70,7 +70,7 @@ This application uses a **cookie-based authentication** system with HTTP-only co
 
 ### Cookie Structure
 
-```typescript
+\`\`\`typescript
 // Set during login
 cookies.set("auth_token", access_token, {
   httpOnly: true,      // Cannot be read by JavaScript
@@ -87,19 +87,19 @@ cookies.set("operator_data", JSON.stringify(operator), {
   maxAge: 604800,
   path: "/"
 })
-```
+\`\`\`
 
 ### Data Mapping
 
 The backend returns operator data in this format:
-```json
+\`\`\`json
 {
   "id": 1,
   "email": "elite@travels.com",
   "companyName": "Elite Hajj Travels",
   "verificationStatus": "approved"
 }
-```
+\`\`\`
 
 This is stored in cookies and mapped to the Operator type for consistent UI display.
 
