@@ -3,8 +3,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhos
 export async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
 
-  // Get JWT token from localStorage (client-side)
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+  const token =
+    typeof window !== "undefined"
+      ? document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("auth_token="))
+          ?.split("=")[1]
+      : null
 
   console.log("[v0] Client API Request:", endpoint, "Token exists:", !!token)
 
