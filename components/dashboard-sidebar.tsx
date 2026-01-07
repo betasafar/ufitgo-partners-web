@@ -8,7 +8,6 @@ import {
   Package,
   Users,
   CreditCard,
-  BarChart3,
   Settings,
   HelpCircle,
   LogOut,
@@ -34,7 +33,6 @@ const navigation = [
     icon: LayoutDashboard,
     subItems: [
       { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-      { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
       { name: "Financial", href: "/dashboard/financial", icon: DollarSign },
       { name: "Reports", href: "/dashboard/reports", icon: FileText },
     ],

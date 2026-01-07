@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -5,8 +8,63 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Bold, Italic, Underline, List, Link, ImageIcon, History, Send, Save, Eye, Plus } from "lucide-react"
+import { apiRequest } from "@/lib/api"
 
 export default function CommunicationsPage() {
+  const [packages, setPackages] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [formData, setFormData] = useState({
+    packageId: "all",
+    subject: "",
+    message: "",
+  })
+  const [sending, setSending] = useState(false)
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        const data = await apiRequest("/packages")
+        setPackages(data)
+      } catch (error) {
+        console.error("Failed to load packages:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPackages()
+  }, [])
+
+  const handleSendBroadcast = async () => {
+    if (!formData.subject || !formData.message) {
+      alert("Please fill in all fields")
+      return
+    }
+
+    setSending(true)
+    try {
+      await apiRequest("/notifications/send", {
+        method: "POST",
+        body: JSON.stringify({
+          title: formData.subject,
+          message: formData.message,
+          type: "BROADCAST",
+          priority: "MEDIUM",
+          channel: "EMAIL",
+          packageId: formData.packageId === "all" ? undefined : formData.packageId,
+        }),
+      })
+
+      alert("Broadcast sent successfully!")
+      setFormData({ packageId: "all", subject: "", message: "" })
+    } catch (error) {
+      console.error("Failed to send broadcast:", error)
+      alert("Failed to send broadcast. Please try again.")
+    } finally {
+      setSending(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -17,9 +75,11 @@ export default function CommunicationsPage() {
             compliance.
           </p>
         </div>
-        <Button variant="outline" className="gap-2 bg-transparent">
-          <History className="size-4" />
-          View History
+        <Button variant="outline" className="gap-2 bg-transparent" asChild>
+          <a href="/dashboard/communications/history">
+            <History className="size-4" />
+            View History
+          </a>
         </Button>
       </div>
 
@@ -39,15 +99,21 @@ export default function CommunicationsPage() {
                   <Label htmlFor="target-package" className="text-xs uppercase text-muted-foreground">
                     Target Package
                   </Label>
-                  <Select defaultValue="all">
+                  <Select
+                    value={formData.packageId}
+                    onValueChange={(value) => setFormData({ ...formData, packageId: value })}
+                    disabled={loading}
+                  >
                     <SelectTrigger id="target-package" className="mt-1.5 w-full">
                       <SelectValue placeholder="Select a recipient group..." />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Active Packages</SelectItem>
-                      <SelectItem value="premium-religious">Premium Religious Pilgrimage 2024</SelectItem>
-                      <SelectItem value="europe-tour">Europe Grand Tour Package</SelectItem>
-                      <SelectItem value="holy-land">Holy Land Experience 2024</SelectItem>
+                      {packages.map((pkg: any) => (
+                        <SelectItem key={pkg.id} value={pkg.id}>
+                          {pkg.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <p className="mt-1.5 text-xs text-yellow-600 flex items-start gap-1.5">
@@ -60,7 +126,13 @@ export default function CommunicationsPage() {
                   <Label htmlFor="subject" className="text-xs uppercase text-muted-foreground">
                     Subject Line
                   </Label>
-                  <Input id="subject" placeholder="e.g., Important Update Regarding Flight HA-402" className="mt-1.5" />
+                  <Input
+                    id="subject"
+                    placeholder="e.g., Important Update Regarding Flight HA-402"
+                    className="mt-1.5"
+                    value={formData.subject}
+                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  />
                 </div>
               </div>
             </CardContent>
@@ -99,7 +171,12 @@ export default function CommunicationsPage() {
                 <code className="px-2 py-1 bg-muted rounded text-foreground">{"{Passport_Number}"}</code>
               </div>
 
-              <Textarea placeholder="Type your message here..." className="min-h-[240px] resize-none" />
+              <Textarea
+                placeholder="Type your message here..."
+                className="min-h-[240px] resize-none"
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              />
 
               <div className="flex gap-3">
                 <Button variant="outline" className="gap-2 bg-transparent">
@@ -110,9 +187,9 @@ export default function CommunicationsPage() {
                   <Eye className="size-4" />
                   Preview
                 </Button>
-                <Button className="gap-2 ml-auto">
+                <Button className="gap-2 ml-auto" onClick={handleSendBroadcast} disabled={sending}>
                   <Send className="size-4" />
-                  Send Broadcast
+                  {sending ? "Sending..." : "Send Broadcast"}
                 </Button>
               </div>
             </CardContent>
@@ -130,7 +207,9 @@ export default function CommunicationsPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Package</span>
-                  <span className="text-foreground">Premium Religious Pilgrimage 2024</span>
+                  <span className="text-foreground">
+                    {formData.packageId === "all" ? "All Packages" : "Selected Package"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Status</span>
@@ -167,6 +246,7 @@ export default function CommunicationsPage() {
                   <button
                     key={template.title}
                     className="w-full text-left p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    onClick={() => setFormData({ ...formData, message: template.desc })}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">

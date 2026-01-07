@@ -1,243 +1,215 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, AlertCircle, Calendar, Download } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from "recharts"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-
-// Mock data - will be replaced with real API calls
-const financialStats = {
-  totalRevenue: 45000000,
-  totalBookings: 342,
-  outstandingBalance: 2150000,
-  visaSuccessRate: 98.5,
-  revenueChange: 12.5,
-  bookingsChange: 5,
-  overduePayments: 24,
-  nextFlightDays: 14,
-}
+import { Card, CardContent } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Legend } from "recharts"
+import { TrendingUp, TrendingDown, Download } from "lucide-react"
 
 const revenueData = [
-  { month: "Jan", revenue: 7200000, expenses: 4800000 },
-  { month: "Feb", revenue: 6800000, expenses: 4500000 },
-  { month: "Mar", revenue: 8100000, expenses: 5200000 },
-  { month: "Apr", revenue: 7900000, expenses: 4900000 },
-  { month: "May", revenue: 9500000, expenses: 5800000 },
-  { month: "Jun", revenue: 10200000, expenses: 6100000 },
+  { month: "Jan", revenue: 25000000, expenses: 18000000 },
+  { month: "Feb", revenue: 28000000, expenses: 19000000 },
+  { month: "Mar", revenue: 32000000, expenses: 21000000 },
+  { month: "Apr", revenue: 29000000, expenses: 20000000 },
+  { month: "May", revenue: 38000000, expenses: 23000000 },
+  { month: "Jun", revenue: 45000000, expenses: 25000000 },
 ]
 
 const topPackages = [
-  { id: 1, name: "Hajj Deluxe 2024", slots: "45/50", revenue: 4500000, image: "🕋" },
-  { id: 2, name: "Umrah Premium Package", slots: "120/200", revenue: 2200000, image: "🕌" },
-  { id: 3, name: "Ramadan Special", slots: "Full", revenue: 3800000, image: "🌙" },
+  { name: "Hajj Deluxe 2024", slots: "45/50", booked: 45, total: 50, revenue: 4500000 },
+  { name: "Umrah Premium", slots: "120/200", booked: 120, total: 200, revenue: 2200000 },
+  { name: "Ramadan Special", slots: "40/40", booked: 40, total: 40, revenue: 3800000 },
 ]
 
-const recentTransactions = [
-  {
-    id: 1,
-    applicant: "Yusuf Abdullahi",
-    package: "Hajj Deluxe 2024",
-    date: "Oct 24, 2023",
-    amount: 2500000,
-    status: "completed",
-  },
-  {
-    id: 2,
-    applicant: "Amina Ibrahim",
-    package: "Umrah Premium",
-    date: "Oct 23, 2023",
-    amount: 1800000,
-    status: "completed",
-  },
-  {
-    id: 3,
-    applicant: "Mohammed Hassan",
-    package: "Standard Hajj",
-    date: "Oct 22, 2023",
-    amount: 1500000,
-    status: "pending",
-  },
-]
-
-export default function FinancialOverviewPage() {
+export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-muted-foreground mb-1">Salaam, Ibrahim.</p>
+          <div className="text-sm text-muted-foreground mb-1">Salaam, Ibrahim.</div>
           <h1 className="text-3xl font-bold text-foreground">Financial Overview</h1>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            This Month
+        <div className="flex items-center gap-3">
+          <Select defaultValue="this-month">
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="this-month">This Month</SelectItem>
+              <SelectItem value="last-month">Last Month</SelectItem>
+              <SelectItem value="ytd">YTD</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button className="gap-2">
+            <Download className="size-4" />
+            Record Payment
           </Button>
-          <Button variant="outline" size="sm">
-            Last Month
-          </Button>
-          <Button variant="outline" size="sm">
-            YTD
-          </Button>
-          <Button className="gap-2">Record Payment</Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-card/50 border-border/50">
           <CardContent className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Total Revenue</p>
-              <p className="text-3xl font-bold">₦{(financialStats.totalRevenue / 1000000).toFixed(1)}M</p>
-              <div className="flex items-center gap-1 text-sm text-green-600">
-                <TrendingUp className="size-4" />
-                <span>+{financialStats.revenueChange}% from last month</span>
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs uppercase text-muted-foreground">Total Revenue</div>
+              <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">💰</div>
+            </div>
+            <div className="text-2xl font-bold text-foreground mb-1">₦45,000,000</div>
+            <div className="flex items-center gap-1 text-xs text-green-600">
+              <TrendingUp className="size-3" />
+              <span>+12.5% from last month</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card/50 border-border/50">
           <CardContent className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Total Bookings</p>
-              <p className="text-3xl font-bold">{financialStats.totalBookings}</p>
-              <div className="flex items-center gap-1 text-sm text-green-600">
-                <TrendingUp className="size-4" />
-                <span>+{financialStats.bookingsChange}% new applicants</span>
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs uppercase text-muted-foreground">Total Bookings</div>
+              <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">👥</div>
+            </div>
+            <div className="text-2xl font-bold text-foreground mb-1">342</div>
+            <div className="flex items-center gap-1 text-xs text-green-600">
+              <TrendingUp className="size-3" />
+              <span>+5% new applicants</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card/50 border-border/50">
           <CardContent className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Outstanding Balance</p>
-              <p className="text-3xl font-bold">₦{(financialStats.outstandingBalance / 1000000).toFixed(1)}M</p>
-              <div className="flex items-center gap-1 text-sm text-red-600">
-                <AlertCircle className="size-4" />
-                <span>{financialStats.overduePayments} payments overdue</span>
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs uppercase text-muted-foreground">Outstanding Balance</div>
+              <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">📊</div>
+            </div>
+            <div className="text-2xl font-bold text-foreground mb-1">₦2,150,000</div>
+            <div className="flex items-center gap-1 text-xs text-red-600">
+              <TrendingDown className="size-3" />
+              <span>24 payments overdue</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card/50 border-border/50">
           <CardContent className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Visa Success Rate</p>
-              <p className="text-3xl font-bold">{financialStats.visaSuccessRate}%</p>
-              <div className="flex items-center gap-1 text-sm text-orange-600">
-                <Calendar className="size-4" />
-                <span>Next flight in {financialStats.nextFlightDays} days</span>
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs uppercase text-muted-foreground">Visa Success Rate</div>
+              <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">✈</div>
+            </div>
+            <div className="text-2xl font-bold text-foreground mb-1">98.5%</div>
+            <div className="flex items-center gap-1 text-xs text-green-600">
+              <TrendingUp className="size-3" />
+              <span>Next flight in 14 days</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Revenue Analytics */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Revenue Analytics</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Income vs Expenses over the last 6 months</p>
+        <Card className="lg:col-span-2 bg-card/50 border-border/50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-lg font-semibold mb-1">Revenue Analytics</h2>
+                <p className="text-sm text-muted-foreground">Income vs Expenses over the last 6 months</p>
+              </div>
+              <Button variant="ghost" size="sm">
+                ⋮
+              </Button>
             </div>
-            <Button variant="ghost" size="icon">
-              <span className="text-xl">⋮</span>
-            </Button>
-          </CardHeader>
-          <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="month" className="text-xs" />
-                <YAxis className="text-xs" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "0.5rem",
-                  }}
-                />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <Legend />
-                <Bar dataKey="revenue" name="Revenue" fill="#eab308" />
-                <Bar dataKey="expenses" name="Expenses" fill="#78716c" />
+                <Bar dataKey="revenue" fill="hsl(var(--primary))" name="Revenue" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expenses" fill="hsl(var(--muted))" name="Expenses" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Top Packages */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Packages</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {topPackages.map((pkg) => (
-              <div key={pkg.id} className="flex items-center gap-3">
-                <div className="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
-                  {pkg.image}
+        <Card className="bg-card/50 border-border/50">
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Top Packages</h2>
+            <div className="space-y-4">
+              {topPackages.map((pkg) => (
+                <div key={pkg.name}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-foreground">{pkg.name}</div>
+                      <div className="text-xs text-muted-foreground">{pkg.slots} slots booked</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-primary">₦{(pkg.revenue / 1000000).toFixed(1)}M</div>
+                    </div>
+                  </div>
+                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full"
+                      style={{ width: `${(pkg.booked / pkg.total) * 100}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{pkg.name}</p>
-                  <p className="text-xs text-muted-foreground">{pkg.slots} slots booked</p>
-                </div>
-                <p className="font-semibold text-primary">₦{(pkg.revenue / 1000000).toFixed(1)}M</p>
-              </div>
-            ))}
-            <Button variant="outline" className="w-full mt-4 bg-transparent">
+              ))}
+            </div>
+            <Button variant="outline" size="sm" className="w-full mt-4 bg-transparent">
               View All Packages
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Transactions */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Transactions</CardTitle>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="icon">
-              <span className="text-xl">⋮</span>
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Download className="size-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-5 gap-4 text-sm font-medium text-muted-foreground pb-3 border-b">
-              <div>Applicant</div>
-              <div>Package</div>
-              <div>Date</div>
-              <div>Status</div>
-              <div className="text-right">Amount</div>
+      <Card className="bg-card/50 border-border/50">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Recent Transactions</h2>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm">
+                ⚙
+              </Button>
+              <Button variant="ghost" size="sm">
+                <Download className="size-4" />
+              </Button>
             </div>
-            {recentTransactions.map((transaction) => (
-              <div key={transaction.id} className="grid grid-cols-5 gap-4 items-center py-3 border-b last:border-0">
-                <div className="flex items-center gap-2">
-                  <Avatar className="size-8">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                      {transaction.applicant.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium">{transaction.applicant}</span>
-                </div>
-                <div className="text-sm">{transaction.package}</div>
-                <div className="text-sm text-muted-foreground">{transaction.date}</div>
-                <div>
-                  <Badge variant={transaction.status === "completed" ? "default" : "secondary"}>
-                    {transaction.status === "completed" ? "Completed" : "Pending"}
-                  </Badge>
-                </div>
-                <div className="text-sm font-semibold text-right">₦{transaction.amount.toLocaleString()}</div>
-              </div>
-            ))}
+          </div>
+          <div className="border border-border/50 rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-muted/50 border-b border-border/50">
+                <tr>
+                  <th className="text-left text-xs uppercase text-muted-foreground px-4 py-3">Applicant</th>
+                  <th className="text-left text-xs uppercase text-muted-foreground px-4 py-3">Package</th>
+                  <th className="text-left text-xs uppercase text-muted-foreground px-4 py-3">Date</th>
+                  <th className="text-right text-xs uppercase text-muted-foreground px-4 py-3">Status</th>
+                  <th className="text-right text-xs uppercase text-muted-foreground px-4 py-3">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-border/50">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                        IM
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium">Musa Ibrahim</div>
+                        <div className="text-xs text-muted-foreground">ID: HAJJ-24-001</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">Hajj Premium 2024</td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">Oct 24, 2024</td>
+                  <td className="px-4 py-3 text-right">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/10 text-green-600 text-xs">
+                      <span className="size-1.5 rounded-full bg-green-600" />
+                      Paid
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right font-semibold">₦2,500,000</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
