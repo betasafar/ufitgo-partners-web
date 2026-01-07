@@ -81,7 +81,7 @@ export function PackagesTable({ packages }: PackagesTableProps) {
                       />
                       <div>
                         <div className="font-medium">{pkg.title}</div>
-                        <div className="text-sm text-muted-foreground">ID: #{pkg.id.slice(0, 12)}</div>
+                        <div className="text-sm text-muted-foreground">ID: #{String(pkg.id).slice(0, 12)}</div>
                       </div>
                     </div>
                   </TableCell>
