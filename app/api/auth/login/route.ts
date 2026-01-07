@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
     const apiUrl = `${backendUrl}/operator/auth/login`
 
     console.log("[v0] Attempting login to:", apiUrl)
+    
 
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
