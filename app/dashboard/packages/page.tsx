@@ -8,6 +8,8 @@ import Link from "next/link"
 async function getPackagesData() {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.BACKEND_API_URL || "http://localhost:5000/api"
+    console.log("[v0] Fetching packages from:", `${apiUrl}/packages`)
+
     const response = await fetch(`${apiUrl}/packages`, {
       cache: "no-store",
       headers: {
@@ -15,9 +17,16 @@ async function getPackagesData() {
       },
     })
 
-    if (!response.ok) throw new Error("Failed to fetch packages")
+    console.log("[v0] Response status:", response.status, response.statusText)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error("[v0] Response error body:", errorText)
+      throw new Error(`Failed to fetch packages: ${response.status} ${response.statusText}`)
+    }
 
     const packages: Package[] = await response.json()
+    console.log("[v0] Successfully fetched packages:", packages.length)
 
     // Calculate stats from the packages data
     const activePackages = packages.filter((p) => p.status === "active")
@@ -43,7 +52,6 @@ async function getPackagesData() {
     return { packages, stats }
   } catch (error) {
     console.error("[v0] Failed to fetch packages:", error)
-    // Return empty data on error
     return {
       packages: [],
       stats: {

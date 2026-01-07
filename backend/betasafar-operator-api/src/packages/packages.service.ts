@@ -32,10 +32,13 @@ export class UpdatePackageDto {
 
 @Injectable()
 export class PackagesService {
-  constructor(
-    private packageRepo: Repository<Package>,
-    private cloudinaryService: CloudinaryService,
-  ) {}
+  private readonly packageRepo: Repository<Package>
+  private readonly cloudinaryService: CloudinaryService
+
+  constructor(packageRepo: Repository<Package>, cloudinaryService: CloudinaryService) {
+    this.packageRepo = packageRepo
+    this.cloudinaryService = cloudinaryService
+  }
 
   async create(operatorId: number, dto: CreatePackageDto, files?: Array<Express.Multer.File>) {
     let imageUrls: string[] = dto.images || []
@@ -149,6 +152,46 @@ export class PackagesService {
       availableSlots: pkg.capacity - pkg.booked,
       averageBookingValue: Math.round(averageBookingValue),
       status: pkg.status,
+    }
+  }
+
+  async getPackageAvailability(packageId: number, operatorId: number) {
+    const pkg = await this.packageRepo.findOne({
+      where: { id: packageId, operatorId },
+      relations: ["bookings"],
+    })
+
+    if (!pkg) {
+      throw new NotFoundException("Package not found or access denied")
+    }
+
+    const totalSlots = pkg.capacity
+    const bookedSlots = pkg.booked
+    const availableSlots = totalSlots - bookedSlots
+    const occupancyPercentage = totalSlots > 0 ? (bookedSlots / totalSlots) * 100 : 0
+
+    // Calculate slots by status
+    const pendingSlots =
+      pkg.bookings?.filter((b) => b.status === "pending").reduce((sum, b) => sum + b.numberOfPilgrims, 0) || 0
+    const confirmedSlots =
+      pkg.bookings
+        ?.filter((b) => b.status === "confirmed" || b.status === "fully_paid")
+        .reduce((sum, b) => sum + b.numberOfPilgrims, 0) || 0
+
+    return {
+      packageId: pkg.id,
+      packageTitle: pkg.title,
+      totalSlots,
+      bookedSlots,
+      availableSlots,
+      occupancyPercentage: Math.round(occupancyPercentage * 10) / 10,
+      pendingSlots,
+      confirmedSlots,
+      status: pkg.status,
+      departureDate: pkg.departureDate,
+      returnDate: pkg.returnDate,
+      isFullyBooked: availableSlots <= 0,
+      bookingStatus: availableSlots <= 0 ? "full" : availableSlots < 10 ? "filling_fast" : "available",
     }
   }
 }

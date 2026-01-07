@@ -1,18 +1,18 @@
 // src/bookings/bookings.service.ts
 import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common"
-import type { EmailService } from "../common/email/email.service"
 import type { Repository } from "typeorm"
 import { type Booking, BookingStatus } from "./entities/booking.entity"
+import type { EmailService } from "../common/email/email.service"
+import type { ApproveBookingDto } from "./dto/approve-booking.dto"
+import type { RejectBookingDto } from "./dto/reject-booking.dto"
+import type { RefundBookingDto } from "./dto/refund-booking.dto"
 
 @Injectable()
 export class BookingsService {
-  private readonly bookingRepo: Repository<Booking>
-  private emailService: EmailService
-
-  constructor(bookingRepo: Repository<Booking>, emailService: EmailService) {
-    this.bookingRepo = bookingRepo
-    this.emailService = emailService
-  }
+  constructor(
+    private readonly bookingRepo: Repository<Booking>,
+    private readonly emailService: EmailService,
+  ) {}
 
   async findAllForOperator(operatorId: number): Promise<Booking[]> {
     return this.bookingRepo.find({
@@ -43,7 +43,6 @@ export class BookingsService {
       paymentDetails?: Record<string, any>
     },
   ): Promise<Booking> {
-    // Load booking with operator relation because we need email/companyName for notification
     const booking = await this.bookingRepo.findOne({
       where: { id, operatorId },
       relations: ["operator", "package"],
@@ -75,7 +74,6 @@ export class BookingsService {
 
     const updatedBooking = await this.bookingRepo.save(booking)
 
-    // Send email only when status changes to confirmed or fully_paid
     if (
       (previousStatus !== BookingStatus.CONFIRMED && updatedBooking.status === BookingStatus.CONFIRMED) ||
       (previousStatus !== BookingStatus.FULLY_PAID && updatedBooking.status === BookingStatus.FULLY_PAID)
@@ -130,7 +128,6 @@ export class BookingsService {
       action: string
     }> = []
 
-    // 1. Pending bookings awaiting confirmation
     const pendingCount = await this.bookingRepo.count({
       where: { operatorId, status: BookingStatus.PENDING },
     })
@@ -146,7 +143,6 @@ export class BookingsService {
       })
     }
 
-    // 2. Incomplete payments (deposit paid but not fully paid)
     const incompletePayments = await this.bookingRepo.count({
       where: { operatorId, status: BookingStatus.DEPOSIT_PAID },
     })
@@ -162,7 +158,6 @@ export class BookingsService {
       })
     }
 
-    // 3. Bookings with departure in next 7 days
     const weekFromNow = new Date()
     weekFromNow.setDate(weekFromNow.getDate() + 7)
 
@@ -210,10 +205,8 @@ export class BookingsService {
       throw new NotFoundException(`Booking with ID ${id} not found or access denied`)
     }
 
-    // Calculate payment progress
     const paymentProgress = (Number(booking.amountPaid) / Number(booking.totalAmount)) * 100
 
-    // Get related bookings from same package
     const relatedBookings = await this.bookingRepo.count({
       where: { packageId: booking.packageId, operatorId },
     })
@@ -222,7 +215,125 @@ export class BookingsService {
       ...booking,
       paymentProgress: Math.round(paymentProgress),
       remainingBalance: Number(booking.totalAmount) - Number(booking.amountPaid),
-      relatedBookingsCount: relatedBookings - 1, // exclude current booking
+      relatedBookingsCount: relatedBookings - 1,
+    }
+  }
+
+  async approveBooking(id: number, operatorId: number, dto: ApproveBookingDto): Promise<Booking> {
+    const booking = await this.bookingRepo.findOne({
+      where: { id, operatorId },
+      relations: ["operator", "package"],
+    })
+
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID ${id} not found or access denied`)
+    }
+
+    if (booking.status !== BookingStatus.PENDING) {
+      throw new BadRequestException(`Booking is not in pending status`)
+    }
+
+    booking.status = BookingStatus.CONFIRMED
+
+    if (dto.notes) {
+      booking.paymentDetails = {
+        ...booking.paymentDetails,
+        approvalNotes: dto.notes,
+        approvedAt: new Date().toISOString(),
+      }
+    }
+
+    const updatedBooking = await this.bookingRepo.save(booking)
+
+    if (updatedBooking.operator?.email) {
+      await this.emailService.sendNewBookingEmail(updatedBooking.operator.email, {
+        companyName: updatedBooking.operator.companyName || "Valued Operator",
+        bookingId: updatedBooking.id,
+        pilgrimName: updatedBooking.pilgrimName || "Pilgrim",
+        packageTitle: updatedBooking.package?.title || "Travel Package",
+        numberOfPilgrims: updatedBooking.numberOfPilgrims,
+        totalAmount: updatedBooking.totalAmount,
+      })
+    }
+
+    return updatedBooking
+  }
+
+  async rejectBooking(id: number, operatorId: number, dto: RejectBookingDto): Promise<Booking> {
+    const booking = await this.bookingRepo.findOne({
+      where: { id, operatorId },
+      relations: ["operator", "package"],
+    })
+
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID ${id} not found or access denied`)
+    }
+
+    if (booking.status === BookingStatus.CANCELLED) {
+      throw new BadRequestException(`Booking is already cancelled`)
+    }
+
+    booking.status = BookingStatus.CANCELLED
+    booking.paymentDetails = {
+      ...booking.paymentDetails,
+      rejectionReason: dto.reason,
+      rejectedAt: new Date().toISOString(),
+    }
+
+    const updatedBooking = await this.bookingRepo.save(booking)
+
+    if (updatedBooking.operator?.email) {
+      // You can add a sendBookingRejectionEmail method to email service
+    }
+
+    return updatedBooking
+  }
+
+  async processRefund(id: number, operatorId: number, dto: RefundBookingDto) {
+    const booking = await this.bookingRepo.findOne({
+      where: { id, operatorId },
+      relations: ["operator", "package"],
+    })
+
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID ${id} not found or access denied`)
+    }
+
+    if (dto.amount > Number(booking.amountPaid)) {
+      throw new BadRequestException(`Refund amount cannot exceed amount paid (${booking.amountPaid})`)
+    }
+
+    const newAmountPaid = Number(booking.amountPaid) - dto.amount
+
+    booking.amountPaid = newAmountPaid
+
+    if (newAmountPaid === 0) {
+      booking.status = BookingStatus.CANCELLED
+    } else if (newAmountPaid < Number(booking.totalAmount)) {
+      booking.status = BookingStatus.DEPOSIT_PAID
+    }
+
+    booking.paymentDetails = {
+      ...booking.paymentDetails,
+      refunds: [
+        ...(booking.paymentDetails?.refunds || []),
+        {
+          amount: dto.amount,
+          reason: dto.reason,
+          method: dto.method,
+          processedAt: new Date().toISOString(),
+        },
+      ],
+    }
+
+    const updatedBooking = await this.bookingRepo.save(booking)
+
+    return {
+      success: true,
+      message: `Refund of ${dto.amount} processed successfully`,
+      booking: updatedBooking,
+      refundAmount: dto.amount,
+      remainingBalance: Number(updatedBooking.totalAmount) - Number(updatedBooking.amountPaid),
     }
   }
 }

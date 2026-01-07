@@ -1,14 +1,13 @@
 import { Injectable } from "@nestjs/common"
-import type { Repository } from "typeorm"
+import { type Repository, Between } from "typeorm"
 import { type Booking, BookingStatus } from "../bookings/entities/booking.entity"
 import type { WalletTransaction } from "../wallet/entities/wallet-transaction.entity"
-import { Between } from "typeorm"
 
 @Injectable()
 export class AnalyticsService {
   constructor(
-    private bookingRepo: Repository<Booking>,
-    private transactionRepo: Repository<WalletTransaction>,
+    private readonly bookingRepo: Repository<Booking>,
+    private readonly transactionRepo: Repository<WalletTransaction>,
   ) {}
 
   // Revenue summary (all time or date range)

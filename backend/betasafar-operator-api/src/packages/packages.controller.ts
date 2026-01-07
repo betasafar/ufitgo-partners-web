@@ -1,5 +1,5 @@
 // src/packages/packages.controller.ts
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, UseInterceptors } from "@nestjs/common"
+import { Controller, Get, Post, Put, Delete, UseInterceptors, Param, Body, UploadedFiles } from "@nestjs/common"
 import { type PackagesService, type CreatePackageDto, UpdatePackageDto } from "./packages.service"
 import { FilesInterceptor } from "@nestjs/platform-express"
 import type { Express } from "express"
@@ -18,39 +18,35 @@ export class PackagesController {
   @UseInterceptors(FilesInterceptor("images", 10))
   @ApiOperation({ summary: "Create a new package with images" })
   @ApiResponse({ status: 201, description: "Package created successfully", type: PackageDto })
-  async create(
-    dto: CreatePackageDto,
-    files: Array<Express.Multer.File>,
-    @Param("operatorId", ParseIntPipe) operatorId: number,
-  ) {
-    return this.packagesService.create(operatorId, dto, files)
+  async create(@Body() dto: CreatePackageDto, @UploadedFiles() files: Array<Express.Multer.File>) {
+    const operator = { id: 1 } // TODO: Get from @CurrentOperator() decorator
+    return this.packagesService.create(operator.id, dto, files)
   }
 
   @Get()
   @ApiOperation({ summary: "Get all packages belonging to the operator" })
   @ApiResponse({ status: 200, description: "List of operator packages", type: [PackageDto] })
-  async findAll(@Param("operatorId", ParseIntPipe) operatorId: number) {
-    return this.packagesService.findAllForOperator(operatorId)
+  async findAll() {
+    const operator = { id: 1 } // TODO: Get from @CurrentOperator() decorator
+    return this.packagesService.findAllForOperator(operator.id)
   }
 
   @Get(":id")
   @ApiOperation({ summary: "Get detailed information about a specific package" })
   @ApiResponse({ status: 200, description: "Package details with itinerary and images", type: PackageDto })
   @ApiResponse({ status: 404, description: "Package not found or access denied" })
-  async findOne(@Param("id", ParseIntPipe) id: number, @Param("operatorId", ParseIntPipe) operatorId: number) {
-    return this.packagesService.findOne(id, operatorId)
+  async findOne(@Param("id") id: string) {
+    const operator = { id: 1 } // TODO: Get from @CurrentOperator() decorator
+    return this.packagesService.findOne(Number(id), operator.id)
   }
 
   @Put(":id")
   @ApiOperation({ summary: "Update an existing package" })
   @ApiBody({ type: UpdatePackageDto })
   @ApiResponse({ status: 200, description: "Package updated successfully" })
-  async update(
-    @Param("id", ParseIntPipe) id: number,
-    @Param("operatorId", ParseIntPipe) operatorId: number,
-    @Body() dto: UpdatePackageDto,
-  ) {
-    return this.packagesService.update(id, operatorId, dto)
+  async update(@Param("id") id: string, @Body() dto: UpdatePackageDto) {
+    const operator = { id: 1 } // TODO: Get from @CurrentOperator() decorator
+    return this.packagesService.update(Number(id), operator.id, dto)
   }
 
   @Put(":id/status")
@@ -59,38 +55,41 @@ export class PackagesController {
     schema: { type: "object", properties: { status: { type: "string", enum: Object.values(PackageStatus) } } },
   })
   @ApiResponse({ status: 200, description: "Package status updated" })
-  async toggleStatus(
-    @Param("id", ParseIntPipe) id: number,
-    @Param("operatorId", ParseIntPipe) operatorId: number,
-    @Body("status") status: PackageStatus,
-  ) {
-    return this.packagesService.toggleStatus(id, operatorId, status)
+  async toggleStatus(@Param("id") id: string, @Body("status") status: PackageStatus) {
+    const operator = { id: 1 } // TODO: Get from @CurrentOperator() decorator
+    return this.packagesService.toggleStatus(Number(id), operator.id, status)
   }
 
   @Delete(":id")
   @ApiOperation({ summary: "Delete a package" })
   @ApiResponse({ status: 200, description: "Package deleted successfully" })
-  async delete(@Param("id", ParseIntPipe) id: number, @Param("operatorId", ParseIntPipe) operatorId: number) {
-    return this.packagesService.delete(id, operatorId)
+  async delete(@Param("id") id: string) {
+    const operator = { id: 1 } // TODO: Get from @CurrentOperator() decorator
+    return this.packagesService.delete(Number(id), operator.id)
   }
 
   @Get(":id/bookings")
   @ApiOperation({ summary: "Get all bookings for a specific package" })
   @ApiResponse({ status: 200, description: "Package bookings returned" })
-  async getPackageBookings(
-    @Param("id", ParseIntPipe) id: number,
-    @Param("operatorId", ParseIntPipe) operatorId: number,
-  ) {
-    return this.packagesService.getBookingsForPackage(id, operatorId)
+  async getPackageBookings(@Param("id") id: string) {
+    const operator = { id: 1 } // TODO: Get from @CurrentOperator() decorator
+    return this.packagesService.getBookingsForPackage(Number(id), operator.id)
   }
 
   @Get(":id/performance")
   @ApiOperation({ summary: "Get performance metrics for a package" })
   @ApiResponse({ status: 200, description: "Package performance metrics returned" })
-  async getPackagePerformance(
-    @Param("id", ParseIntPipe) id: number,
-    @Param("operatorId", ParseIntPipe) operatorId: number,
-  ) {
-    return this.packagesService.getPackagePerformance(id, operatorId)
+  async getPackagePerformance(@Param("id") id: string) {
+    const operator = { id: 1 } // TODO: Get from @CurrentOperator() decorator
+    return this.packagesService.getPackagePerformance(Number(id), operator.id)
+  }
+
+  @Get(":id/availability")
+  @ApiOperation({ summary: "Get package availability and slot information" })
+  @ApiResponse({ status: 200, description: "Package availability returned" })
+  @ApiResponse({ status: 404, description: "Package not found" })
+  async getPackageAvailability(@Param("id") id: string) {
+    const operator = { id: 1 } // TODO: Get from @CurrentOperator() decorator
+    return this.packagesService.getPackageAvailability(Number(id), operator.id)
   }
 }
