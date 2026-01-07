@@ -1,6 +1,6 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:5000/api"
 
-export async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export async function apiRequest<T>(endpoint: string, options: RequestInit = {}, showLoading = false): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
 
   const token =
@@ -30,7 +30,6 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
 
   if (!response.ok) {
     if (response.status === 401) {
-      // Redirect to login on unauthorized
       if (typeof window !== "undefined") {
         window.location.href = "/login"
       }

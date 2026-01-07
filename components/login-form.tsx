@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useLoading } from "@/contexts/loading-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,6 +12,7 @@ import { Eye, EyeOff, User, Lock } from "lucide-react"
 
 export function LoginForm() {
   const router = useRouter()
+  const { startLoading, stopLoading } = useLoading()
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -25,6 +26,7 @@ export function LoginForm() {
     e.preventDefault()
     setLoading(true)
     setError("")
+    startLoading()
 
     console.log("[v0] Login attempt started")
 
@@ -56,6 +58,7 @@ export function LoginForm() {
     } catch (err) {
       console.error("[v0] Login error:", err)
       setError(err instanceof Error ? err.message : "Login failed")
+      stopLoading()
     } finally {
       setLoading(false)
     }
