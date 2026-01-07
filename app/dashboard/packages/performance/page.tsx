@@ -4,103 +4,168 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from "recharts"
 import { TrendingUp, TrendingDown, Download } from "lucide-react"
+import { apiRequest } from "@/lib/api-client"
+import { useEffect, useState } from "react"
 
-// Fetching package performance from backend API
-async function getPackagePerformance() {
-  try {
-    const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.BACKEND_API_URL || "http://localhost:5000/api"
-    const response = await fetch(`${apiUrl}/operator/packages/performance`, {
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-
-    if (!response.ok) throw new Error("Failed to fetch performance")
-
-    return await response.json()
-  } catch (error) {
-    console.error("[v0] Failed to fetch package performance:", error)
-    // Return mock data as fallback
-    return {
-      totalRevenue: 45200000,
-      totalBookings: 1240,
-      avgConversion: 12.5,
-      slotsRemaining: 450,
-      bookingVelocity: [
-        { week: "Wk 1", applications: 85, bookings: 65 },
-        { week: "Wk 2", applications: 110, bookings: 95 },
-        { week: "Wk 3", applications: 145, bookings: 120 },
-        { week: "Wk 4", applications: 180, bookings: 155 },
-        { week: "Wk 5", applications: 210, bookings: 185 },
-        { week: "Wk 6", applications: 260, bookings: 230 },
-      ],
-      topRegions: [
-        { region: "Kano", percentage: 42, applicants: 520 },
-        { region: "Lagos", percentage: 28, applicants: 310 },
-        { region: "Abuja (FCT)", percentage: 15, applicants: 180 },
-      ],
-      paymentPreference: [
-        { type: "Installment", percentage: 60 },
-        { type: "Full Payment", percentage: 40 },
-      ],
-      activePackages: [
-        {
-          name: "Ramadan VIP 2024",
-          duration: "Last 10 Days",
-          status: "filling-fast",
-          price: 4500000,
-          filled: 45,
-          total: 50,
-          revenue: 202500000,
-        },
-        {
-          name: "Standard Hajj Package",
-          duration: "Full Season",
-          status: "open",
-          price: 3200000,
-          filled: 120,
-          total: 300,
-          revenue: 384000000,
-        },
-        {
-          name: "Umrah Express",
-          duration: "14 Days",
-          status: "closing-soon",
-          price: 1850000,
-          filled: 88,
-          total: 100,
-          revenue: 162800000,
-        },
-      ],
-    }
-  }
+// Define proper types
+interface PerformanceData {
+  totalRevenue: number
+  totalBookings: number
+  avgConversion: number
+  slotsRemaining: number
+  conversionRate: number
+  cancellationRate: number
+  activePackagesCount: number        // ← number: how many are active
+  totalPackages: number
+  activePackages: Array<{            // ← array: for the table
+    id: number
+    name: string
+    duration: string
+    status: "filling-fast" | "closing-soon" | "open" | "closed"
+    price: number
+    filled: number
+    total: number
+    revenue: number
+    occupancyRate: number
+  }>
+  bookingVelocity: Array<{ week: string; applications: number; bookings: number }>
+  topRegions: Array<{ region: string; percentage: number; applicants: number }>
+  paymentPreference: Array<{ type: string; percentage: number }>
 }
 
-export default async function PackagePerformancePage() {
-  const performanceData = await getPackagePerformance()
+const initialPerformanceData: PerformanceData = {
+  totalRevenue: 0,
+  totalBookings: 0,
+  avgConversion: 0,
+  slotsRemaining: 0,
+  conversionRate: 0,
+  cancellationRate: 0,
+  activePackagesCount: 0,
+  totalPackages: 0,
+  activePackages: [],
+  bookingVelocity: [],
+  topRegions: [],
+  paymentPreference: [],
+}
+
+export default function PackagePerformancePage() {
+  const [performanceData, setPerformanceData] = useState<PerformanceData>(initialPerformanceData)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const data = await apiRequest<any>("/operator/packages/performance")
+
+        if (!data || !data.summary || !data.packages) {
+          setPerformanceData(initialPerformanceData)
+          return
+        }
+
+        const { summary, packages } = data
+
+        // Transform packages for the table
+        const activePackages = packages.map((pkg: any) => ({
+          id: pkg.id,
+          name: pkg.title,
+          duration: pkg.departureDate
+            ? new Date(pkg.departureDate).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+            : "TBD",
+          status:
+            pkg.available <= 5
+              ? "filling-fast"
+              : pkg.available <= 10
+                ? "closing-soon"
+                : pkg.status === "active"
+                  ? "open"
+                  : "closed",
+          price: pkg.booked > 0 ? Math.round(pkg.revenue / pkg.booked) : 0,
+          filled: pkg.booked,
+          total: pkg.capacity,
+          revenue: pkg.revenue,
+          occupancyRate: pkg.occupancyRate,
+        }))
+
+        // Mock chart data (replace later with real endpoints)
+        const bookingVelocity = [
+          { week: "Wk 1", applications: 85, bookings: 65 },
+          { week: "Wk 2", applications: 110, bookings: 95 },
+          { week: "Wk 3", applications: 145, bookings: 120 },
+          { week: "Wk 4", applications: 180, bookings: 155 },
+          { week: "Wk 5", applications: 210, bookings: 185 },
+          { week: "Wk 6", applications: 260, bookings: 230 },
+        ]
+
+        const topRegions = [
+          { region: "Kano", percentage: 42, applicants: 520 },
+          { region: "Lagos", percentage: 28, applicants: 310 },
+          { region: "Abuja (FCT)", percentage: 15, applicants: 180 },
+        ]
+
+        const paymentPreference = [
+          { type: "Installment", percentage: 60 },
+          { type: "Full Payment", percentage: 40 },
+        ]
+
+        setPerformanceData({
+          totalRevenue: summary.totalRevenue || 0,
+          totalBookings: summary.totalBookings || 0,
+          avgConversion: summary.occupancyRate || 0,
+          slotsRemaining: summary.availableSlots || 0,
+          conversionRate: summary.conversionRate || 0,
+          cancellationRate: summary.cancellationRate || 0,
+          activePackagesCount: summary.activePackages || 0,
+          totalPackages: summary.totalPackages || 0,
+          activePackages,
+          bookingVelocity,
+          topRegions,
+          paymentPreference,
+        })
+      } catch (error) {
+        console.error("[v0] Failed to fetch package performance:", error)
+        setPerformanceData(initialPerformanceData)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-muted-foreground">Loading performance data...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Package Performance</h1>
-          <p className="text-sm text-muted-foreground">Insights for Hajj & Umrah 2024 Season</p>
+          <p className="text-sm text-muted-foreground">
+            Insights for Hajj & Umrah 2024 Season •{" "}
+            <strong>{performanceData.activePackagesCount}</strong> of{" "}
+            <strong>{performanceData.totalPackages}</strong> Active
+          </p>
         </div>
+        {/* Filters remain the same */}
         <div className="flex items-center gap-3">
           <Select defaultValue="this-season">
-            <SelectTrigger className="w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="this-season">This Season</SelectItem>
               <SelectItem value="last-season">Last Season</SelectItem>
             </SelectContent>
           </Select>
           <Select defaultValue="all">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Package Type: All</SelectItem>
               <SelectItem value="hajj">Hajj Only</SelectItem>
@@ -108,9 +173,7 @@ export default async function PackagePerformancePage() {
             </SelectContent>
           </Select>
           <Select defaultValue="active">
-            <SelectTrigger className="w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="active">Status: Active</SelectItem>
               <SelectItem value="closed">Status: Closed</SelectItem>
@@ -129,7 +192,6 @@ export default async function PackagePerformancePage() {
               <div className="text-xs uppercase text-muted-foreground">Total Revenue</div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">💰</div>
             </div>
-            {/* Using backend data instead of hardcoded values */}
             <div className="text-3xl font-bold text-foreground mb-1">
               ₦ {(performanceData.totalRevenue / 1000000).toFixed(1)}M
             </div>
@@ -146,7 +208,6 @@ export default async function PackagePerformancePage() {
               <div className="text-xs uppercase text-muted-foreground">Total Bookings</div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">🎫</div>
             </div>
-            {/* Using backend data */}
             <div className="text-3xl font-bold text-foreground mb-1">
               {performanceData.totalBookings.toLocaleString()}
             </div>
@@ -163,8 +224,7 @@ export default async function PackagePerformancePage() {
               <div className="text-xs uppercase text-muted-foreground">Avg. Conversion</div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">📊</div>
             </div>
-            {/* Using backend data */}
-            <div className="text-3xl font-bold text-foreground mb-1">{performanceData.avgConversion}%</div>
+            <div className="text-3xl font-bold text-foreground mb-1">{performanceData.conversionRate}%</div>
             <div className="flex items-center gap-1 text-xs text-green-600">
               <TrendingUp className="size-3" />
               <span>+2.1% vs average</span>
@@ -178,7 +238,6 @@ export default async function PackagePerformancePage() {
               <div className="text-xs uppercase text-muted-foreground">Slots Remaining</div>
               <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">🪑</div>
             </div>
-            {/* Using backend data */}
             <div className="text-3xl font-bold text-foreground mb-1">{performanceData.slotsRemaining}</div>
             <div className="flex items-center gap-1 text-xs text-red-600">
               <TrendingDown className="size-3" />
@@ -284,15 +343,14 @@ export default async function PackagePerformancePage() {
                 <tr>
                   <th className="text-left text-xs uppercase text-muted-foreground px-4 py-3">Package Name</th>
                   <th className="text-left text-xs uppercase text-muted-foreground px-4 py-3">Status</th>
-                  <th className="text-right text-xs uppercase text-muted-foreground px-4 py-3">Price / Pax</th>
+                  <th className="text-right text-xs uppercase text-muted-foreground px-4 py-3">Occupancy</th>
                   <th className="text-right text-xs uppercase text-muted-foreground px-4 py-3">Filled Slots</th>
                   <th className="text-right text-xs uppercase text-muted-foreground px-4 py-3">Revenue</th>
                 </tr>
               </thead>
               <tbody>
-                {/* Using backend data for active packages table */}
                 {performanceData.activePackages.map((pkg: any) => (
-                  <tr key={pkg.name} className="border-b border-border/50">
+                  <tr key={pkg.id} className="border-b border-border/50">
                     <td className="px-4 py-3">
                       <div>
                         <div className="text-sm font-medium">{pkg.name}</div>
@@ -319,7 +377,7 @@ export default async function PackagePerformancePage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right text-sm font-medium">₦ {(pkg.price / 1000000).toFixed(1)}M</td>
+                    <td className="px-4 py-3 text-right text-sm font-medium">{pkg.occupancyRate}%</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <span className="text-sm font-semibold">

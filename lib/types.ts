@@ -66,6 +66,7 @@ export interface DashboardStats {
   seatsFilled: number
   totalSeats: number
   revenueProjected: number
+  
 }
 
 export interface RevenueDataPoint {

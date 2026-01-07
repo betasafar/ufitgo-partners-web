@@ -7,11 +7,11 @@ export async function POST(request: NextRequest) {
     const { email, password } = body
 
     const backendUrl = process.env.BACKEND_API_URL
-    console.log("[v0] Environment check:", {
-      BACKEND_API_URL: backendUrl,
-      NODE_ENV: process.env.NODE_ENV,
-      allEnvKeys: Object.keys(process.env).filter((k) => k.includes("BACKEND")),
-    })
+    // console.log("[v0] Environment check:", {
+    //   BACKEND_API_URL: backendUrl,
+    //   NODE_ENV: process.env.NODE_ENV,
+    //   allEnvKeys: Object.keys(process.env).filter((k) => k.includes("BACKEND")),
+    // })
 
     const apiUrl = `${backendUrl}/operator/auth/login`
     console.log("[v0] Attempting login to:", apiUrl)

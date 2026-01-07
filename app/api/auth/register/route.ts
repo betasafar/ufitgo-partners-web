@@ -6,10 +6,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     const backendUrl = process.env.BACKEND_API_URL
-    console.log("[v0] Registration - Environment check:", {
-      BACKEND_API_URL: backendUrl,
-      NODE_ENV: process.env.NODE_ENV,
-    })
+    // console.log("[v0] Registration - Environment check:", {
+    //   BACKEND_API_URL: backendUrl,
+    //   NODE_ENV: process.env.NODE_ENV,
+    // })
 
     const apiUrl = `${backendUrl}/operator/auth/register`
     console.log("[v0] Attempting registration to:", apiUrl)
