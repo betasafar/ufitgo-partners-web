@@ -15,38 +15,37 @@ async function getOperator(): Promise<Operator> {
   try {
     const userData = await getCurrentUser()
 
-    if (userData) {
+    if (!userData) {
+      console.warn("[v0] No user data available, using fallback")
       return {
-        id: String(userData.id),
-        companyName: userData.companyName || "Travel Agency",
-        email: userData.email,
-        phone: userData.phone || "",
-        logo: userData.logo,
-        verified: userData.verificationStatus === "approved",
-        verificationStatus: userData.verificationStatus || "pending",
-        cacRegistration: userData.cacRegistration || "",
-        nahconLicense: userData.nahconLicense || "",
+        id: "guest",
+        companyName: "Loading...",
+        email: "operator@travelops.com",
+        phone: "",
+        verified: false,
+        verificationStatus: "pending",
+        cacRegistration: "",
+        nahconLicense: "",
         role: "operator",
       }
     }
 
-    // Fallback
     return {
-      id: "1",
-      companyName: "Travel Agency",
-      email: "operator@travelops.com",
-      phone: "",
-      verified: false,
-      verificationStatus: "pending",
-      cacRegistration: "",
-      nahconLicense: "",
+      id: String(userData.id),
+      companyName: userData.companyName || "Travel Agency",
+      email: userData.email,
+      phone: userData.phone || "",
+      logo: userData.logo,
+      verified: userData.verificationStatus === "approved",
+      verificationStatus: userData.verificationStatus || "pending",
+      cacRegistration: userData.cacRegistration || "",
+      nahconLicense: userData.nahconLicense || "",
       role: "operator",
     }
   } catch (error) {
     console.error("[v0] Failed to load operator:", error)
-    // Silent fallback
     return {
-      id: "1",
+      id: "error",
       companyName: "Travel Agency",
       email: "operator@travelops.com",
       phone: "",

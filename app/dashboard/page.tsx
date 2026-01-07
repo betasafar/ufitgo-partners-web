@@ -6,18 +6,13 @@ import { UrgentTasks } from "@/components/urgent-tasks"
 import { RecentApplicants } from "@/components/recent-applicants"
 import { Suspense } from "react"
 import { apiRequest } from "@/lib/api-proxy"
-import { cookies } from "next/headers"
 
 async function getDashboardData() {
-  const cookieStore = await cookies()
-  const operatorData = cookieStore.get("operator_data")?.value
-  const operator = operatorData ? JSON.parse(operatorData) : null
-
   try {
     const [statsResult, revenueResult, bookingsResult] = await Promise.allSettled([
-      apiRequest("/operator/reports/dashboard-stats"),
-      apiRequest("/operator/reports/revenue-flow", { next: { revalidate: 60 } }),
-      apiRequest("/operator/bookings/recent", { next: { revalidate: 30 } }),
+      apiRequest("/operator/reports/dashboard-stats", { next: { revalidate: 60 } }),
+      apiRequest("/operator/reports/revenue-flow", { next: { revalidate: 120 } }),
+      apiRequest("/operator/bookings/recent", { next: { revalidate: 90 } }),
     ])
 
     const stats = statsResult.status === "fulfilled" ? statsResult.value : null
@@ -37,7 +32,7 @@ async function getDashboardData() {
       paymentsChange: 0,
       visaExpiring: 0,
       visaChange: 0,
-      activePackages: 0,
+      activePackages: stats?.activePackages || 0,
       seatsFilled: 0,
       totalSeats: 0,
       revenueProjected: 0,
@@ -57,7 +52,7 @@ async function getDashboardData() {
       createdAt: booking.createdAt || new Date().toISOString(),
     }))
 
-    return { stats: mappedStats, revenueData, recentBookings: mappedBookings, operator }
+    return { stats: mappedStats, revenueData, recentBookings: mappedBookings }
   } catch (error) {
     console.error("[v0] Dashboard data fetch error:", error)
     return {
@@ -77,18 +72,17 @@ async function getDashboardData() {
       },
       revenueData: [],
       recentBookings: [],
-      operator: null,
     }
   }
 }
 
 export default async function DashboardPage() {
-  const { stats, revenueData, recentBookings, operator } = await getDashboardData()
+  const { stats, revenueData, recentBookings } = await getDashboardData()
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Welcome back, {operator?.companyName || "Travel Agency"}</h1>
+        <h1 className="text-3xl font-bold">Welcome back</h1>
         <p className="text-muted-foreground">Here's your business overview for today</p>
       </div>
 
@@ -103,7 +97,9 @@ export default async function DashboardPage() {
           <RevenueChart data={revenueData} />
         </div>
         <div>
-          <UrgentTasks />
+          <Suspense fallback={<div className="animate-pulse h-48 bg-muted/10 rounded-lg" />}>
+            <UrgentTasks />
+          </Suspense>
         </div>
       </div>
 
