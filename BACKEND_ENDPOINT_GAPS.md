@@ -17,13 +17,13 @@ This document identifies frontend pages that are calling backend endpoints that 
 - **Frontend Page**: `app/dashboard/applicants/[id]/refund/page.tsx:48`
 - **Purpose**: Process refund for a booking
 - **Request Body**: 
-  ```typescript
+  \`\`\`typescript
   {
     amount: number;
     reason: string;
     method: 'original' | 'bank_transfer';
   }
-  ```
+  \`\`\`
 - **Response**: Refund confirmation
 - **Controller**: `bookings.controller.ts`
 - **Service Method**: `processRefund()`
@@ -34,12 +34,12 @@ This document identifies frontend pages that are calling backend endpoints that 
 - **Frontend Page**: `app/dashboard/applicants/[id]/review/page.tsx:40`
 - **Purpose**: Accept/approve a booking application
 - **Request Body**: 
-  ```typescript
+  \`\`\`typescript
   {
     notes?: string;
     assignedGroup?: string;
   }
-  ```
+  \`\`\`
 - **Response**: Updated booking with status 'confirmed'
 - **Controller**: `bookings.controller.ts`
 - **Service Method**: `acceptBooking()`
@@ -50,12 +50,12 @@ This document identifies frontend pages that are calling backend endpoints that 
 - **Frontend Page**: `app/dashboard/applicants/[id]/review/page.tsx:61`
 - **Purpose**: Reject a booking application
 - **Request Body**: 
-  ```typescript
+  \`\`\`typescript
   {
     reason: string;
     refundAmount?: number;
   }
-  ```
+  \`\`\`
 - **Response**: Updated booking with status 'rejected'
 - **Controller**: `bookings.controller.ts`
 - **Service Method**: `rejectBooking()`
@@ -69,7 +69,7 @@ This document identifies frontend pages that are calling backend endpoints that 
 - **Purpose**: Get overall package performance metrics
 - **Query Params**: `startDate?, endDate?`
 - **Response**: 
-  ```typescript
+  \`\`\`typescript
   {
     totalRevenue: number;
     totalBookings: number;
@@ -79,7 +79,7 @@ This document identifies frontend pages that are calling backend endpoints that 
     paymentPreferences: {installment: number, fullPayment: number};
     activePackages: Package[];
   }
-  ```
+  \`\`\`
 - **Controller**: `packages.controller.ts`
 - **Service Method**: `getOverallPerformance()`
 - **Note**: Different from `/packages/:id/performance` (single package)
@@ -90,13 +90,13 @@ This document identifies frontend pages that are calling backend endpoints that 
 - **Frontend Page**: `app/dashboard/packages/[id]/availability/page.tsx:48`
 - **Purpose**: Update package availability/slots
 - **Request Body**: 
-  ```typescript
+  \`\`\`typescript
   {
     totalSlots?: number;
     bookedSlots?: number;
     status?: 'open' | 'closed' | 'full';
   }
-  ```
+  \`\`\`
 - **Response**: Updated package
 - **Controller**: `packages.controller.ts`
 - **Service Method**: `updateAvailability()`
@@ -109,7 +109,7 @@ This document identifies frontend pages that are calling backend endpoints that 
 - **Frontend Page**: `app/dashboard/reports/page.tsx:69`
 - **Purpose**: Export various reports (Applicant Manifest, Financial, Refund Logs, Accommodation)
 - **Query Params**: 
-  ```typescript
+  \`\`\`typescript
   {
     type: 'applicant_manifest' | 'financial' | 'refund_logs' | 'accommodation';
     format: 'csv' | 'pdf';
@@ -119,7 +119,7 @@ This document identifies frontend pages that are calling backend endpoints that 
     group?: string;
     includePhotos?: boolean;
   }
-  ```
+  \`\`\`
 - **Response**: File download (CSV/PDF)
 - **Controller**: Need to check if `analytics.controller.ts` export endpoint handles all types
 - **Note**: Currently exists as `/operator/analytics/export` - may need to verify it supports all report types

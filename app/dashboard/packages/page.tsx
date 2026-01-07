@@ -8,9 +8,9 @@ import Link from "next/link"
 async function getPackagesData() {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.BACKEND_API_URL || "http://localhost:5000/api"
-    console.log("[v0] Fetching packages from:", `${apiUrl}/packages`)
+    console.log("[v0] Fetching packages from:", `${apiUrl}/operator/packages`)
 
-    const response = await fetch(`${apiUrl}/packages`, {
+    const response = await fetch(`${apiUrl}/operator/packages`, {
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",

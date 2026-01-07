@@ -43,7 +43,9 @@ export default function ApplicantDetailPage({ params }: { params: { id: string }
 
   const fetchBookingDetails = async () => {
     try {
-      const response = await fetch(`/api/bookings/${params.id}/detailed`, {
+      const apiUrl =
+        process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.BACKEND_API_URL || "http://localhost:5000/api"
+      const response = await fetch(`${apiUrl}/operator/bookings/${params.id}/detailed`, {
         credentials: "include",
       })
 

@@ -64,19 +64,22 @@ export default function FinancialPage() {
         // Fetch revenue flow data
         const revenueRes = await fetch(`${apiUrl}/operator/reports/revenue-flow?period=monthly`)
         const revenueFlowData = await revenueRes.json()
-        setRevenueData(revenueFlowData)
+        setRevenueData(Array.isArray(revenueFlowData) ? revenueFlowData : [])
 
         // Fetch popular packages
         const packagesRes = await fetch(`${apiUrl}/operator/reports/popular-packages?limit=3`)
         const packagesData = await packagesRes.json()
-        setTopPackages(packagesData)
+        setTopPackages(Array.isArray(packagesData) ? packagesData : packagesData?.packages || [])
 
         // Fetch recent transactions (using wallet endpoint)
         const transactionsRes = await fetch(`${apiUrl}/operator/wallet/transactions?limit=5`)
         const transactionsData = await transactionsRes.json()
-        setTransactions(transactionsData)
+        setTransactions(Array.isArray(transactionsData) ? transactionsData : transactionsData?.transactions || [])
       } catch (error) {
         console.error("[v0] Failed to fetch financial data:", error)
+        setRevenueData([])
+        setTopPackages([])
+        setTransactions([])
       } finally {
         setLoading(false)
       }
@@ -209,27 +212,31 @@ export default function FinancialPage() {
           <CardContent className="p-6">
             <h2 className="text-lg font-semibold mb-4">Top Packages</h2>
             <div className="space-y-4">
-              {topPackages.map((pkg) => (
-                <div key={pkg.id}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-foreground">{pkg.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {pkg.booked}/{pkg.total} slots booked
+              {topPackages.length > 0 ? (
+                topPackages.map((pkg) => (
+                  <div key={pkg.id}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-foreground">{pkg.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {pkg.booked}/{pkg.total} slots booked
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-primary">₦{(pkg.revenue / 1000000).toFixed(1)}M</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-bold text-primary">₦{(pkg.revenue / 1000000).toFixed(1)}M</div>
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full"
+                        style={{ width: `${(pkg.booked / pkg.total) * 100}%` }}
+                      />
                     </div>
                   </div>
-                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full"
-                      style={{ width: `${(pkg.booked / pkg.total) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground text-center py-4">No package data available</div>
+              )}
             </div>
             <Button variant="outline" size="sm" className="w-full mt-4 bg-transparent">
               View All Packages
@@ -263,41 +270,51 @@ export default function FinancialPage() {
                 </tr>
               </thead>
               <tbody>
-                {transactions.map((txn) => (
-                  <tr key={txn.id} className="border-b border-border/50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
-                          {txn.applicantName
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
+                {transactions.length > 0 ? (
+                  transactions.map((txn) => (
+                    <tr key={txn.id} className="border-b border-border/50">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                            {txn.applicantName
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium">{txn.applicantName}</div>
+                            <div className="text-xs text-muted-foreground">ID: {txn.applicantId}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="text-sm font-medium">{txn.applicantName}</div>
-                          <div className="text-xs text-muted-foreground">ID: {txn.applicantId}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm">{txn.packageName}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{txn.date}</td>
-                    <td className="px-4 py-3 text-right">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs ${
-                          txn.status === "paid" ? "bg-green-500/10 text-green-600" : "bg-yellow-500/10 text-yellow-600"
-                        }`}
-                      >
+                      </td>
+                      <td className="px-4 py-3 text-sm">{txn.packageName}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{txn.date}</td>
+                      <td className="px-4 py-3 text-right">
                         <span
-                          className={`size-1.5 rounded-full ${
-                            txn.status === "paid" ? "bg-green-600" : "bg-yellow-600"
+                          className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs ${
+                            txn.status === "paid"
+                              ? "bg-green-500/10 text-green-600"
+                              : "bg-yellow-500/10 text-yellow-600"
                           }`}
-                        />
-                        {txn.status === "paid" ? "Paid" : "Pending"}
-                      </span>
+                        >
+                          <span
+                            className={`size-1.5 rounded-full ${
+                              txn.status === "paid" ? "bg-green-600" : "bg-yellow-600"
+                            }`}
+                          />
+                          {txn.status === "paid" ? "Paid" : "Pending"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold">₦{txn.amount.toLocaleString()}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                      No transactions available
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold">₦{txn.amount.toLocaleString()}</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

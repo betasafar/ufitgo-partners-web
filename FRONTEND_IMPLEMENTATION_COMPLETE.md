@@ -149,7 +149,7 @@ All 10 modules have been successfully implemented with full backend API integrat
 
 The sidebar has been completely updated with dropdown menus:
 
-```
+\`\`\`
 📊 Dashboard (Dropdown)
   ├─ Overview
   ├─ Financial Overview
@@ -171,7 +171,7 @@ The sidebar has been completely updated with dropdown menus:
   └─ History
 
 ⚙️ Settings
-```
+\`\`\`
 
 ---
 
@@ -190,9 +190,9 @@ All frontend pages follow these patterns:
 
 ## Environment Variables Required
 
-```env
+\`\`\`env
 NEXT_PUBLIC_BACKEND_API_URL=http://localhost:3001
-```
+\`\`\`
 
 ---
 
