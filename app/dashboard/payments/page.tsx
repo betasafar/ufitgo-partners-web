@@ -9,8 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts"
 
 interface PaymentStats {
-  monthlyCollected: number      // This month's revenue from completed credits
-  pendingWithdrawals: number    // Pending payout requests
+  monthlyCollected: number // This month's revenue from completed credits
+  pendingWithdrawals: number // Pending payout requests
   totalTransactions: number
   averageTransaction: number
 }
@@ -59,7 +59,13 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     const fetchPaymentData = async () => {
-      const token = localStorage.getItem("token")
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("auth_token="))
+        ?.split("=")[1]
+
+      console.log("[v0] Payments page - Token exists:", !!token)
+
       if (!token) {
         setError("Please log in to view payments")
         setLoading(false)
@@ -91,14 +97,11 @@ export default function PaymentsPage() {
         }
 
         // 2. Fetch recent transactions
-        const txRes = await fetch(
-          `${apiUrl}/operator/wallet/transactions/filtered?limit=20&type=credit`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
+        const txRes = await fetch(`${apiUrl}/operator/wallet/transactions/filtered?limit=20&type=credit`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
         let txData: Transaction[] = []
         if (txRes.ok) {
@@ -155,9 +158,7 @@ export default function PaymentsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Payments Overview</h1>
-          <p className="text-muted-foreground">
-            Track earnings, deposits, and payout requests from pilgrim payments.
-          </p>
+          <p className="text-muted-foreground">Track earnings, deposits, and payout requests from pilgrim payments.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="gap-2 bg-transparent">
@@ -178,14 +179,17 @@ export default function PaymentsPage() {
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-primary/10 rounded-lg">
               <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <span className="text-sm text-muted-foreground">THIS MONTH REVENUE</span>
           </div>
-          <div className="text-3xl font-bold mb-1">
-            ₦ {(stats?.monthlyCollected || 0) / 1000000}M
-          </div>
+          <div className="text-3xl font-bold mb-1">₦ {(stats?.monthlyCollected || 0) / 1000000}M</div>
           <div className="flex items-center gap-1 text-xs text-green-500">
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -199,17 +203,25 @@ export default function PaymentsPage() {
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-orange-500/10 rounded-lg">
               <svg className="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <span className="text-sm text-muted-foreground">PENDING PAYOUTS</span>
           </div>
-          <div className="text-3xl font-bold mb-1">
-            ₦ {(stats?.pendingWithdrawals || 0) / 1000000}M
-          </div>
+          <div className="text-3xl font-bold mb-1">₦ {(stats?.pendingWithdrawals || 0) / 1000000}M</div>
           <div className="flex items-center gap-1 text-xs text-orange-500">
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
             </svg>
             <span>Awaiting bank transfer</span>
           </div>
@@ -220,7 +232,12 @@ export default function PaymentsPage() {
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-blue-500/10 rounded-lg">
               <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
               </svg>
             </div>
             <span className="text-sm text-muted-foreground">TOTAL TRANSACTIONS</span>
@@ -239,9 +256,7 @@ export default function PaymentsPage() {
             </div>
             <span className="text-sm text-muted-foreground">AVG TRANSACTION</span>
           </div>
-          <div className="text-3xl font-bold mb-1">
-            ₦ {((stats?.averageTransaction || 0) / 1000).toFixed(0)}k
-          </div>
+          <div className="text-3xl font-bold mb-1">₦ {((stats?.averageTransaction || 0) / 1000).toFixed(0)}k</div>
           <div className="text-xs text-muted-foreground">Per booking payment</div>
         </div>
       </div>
@@ -360,7 +375,11 @@ export default function PaymentsPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                           <span className="text-sm font-semibold">
-                            {pilgrimName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                            {pilgrimName
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .slice(0, 2)}
                           </span>
                         </div>
                         <div>
@@ -370,9 +389,7 @@ export default function PaymentsPage() {
                       </div>
                     </TableCell>
                     <TableCell>{packageTitle}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(txn.createdAt)}
-                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{formatDate(txn.createdAt)}</TableCell>
                     <TableCell className="font-semibold">{formatCurrency(txn.amount)}</TableCell>
                     <TableCell>
                       <Badge
@@ -381,17 +398,15 @@ export default function PaymentsPage() {
                           txn.status === "completed"
                             ? "bg-green-500/10 text-green-600 border-green-500/20"
                             : txn.status === "pending"
-                            ? "bg-orange-500/10 text-orange-600 border-orange-500/20"
-                            : "bg-red-500/10 text-red-600 border-red-500/20"
+                              ? "bg-orange-500/10 text-orange-600 border-orange-500/20"
+                              : "bg-red-500/10 text-red-600 border-red-500/20"
                         }
                       >
                         {txn.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">
-                        {txn.type === "credit" ? "Payment Received" : "Payout"}
-                      </Badge>
+                      <Badge variant="secondary">{txn.type === "credit" ? "Payment Received" : "Payout"}</Badge>
                     </TableCell>
                   </TableRow>
                 )
