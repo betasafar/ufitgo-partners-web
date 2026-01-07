@@ -1,4 +1,6 @@
-import { mockApplicants, mockTransactions } from "@/lib/mock-data"
+"use client"
+
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -7,8 +9,44 @@ import Link from "next/link"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 export default function ApplicantPaymentsPage({ params }: { params: { id: string } }) {
-  const applicant = mockApplicants[0]
-  const transactions = mockTransactions
+  const [booking, setBooking] = useState<any>(null)
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchBookingDetails()
+  }, [params.id])
+
+  const fetchBookingDetails = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/bookings/${params.id}/detailed`,
+        { credentials: "include" },
+      )
+      if (response.ok) {
+        const data = await response.json()
+        setBooking(data.booking)
+        setTransactions(data.transactions || [])
+      }
+    } catch (error) {
+      console.error("Failed to fetch booking details:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="p-6">Loading payment details...</div>
+  }
+
+  if (!booking) {
+    return <div className="p-6">Booking not found</div>
+  }
+
+  const totalCost = booking.package?.price || 0
+  const amountPaid = booking.paymentProgress?.paid || 0
+  const outstanding = totalCost - amountPaid
+  const paymentPercentage = totalCost > 0 ? (amountPaid / totalCost) * 100 : 0
 
   return (
     <div className="space-y-6">
@@ -23,7 +61,7 @@ export default function ApplicantPaymentsPage({ params }: { params: { id: string
         </Link>
         <ChevronRight className="h-4 w-4" />
         <Link href={`/dashboard/applicants/${params.id}`} className="hover:text-foreground">
-          Ibrahim Musa
+          {booking.applicant?.name || "Applicant Name"}
         </Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-primary">Payments</span>
@@ -32,10 +70,10 @@ export default function ApplicantPaymentsPage({ params }: { params: { id: string
       {/* Header */}
       <div className="flex items-center gap-4">
         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-          <span className="text-xl font-bold">IM</span>
+          <span className="text-xl font-bold">{booking.applicant?.initials || "A"}</span>
         </div>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">Ibrahim Musa</h1>
+          <h1 className="text-2xl font-bold">{booking.applicant?.name || "Applicant Name"}</h1>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -46,7 +84,7 @@ export default function ApplicantPaymentsPage({ params }: { params: { id: string
                   d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                 />
               </svg>
-              Passport: A12345678
+              Passport: {booking.applicant?.passport || "A12345678"}
             </span>
             <span className="flex items-center gap-1">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -57,13 +95,13 @@ export default function ApplicantPaymentsPage({ params }: { params: { id: string
                   d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                 />
               </svg>
-              Package: Premium Hajj 2024 (Abuja)
+              Package: {booking.package?.name || "Premium Hajj 2024 (Abuja)"}
             </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-            Confirmed
+            {booking.status || "Confirmed"}
           </Badge>
           <Button variant="outline">
             <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -95,7 +133,7 @@ export default function ApplicantPaymentsPage({ params }: { params: { id: string
             </div>
             <span className="text-sm text-muted-foreground">Total Package Cost</span>
           </div>
-          <p className="text-3xl font-bold mb-2">₦4,500,000</p>
+          <p className="text-3xl font-bold mb-2">₦{totalCost.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -125,12 +163,14 @@ export default function ApplicantPaymentsPage({ params }: { params: { id: string
               <span className="text-sm text-muted-foreground">Total Paid</span>
             </div>
             <Badge variant="outline" className="text-xs">
-              66%
+              {paymentPercentage.toFixed(0)}%
             </Badge>
           </div>
-          <p className="text-3xl font-bold text-green-500 mb-2">₦3,000,000</p>
-          <Progress value={66} className="h-2 mb-2" />
-          <p className="text-xs text-muted-foreground">Last payment: Oct 12, 2023</p>
+          <p className="text-3xl font-bold text-green-500 mb-2">₦{amountPaid.toLocaleString()}</p>
+          <Progress value={paymentPercentage} className="h-2 mb-2" />
+          <p className="text-xs text-muted-foreground">
+            Last payment: {new Date(booking.updatedAt).toLocaleDateString()}
+          </p>
         </div>
 
         <div className="bg-card border border-primary/20 rounded-lg p-6">
@@ -147,7 +187,7 @@ export default function ApplicantPaymentsPage({ params }: { params: { id: string
             </div>
             <span className="text-sm text-muted-foreground">Outstanding Balance</span>
           </div>
-          <p className="text-3xl font-bold mb-3">₦1,500,000</p>
+          <p className="text-3xl font-bold mb-3">₦{outstanding.toLocaleString()}</p>
           <Button className="w-full bg-primary hover:bg-primary/90">
             <CreditCard className="h-4 w-4 mr-2" />
             Record Payment
@@ -183,36 +223,21 @@ export default function ApplicantPaymentsPage({ params }: { params: { id: string
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.map((txn) => (
+            {transactions.map((txn: any) => (
               <TableRow key={txn.id} className={`border-b border-border ${txn.status === "pending" ? "italic" : ""}`}>
-                <TableCell className={txn.status === "pending" ? "text-muted-foreground" : ""}>{txn.date}</TableCell>
-                <TableCell className="font-mono text-sm">{txn.refId}</TableCell>
+                <TableCell className={txn.status === "pending" ? "text-muted-foreground" : ""}>
+                  {new Date(txn.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell className="font-mono text-sm">{txn.reference}</TableCell>
                 <TableCell>
-                  <p className="font-medium">{txn.description}</p>
+                  <p className="font-medium">{txn.description || "Payment"}</p>
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2">
-                    {txn.method !== "-" && (
-                      <svg
-                        className="h-4 w-4 text-muted-foreground"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                        />
-                      </svg>
-                    )}
-                    <span className="text-sm">{txn.method}</span>
-                  </div>
+                  <span className="text-sm">{txn.method || "Bank Transfer"}</span>
                 </TableCell>
                 <TableCell className="font-semibold">₦{txn.amount.toLocaleString()}</TableCell>
                 <TableCell>
-                  {txn.status === "paid" && (
+                  {txn.status === "completed" && (
                     <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
                       Paid
                     </Badge>
@@ -249,13 +274,13 @@ export default function ApplicantPaymentsPage({ params }: { params: { id: string
                   fill="none"
                   stroke="hsl(var(--primary))"
                   strokeWidth="20"
-                  strokeDasharray={`${66 * 5.026} ${100 * 5.026}`}
+                  strokeDasharray={`${paymentPercentage * 5.026} ${100 * 5.026}`}
                   strokeLinecap="round"
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <p className="text-xs text-muted-foreground mb-1">PAID</p>
-                <p className="text-3xl font-bold">66%</p>
+                <p className="text-3xl font-bold">{paymentPercentage.toFixed(0)}%</p>
               </div>
             </div>
           </div>

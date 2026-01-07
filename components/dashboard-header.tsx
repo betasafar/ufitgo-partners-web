@@ -1,7 +1,9 @@
-import { Bell, Search } from "lucide-react"
+"use client"
+
+import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { NotificationsPanel } from "@/components/notifications-panel"
 import type { Operator } from "@/lib/types"
 
 interface DashboardHeaderProps {
@@ -26,10 +28,7 @@ export function DashboardHeader({ operator }: DashboardHeaderProps) {
       </div>
 
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-        </Button>
+        <NotificationsPanel />
 
         <div className="flex items-center gap-3">
           <Avatar>

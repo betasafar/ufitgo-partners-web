@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Building2, Mail, Phone, MapPin, Upload, Shield, Bell, HelpCircle, Eye, EyeOff, Check } from "lucide-react"
 
 export default function SettingsPage() {
@@ -19,6 +20,85 @@ export default function SettingsPage() {
     paymentConfirmations: true,
     visaUpdates: true,
   })
+  const [profile, setProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [bankAccount, setBankAccount] = useState<any>(null)
+
+  useEffect(() => {
+    fetchProfile()
+    fetchBankAccount()
+  }, [])
+
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/profile`, {
+        credentials: "include",
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setProfile(data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchBankAccount = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/bank-account`, {
+        credentials: "include",
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setBankAccount(data.data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch bank account:", error)
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/profile`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(profile),
+      })
+
+      if (response.ok) {
+        alert("Profile updated successfully")
+      }
+    } catch (error) {
+      console.error("Failed to update profile:", error)
+    }
+  }
+
+  const handleLogoUpload = async (file: File) => {
+    const formData = new FormData()
+    formData.append("logo", file)
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/profile/logo`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      })
+
+      if (response.ok) {
+        await fetchProfile()
+        alert("Logo uploaded successfully")
+      }
+    } catch (error) {
+      console.error("Failed to upload logo:", error)
+    }
+  }
+
+  if (loading) {
+    return <div className="p-6">Loading profile...</div>
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -59,17 +139,37 @@ export default function SettingsPage() {
                 <Label>Agency Logo</Label>
                 <div className="flex items-center gap-4">
                   <div className="w-24 h-24 bg-[#3a4a3d] rounded-lg flex items-center justify-center border-2 border-primary/50">
-                    <span className="text-2xl">🕌</span>
+                    {profile?.logo ? (
+                      <img
+                        src={profile.logo || "/placeholder.svg"}
+                        alt="Logo"
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    ) : (
+                      <span className="text-2xl">🕌</span>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
                       Upload a high-res logo (PNG/JPG) for official documents.
                     </p>
                     <p className="text-xs text-muted-foreground">Max file size: 2MB</p>
-                    <Button variant="outline" size="sm" className="bg-[#3a4a3d]">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-[#3a4a3d]"
+                      onClick={() => document.getElementById("logo-upload")?.click()}
+                    >
                       <Upload className="mr-2 h-4 w-4" />
                       Upload New Logo
                     </Button>
+                    <input
+                      id="logo-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0])}
+                    />
                   </div>
                 </div>
               </div>
@@ -79,7 +179,8 @@ export default function SettingsPage() {
                 <Label htmlFor="agencyName">Agency Name</Label>
                 <Input
                   id="agencyName"
-                  defaultValue="Al-Haramain Tours & Travels Ltd."
+                  value={profile?.agencyName || ""}
+                  onChange={(e) => setProfile({ ...profile, agencyName: e.target.value })}
                   className="bg-[#1a2a1d] border-[#3a4a3d]"
                 />
               </div>
@@ -117,7 +218,7 @@ export default function SettingsPage() {
                     <Input
                       id="email"
                       type="email"
-                      defaultValue="operations@alharামaintours.ng"
+                      defaultValue="operations@alharāmaintours.ng"
                       className="bg-[#1a2a1d] border-[#3a4a3d] pl-10"
                     />
                   </div>
@@ -152,12 +253,45 @@ export default function SettingsPage() {
             </div>
           </Card>
 
+          {/* Bank Account Section */}
+          <Card className="p-6 bg-[#2a3a2d] border-[#3a4a3d]">
+            <div className="flex items-center gap-3 mb-6">
+              <Building2 className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Bank Account Details</h2>
+            </div>
+
+            {bankAccount ? (
+              <div className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Bank Name</Label>
+                    <Input value={bankAccount.bankName} disabled className="bg-[#1a2a1d] border-[#3a4a3d]" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Account Name</Label>
+                    <Input value={bankAccount.accountName} disabled className="bg-[#1a2a1d] border-[#3a4a3d]" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Account Number</Label>
+                    <Input value={bankAccount.accountNumber} disabled className="bg-[#1a2a1d] border-[#3a4a3d]" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Badge className="bg-green-500/10 text-green-500">Verified</Badge>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No bank account configured</p>
+            )}
+          </Card>
+
           {/* Save Button */}
           <div className="flex justify-end gap-3">
             <Button variant="outline" className="bg-transparent">
               Discard Changes
             </Button>
-            <Button>
+            <Button onClick={handleSaveProfile}>
               <Check className="mr-2 h-4 w-4" />
               Save Changes
             </Button>

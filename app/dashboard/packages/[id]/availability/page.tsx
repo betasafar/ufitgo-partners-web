@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -5,7 +8,74 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { CalendarIcon, Clock, HelpCircle } from "lucide-react"
 
-export default function PackageAvailabilityPage() {
+export default function PackageAvailabilityPage({ params }: { params: { id: string } }) {
+  const [packageData, setPackageData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [availability, setAvailability] = useState({
+    isOpen: true,
+    opensAt: "",
+    closesAt: "",
+  })
+
+  useEffect(() => {
+    fetchPackageDetails()
+  }, [params.id])
+
+  const fetchPackageDetails = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/packages/${params.id}`, {
+        credentials: "include",
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setPackageData(data)
+        setAvailability({
+          isOpen: data.isOpen || true,
+          opensAt: data.opensAt || "2024-02-15T09:00",
+          closesAt: data.closesAt || "2024-05-30T23:59",
+        })
+      }
+    } catch (error) {
+      console.error("Failed to fetch package details:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdateAvailability = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/packages/${params.id}/availability`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(availability),
+        },
+      )
+
+      if (response.ok) {
+        alert("Availability updated successfully")
+      }
+    } catch (error) {
+      console.error("Failed to update availability:", error)
+    }
+  }
+
+  if (loading) {
+    return <div className="p-6">Loading availability settings...</div>
+  }
+
+  const getDaysDifference = () => {
+    if (availability.opensAt && availability.closesAt) {
+      const start = new Date(availability.opensAt)
+      const end = new Date(availability.closesAt)
+      const diff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+      return diff
+    }
+    return 0
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -16,14 +86,14 @@ export default function PackageAvailabilityPage() {
             </a>
             <span>/</span>
             <a href="#" className="hover:text-foreground">
-              Hajj 2024 Premium
+              {packageData?.name || "Package"}
             </a>
             <span>/</span>
             <span className="text-primary">Availability</span>
           </div>
           <h1 className="text-2xl font-bold text-foreground">Booking Availability Settings</h1>
           <p className="text-sm text-muted-foreground">
-            Configure the registration window for the <strong>Hajj 2024 Premium</strong> package. Manage automated
+            Configure the registration window for the <strong>{packageData?.name}</strong> package. Manage automated
             open/close dates or manually override availability.
           </p>
         </div>
@@ -41,16 +111,23 @@ export default function PackageAvailabilityPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="text-lg font-semibold">Booking Status</h2>
-                    <span className="px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-xs uppercase font-medium">
-                      Open
+                    <span
+                      className={`px-2 py-0.5 rounded-md text-xs uppercase font-medium ${
+                        availability.isOpen ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {availability.isOpen ? "Open" : "Closed"}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Bookings are currently accepting new applicants. Toggle to manually close regardless of the
-                    schedule.
+                    Bookings are currently {availability.isOpen ? "accepting" : "not accepting"} new applicants. Toggle
+                    to manually {availability.isOpen ? "close" : "open"} regardless of the schedule.
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch
+                  checked={availability.isOpen}
+                  onCheckedChange={(checked) => setAvailability({ ...availability, isOpen: checked })}
+                />
               </div>
               <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
                 <span className="text-yellow-600">⚠</span>
@@ -74,11 +151,13 @@ export default function PackageAvailabilityPage() {
                   <p className="text-xs text-muted-foreground mb-1.5">WAT (GMT+1)</p>
                   <div className="relative">
                     <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <Input type="date" id="opens-on" defaultValue="2024-02-15" className="pl-9" />
-                  </div>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <Input type="time" defaultValue="09:00" className="pl-9" />
+                    <Input
+                      type="datetime-local"
+                      id="opens-on"
+                      value={availability.opensAt}
+                      onChange={(e) => setAvailability({ ...availability, opensAt: e.target.value })}
+                      className="pl-9"
+                    />
                   </div>
                 </div>
 
@@ -87,11 +166,13 @@ export default function PackageAvailabilityPage() {
                   <p className="text-xs text-muted-foreground mb-1.5">WAT (GMT+1)</p>
                   <div className="relative">
                     <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <Input type="date" id="closes-on" defaultValue="2024-05-30" className="pl-9" />
-                  </div>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <Input type="time" defaultValue="23:59" className="pl-9" />
+                    <Input
+                      type="datetime-local"
+                      id="closes-on"
+                      value={availability.closesAt}
+                      onChange={(e) => setAvailability({ ...availability, closesAt: e.target.value })}
+                      className="pl-9"
+                    />
                   </div>
                 </div>
               </div>
@@ -104,7 +185,7 @@ export default function PackageAvailabilityPage() {
                       <h3 className="font-semibold mb-1">Booking Window Duration</h3>
                       <p className="text-sm text-muted-foreground">
                         Based on the selected dates, the registration window will remain open for{" "}
-                        <strong className="text-foreground">105 days</strong>
+                        <strong className="text-foreground">{getDaysDifference()} days</strong>
                       </p>
                     </div>
                   </div>
@@ -114,8 +195,10 @@ export default function PackageAvailabilityPage() {
           </Card>
 
           <div className="flex gap-3">
-            <Button variant="outline">Discard Changes</Button>
-            <Button className="gap-2">
+            <Button variant="outline" onClick={fetchPackageDetails}>
+              Discard Changes
+            </Button>
+            <Button className="gap-2" onClick={handleUpdateAvailability}>
               <CalendarIcon className="size-4" />
               Update Availability
             </Button>

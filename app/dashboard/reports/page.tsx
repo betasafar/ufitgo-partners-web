@@ -1,10 +1,13 @@
+"use client"
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FileText, DollarSign, RotateCcw, Bed, History } from "lucide-react"
+import { FileText, DollarSign, RotateCcw, Bed, History, Download } from "lucide-react"
 
 const reportTypes = [
   {
@@ -12,28 +15,83 @@ const reportTypes = [
     icon: FileText,
     title: "Applicant Manifest",
     description: "Complete list of pilgrims including passport details, visa status, and grouping assignments.",
+    endpoint: "applicant-manifest",
   },
   {
     id: "financial",
     icon: DollarSign,
     title: "Financial Report",
     description: "Detailed breakdown of payments received, outstanding balances, and agent commissions.",
+    endpoint: "financial",
   },
   {
     id: "refund",
     icon: RotateCcw,
     title: "Refund Logs",
     description: "History of all processed and pending refunds, including rejection reasons.",
+    endpoint: "refunds",
   },
   {
     id: "accommodation",
     icon: Bed,
     title: "Accommodation List",
     description: "Rooming lists for Makkah and Madinah hotels sorted by package tiers.",
+    endpoint: "accommodation",
   },
 ]
 
 export default function ReportsPage() {
+  const [selectedReport, setSelectedReport] = useState<string>("manifest")
+  const [loading, setLoading] = useState(false)
+  const [params, setParams] = useState({
+    startDate: "2023-10-01",
+    endDate: "2023-10-31",
+    visaStatus: "all",
+    group: "all-groups",
+    format: "csv",
+    includePhotos: true,
+  })
+
+  const handleExportReport = async () => {
+    setLoading(true)
+    try {
+      const queryParams = new URLSearchParams({
+        type: selectedReport,
+        format: params.format,
+        startDate: params.startDate,
+        endDate: params.endDate,
+        visaStatus: params.visaStatus,
+        group: params.group,
+        includePhotos: params.includePhotos.toString(),
+      })
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/reports/export?${queryParams}`,
+        {
+          credentials: "include",
+        },
+      )
+
+      if (!response.ok) throw new Error("Export failed")
+
+      const data = await response.json()
+
+      // Trigger download
+      const blob = new Blob([params.format === "csv" ? data.content : JSON.stringify(data)], {
+        type: params.format === "csv" ? "text/csv" : "application/pdf",
+      })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `${selectedReport}-report-${new Date().toISOString().split("T")[0]}.${params.format}`
+      a.click()
+    } catch (error) {
+      console.error("Export error:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -61,7 +119,12 @@ export default function ReportsPage() {
           {reportTypes.map((report) => (
             <button
               key={report.id}
-              className="group relative flex items-start gap-4 p-4 text-left rounded-lg border border-border/50 bg-card/50 hover:border-primary/50 hover:bg-card transition-all"
+              onClick={() => setSelectedReport(report.id)}
+              className={`group relative flex items-start gap-4 p-4 text-left rounded-lg border transition-all ${
+                selectedReport === report.id
+                  ? "border-primary/50 bg-card"
+                  : "border-border/50 bg-card/50 hover:border-primary/50 hover:bg-card"
+              }`}
             >
               <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <report.icon className="size-6" />
@@ -70,7 +133,11 @@ export default function ReportsPage() {
                 <h3 className="font-semibold text-foreground mb-1">{report.title}</h3>
                 <p className="text-sm text-muted-foreground">{report.description}</p>
               </div>
-              <div className="absolute top-4 right-4 size-5 rounded-full border-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+              {selectedReport === report.id && (
+                <div className="absolute top-4 right-4 size-5 rounded-full border-2 border-primary bg-primary flex items-center justify-center">
+                  <span className="text-primary-foreground text-xs">✓</span>
+                </div>
+              )}
             </button>
           ))}
         </div>
@@ -89,15 +156,24 @@ export default function ReportsPage() {
             <div className="space-y-2">
               <Label htmlFor="date-from">Date Range</Label>
               <div className="flex gap-3 items-center">
-                <Input type="date" id="date-from" defaultValue="2023-10-01" />
+                <Input
+                  type="date"
+                  id="date-from"
+                  value={params.startDate}
+                  onChange={(e) => setParams({ ...params, startDate: e.target.value })}
+                />
                 <span className="text-sm text-muted-foreground">to</span>
-                <Input type="date" defaultValue="2023-10-31" />
+                <Input
+                  type="date"
+                  value={params.endDate}
+                  onChange={(e) => setParams({ ...params, endDate: e.target.value })}
+                />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="visa-status">Visa Status</Label>
-              <Select defaultValue="all">
+              <Select value={params.visaStatus} onValueChange={(v) => setParams({ ...params, visaStatus: v })}>
                 <SelectTrigger id="visa-status">
                   <SelectValue />
                 </SelectTrigger>
@@ -112,7 +188,7 @@ export default function ReportsPage() {
 
             <div className="space-y-2">
               <Label htmlFor="group">Group/Agent</Label>
-              <Select defaultValue="all-groups">
+              <Select value={params.group} onValueChange={(v) => setParams({ ...params, group: v })}>
                 <SelectTrigger id="group">
                   <SelectValue />
                 </SelectTrigger>
@@ -125,16 +201,14 @@ export default function ReportsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Custom Range</Label>
-              <Select defaultValue="custom">
+              <Label>Export Format</Label>
+              <Select value={params.format} onValueChange={(v) => setParams({ ...params, format: v })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="custom">Custom Range</SelectItem>
-                  <SelectItem value="this-month">This Month</SelectItem>
-                  <SelectItem value="last-month">Last Month</SelectItem>
-                  <SelectItem value="this-year">This Year</SelectItem>
+                  <SelectItem value="csv">CSV</SelectItem>
+                  <SelectItem value="pdf">PDF</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -144,7 +218,11 @@ export default function ReportsPage() {
             <Label>Format Columns</Label>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox id="passport-photos" defaultChecked />
+                <Checkbox
+                  id="passport-photos"
+                  checked={params.includePhotos}
+                  onCheckedChange={(checked) => setParams({ ...params, includePhotos: checked === true })}
+                />
                 <span className="text-sm">Include Passport Photos</span>
               </label>
             </div>
@@ -158,10 +236,24 @@ export default function ReportsPage() {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline">Discard Changes</Button>
-            <Button className="gap-2">
-              <FileText className="size-4" />
-              Generate Report
+            <Button
+              variant="outline"
+              onClick={() =>
+                setParams({
+                  startDate: "2023-10-01",
+                  endDate: "2023-10-31",
+                  visaStatus: "all",
+                  group: "all-groups",
+                  format: "csv",
+                  includePhotos: true,
+                })
+              }
+            >
+              Discard Changes
+            </Button>
+            <Button className="gap-2" onClick={handleExportReport} disabled={loading}>
+              <Download className="size-4" />
+              {loading ? "Generating..." : "Generate Report"}
             </Button>
           </div>
         </CardContent>

@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,7 +11,70 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { RotateCcw, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
-export default function IssueRefundPage() {
+export default function IssueRefundPage({ params }: { params: { id: string } }) {
+  const [booking, setBooking] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [refundData, setRefundData] = useState({
+    type: "full",
+    amount: 0,
+    reason: "visa-denied",
+    notes: "",
+  })
+
+  useEffect(() => {
+    fetchBookingDetails()
+  }, [params.id])
+
+  const fetchBookingDetails = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/bookings/${params.id}/detailed`,
+        { credentials: "include" },
+      )
+      if (response.ok) {
+        const data = await response.json()
+        setBooking(data.booking)
+        setRefundData({ ...refundData, amount: data.booking.paymentProgress?.paid || 0 })
+      }
+    } catch (error) {
+      console.error("Failed to fetch booking details:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleIssueRefund = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/bookings/${params.id}/refund`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(refundData),
+        },
+      )
+
+      if (response.ok) {
+        alert("Refund processed successfully")
+        window.location.href = `/dashboard/applicants/${params.id}`
+      }
+    } catch (error) {
+      console.error("Failed to issue refund:", error)
+    }
+  }
+
+  if (loading) {
+    return <div className="p-6">Loading refund details...</div>
+  }
+
+  if (!booking) {
+    return <div className="p-6">Booking not found</div>
+  }
+
+  const totalPaid = booking.paymentProgress?.paid || 0
+  const maxRefundable = totalPaid * 0.75 // 75% refundable
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -16,8 +82,12 @@ export default function IssueRefundPage() {
           Home
         </Link>
         <span>/</span>
-        <Link href="/dashboard/payments" className="hover:text-foreground">
-          Payments
+        <Link href="/dashboard/applicants" className="hover:text-foreground">
+          Applicants
+        </Link>
+        <span>/</span>
+        <Link href={`/dashboard/applicants/${params.id}`} className="hover:text-foreground">
+          {booking.applicant?.name}
         </Link>
         <span>/</span>
         <span className="text-primary">Issue Refund</span>
@@ -27,10 +97,10 @@ export default function IssueRefundPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Issue Refund</h1>
           <p className="text-sm text-muted-foreground">
-            Process a full or partial refund for applicant <strong className="text-primary">#HAJJ-24-001</strong>
+            Process a full or partial refund for applicant <strong className="text-primary">#{booking.id}</strong>
           </p>
         </div>
-        <Link href="/dashboard/applicants/APP-001">
+        <Link href={`/dashboard/applicants/${params.id}`}>
           <Button variant="outline" className="gap-2 bg-transparent">
             <ArrowLeft className="size-4" />
             Back to Applicant Profile
@@ -44,24 +114,24 @@ export default function IssueRefundPage() {
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
                 <Avatar className="size-16">
-                  <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima" />
-                  <AvatarFallback>FY</AvatarFallback>
+                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${booking.applicant?.name}`} />
+                  <AvatarFallback>{booking.applicant?.initials || "A"}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold text-foreground mb-1">Fatima Yusuf</h2>
-                  <div className="text-sm text-muted-foreground">Hajj Premium 2024 Package</div>
+                  <h2 className="text-xl font-bold text-foreground mb-1">{booking.applicant?.name}</h2>
+                  <div className="text-sm text-muted-foreground">{booking.package?.name}</div>
                   <div className="flex items-center gap-4 mt-2 text-sm">
                     <div className="flex items-center gap-1.5">
                       <span className="text-muted-foreground">Passport No.</span>
-                      <span className="font-medium">A12345678</span>
+                      <span className="font-medium">{booking.applicant?.passport}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-muted-foreground">Payment Status</span>
-                      <span className="text-green-600 font-medium">Completed</span>
+                      <span className="text-green-600 font-medium">{booking.paymentStatus}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-muted-foreground">Visa Status</span>
-                      <span className="text-red-600 font-medium">Rejected</span>
+                      <span className="text-red-600 font-medium">{booking.visaStatus}</span>
                     </div>
                   </div>
                 </div>
@@ -82,12 +152,26 @@ export default function IssueRefundPage() {
                     Refund Type
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
-                    <button className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-primary bg-primary/5 hover:bg-primary/10 transition-colors">
+                    <button
+                      onClick={() => setRefundData({ ...refundData, type: "full", amount: totalPaid })}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-colors ${
+                        refundData.type === "full"
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-muted/30 hover:bg-muted/50"
+                      }`}
+                    >
                       <div className="text-2xl">💯</div>
                       <div className="text-sm font-semibold">Full Refund</div>
                       <div className="text-xs text-muted-foreground">Refund entire balance</div>
                     </button>
-                    <button className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <button
+                      onClick={() => setRefundData({ ...refundData, type: "partial", amount: 0 })}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-colors ${
+                        refundData.type === "partial"
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-muted/30 hover:bg-muted/50"
+                      }`}
+                    >
                       <div className="text-2xl">📊</div>
                       <div className="text-sm font-semibold">Partial Refund</div>
                       <div className="text-xs text-muted-foreground">Refund specific amount</div>
@@ -103,27 +187,23 @@ export default function IssueRefundPage() {
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₦</span>
                     <Input
                       id="refund-amount"
-                      type="text"
-                      defaultValue="4,500,000"
+                      type="number"
+                      value={refundData.amount}
+                      onChange={(e) => setRefundData({ ...refundData, amount: Number(e.target.value) })}
                       className="pl-7 text-lg font-semibold"
-                      readOnly
+                      readOnly={refundData.type === "full"}
                     />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs h-auto py-1 px-2"
-                    >
-                      NGN
-                    </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1.5">Max refundable: ₦4,500,000</p>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Max refundable: ₦{maxRefundable.toLocaleString()}
+                  </p>
                 </div>
 
                 <div>
                   <Label htmlFor="reason" className="mb-1.5">
                     Reason for Refund
                   </Label>
-                  <Select defaultValue="visa-denied">
+                  <Select value={refundData.reason} onValueChange={(v) => setRefundData({ ...refundData, reason: v })}>
                     <SelectTrigger id="reason">
                       <SelectValue />
                     </SelectTrigger>
@@ -145,6 +225,8 @@ export default function IssueRefundPage() {
                     id="notes"
                     placeholder="Add any additional details about this transaction..."
                     className="min-h-[100px]"
+                    value={refundData.notes}
+                    onChange={(e) => setRefundData({ ...refundData, notes: e.target.value })}
                   />
                 </div>
               </div>
@@ -161,9 +243,9 @@ export default function IssueRefundPage() {
                 <Button variant="outline" className="flex-1 bg-transparent">
                   Cancel
                 </Button>
-                <Button className="flex-1 gap-2">
+                <Button className="flex-1 gap-2" onClick={handleIssueRefund}>
                   <RotateCcw className="size-4" />
-                  Review Refund
+                  Process Refund
                 </Button>
               </div>
             </CardContent>
@@ -178,7 +260,7 @@ export default function IssueRefundPage() {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Total Paid</span>
-                  <span className="font-semibold text-foreground">₦4,500,000</span>
+                  <span className="font-semibold text-foreground">₦{totalPaid.toLocaleString()}</span>
                 </div>
                 <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                   <div className="h-full bg-green-500" style={{ width: "100%" }} />
@@ -195,7 +277,7 @@ export default function IssueRefundPage() {
               <div className="pt-3 border-t border-border/50">
                 <div className="flex justify-between mb-2">
                   <span className="text-muted-foreground text-sm">Refundable Balance</span>
-                  <span className="text-xl font-bold text-primary">₦4,500,000</span>
+                  <span className="text-xl font-bold text-primary">₦{totalPaid.toLocaleString()}</span>
                 </div>
               </div>
             </CardContent>
