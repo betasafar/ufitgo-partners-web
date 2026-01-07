@@ -44,6 +44,9 @@ export function DashboardHeader({ operator }: DashboardHeaderProps) {
           localStorage.clear()
         }
         router.push("/login")
+        setTimeout(() => {
+          stopLoading()
+        }, 500)
       } else {
         console.error("Logout failed")
         stopLoading()

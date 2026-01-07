@@ -51,7 +51,10 @@ export function LoginForm() {
       if (data.success) {
         console.log("[v0] Login successful, redirecting to dashboard")
         router.push("/dashboard")
-        router.refresh()
+        setTimeout(() => {
+          stopLoading()
+          setLoading(false)
+        }, 500)
       } else {
         throw new Error("Login failed - no success flag")
       }
@@ -59,7 +62,6 @@ export function LoginForm() {
       console.error("[v0] Login error:", err)
       setError(err instanceof Error ? err.message : "Login failed")
       stopLoading()
-    } finally {
       setLoading(false)
     }
   }
