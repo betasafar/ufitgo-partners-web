@@ -1,10 +1,17 @@
 "use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from "recharts"
 import { TrendingUp, TrendingDown, Download } from "lucide-react"
+
+// Import the centralized endpoints
+import { ENDPOINTS } from "@/lib/api-endpoints"
+
+// Keep your existing api client (secure one)
 import { apiClientRequest } from "@/lib/api-client-secure"
+
 import { useEffect, useState } from "react"
 
 // Define proper types
@@ -15,10 +22,9 @@ interface PerformanceData {
   slotsRemaining: number
   conversionRate: number
   cancellationRate: number
-  activePackagesCount: number // ← number: how many are active
+  activePackagesCount: number
   totalPackages: number
   activePackages: Array<{
-    // ← array: for the table
     id: number
     name: string
     duration: string
@@ -56,7 +62,8 @@ export default function PackagePerformancePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await apiClientRequest<any>("/operator/packages/performance")
+        // Use the centralized endpoint instead of hardcoded string
+        const data = await apiClientRequest<any>(ENDPOINTS.PACKAGES.AGGREGATE_PERFORMANCE)
 
         if (!data || !data.summary || !data.packages) {
           setPerformanceData(initialPerformanceData)
@@ -91,7 +98,7 @@ export default function PackagePerformancePage() {
           occupancyRate: pkg.occupancyRate,
         }))
 
-        // Mock chart data (replace later with real endpoints)
+        // Mock chart data (you can replace these later with real endpoints)
         const bookingVelocity = [
           { week: "Wk 1", applications: 85, bookings: 65 },
           { week: "Wk 2", applications: 110, bookings: 95 },
@@ -145,6 +152,7 @@ export default function PackagePerformancePage() {
     )
   }
 
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

@@ -1,3 +1,5 @@
+"use client"
+// import { cookies } from "next/headers"
 import type { Package, DashboardStats } from "@/lib/types"
 import { PackagesStats } from "@/components/packages-stats"
 import { PackagesTable } from "@/components/packages-table"
@@ -66,7 +68,7 @@ export default async function PackagesPage() {
             Overview of your current travel packages for religious pilgrimages and leisure tours.
           </p>
         </div>
-        <Link href="/dashboard/packages/new">
+        <Link href="/dashboard/packages/create">
           <Button className="bg-primary hover:bg-primary/90">
             <Plus className="h-4 w-4 mr-2" />
             Create New Package

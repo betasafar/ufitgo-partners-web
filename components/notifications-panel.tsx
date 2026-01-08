@@ -10,55 +10,55 @@ export function NotificationsPanel() {
   const [notifications, setNotifications] = useState<any[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
 
-  useEffect(() => {
-    fetchNotifications()
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000)
-    return () => clearInterval(interval)
-  }, [])
+  // useEffect(() => {
+  //   fetchNotifications()
+  //   // Poll for new notifications every 30 seconds
+  //   const interval = setInterval(fetchNotifications, 30000)
+  //   return () => clearInterval(interval)
+  // }, [])
 
-  const fetchNotifications = async () => {
-    try { 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/notifications?limit=10`, {
-        credentials: "include",
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setNotifications(data.notifications || [])
-        setUnreadCount(data.unreadCount || 0)
-      }
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error)
-    }
-  }
+  // const fetchNotifications = async () => {
+  //   try { 
+  //     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/notifications?limit=10`, {
+  //       credentials: "include",
+  //     })
+  //     if (response.ok) {
+  //       const data = await response.json()
+  //       setNotifications(data.notifications || [])
+  //       setUnreadCount(data.unreadCount || 0)
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to fetch notifications:", error)
+  //   }
+  // }
 
-  const markAsRead = async (id: string) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/notifications/${id}/read`,
-        { method: "PATCH", credentials: "include" },
-      )
-      if (response.ok) {
-        fetchNotifications()
-      }
-    } catch (error) {
-      console.error("Failed to mark as read:", error)
-    }
-  }
+  // const markAsRead = async (id: string) => {
+  //   try {
+  //     const response = await fetch(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/notifications/${id}/read`,
+  //       { method: "PATCH", credentials: "include" },
+  //     )
+  //     if (response.ok) {
+  //       fetchNotifications()
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to mark as read:", error)
+  //   }
+  // }
 
-  const markAllAsRead = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/notifications/read-all`, {
-        method: "PATCH",
-        credentials: "include",
-      })
-      if (response.ok) {
-        fetchNotifications()
-      }
-    } catch (error) {
-      console.error("Failed to mark all as read:", error)
-    }
-  }
+  // const markAllAsRead = async () => {
+  //   try {
+  //     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || ""}/operator/notifications/read-all`, {
+  //       method: "PATCH",
+  //       credentials: "include",
+  //     })
+  //     if (response.ok) {
+  //       fetchNotifications()
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to mark all as read:", error)
+  //   }
+  // }
 
   return (
     <DropdownMenu>
@@ -73,7 +73,7 @@ export function NotificationsPanel() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-96">
-        <div className="flex items-center justify-between p-4 border-b">
+        {/* <div className="flex items-center justify-between p-4 border-b">
           <h3 className="font-semibold">Notifications</h3>
           {unreadCount > 0 && (
             <Button variant="ghost" size="sm" onClick={markAllAsRead}>
@@ -102,7 +102,7 @@ export function NotificationsPanel() {
               </div>
             ))
           )}
-        </div>
+        </div> */}
       </DropdownMenuContent>
     </DropdownMenu>
   )

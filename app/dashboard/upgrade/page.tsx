@@ -134,7 +134,7 @@ export default async function UpgradePage() {
               key={req.id}
               className={`flex items-start gap-4 p-4 rounded-lg border ${
                 req.completed
-                  ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900"
+                  ? "bg-green-10 border-green-200 dark:bg-green-950/20 dark:border-green-900"
                   : "bg-muted/20"
               }`}
             >

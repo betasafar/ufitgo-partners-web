@@ -1,3 +1,4 @@
+// Create a new package page
 "use client"
 
 import { useState, useEffect } from "react"

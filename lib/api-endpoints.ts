@@ -5,9 +5,11 @@
  * across the operator system. It provides type-safe endpoint access and
  * supports dynamic path parameters.
  *
+ * Updated to include ALL endpoints from the latest API specification.
+ *
  * Usage:
- * - Static endpoints: ENDPOINTS.TIER.INFO
- * - Dynamic endpoints: buildEndpoint(ENDPOINTS.DOCUMENTS.BY_ID, { id: '123' })
+ * - Static endpoints: ENDPOINTS.AUTH.HEALTH
+ * - Dynamic endpoints: buildEndpoint(ENDPOINTS.PACKAGES.BY_ID, { id: '123' })
  */
 
 const OPERATOR_BASE = "/operator"
@@ -28,18 +30,82 @@ export const ENDPOINTS = {
   },
 
   // Operator Profile
-  OPERATOR: {
-    PROFILE: `${OPERATOR_BASE}/profile`,
-    UPDATE_PROFILE: `${OPERATOR_BASE}/profile`,
-    CHANGE_PASSWORD: `${OPERATOR_BASE}/change-password`,
+  PROFILE: {
+    GET: `${OPERATOR_BASE}/profile`,
+    UPDATE: `${OPERATOR_BASE}/profile`,
+    UPLOAD_LOGO: `${OPERATOR_BASE}/profile/logo`,
+    VERIFICATION_STATUS: `${OPERATOR_BASE}/profile/verification-status`,
+  },
+
+  // Packages
+  PACKAGES: {
+    CREATE: `${OPERATOR_BASE}/packages`,
+    LIST: `${OPERATOR_BASE}/packages`,
+    BY_ID: `${OPERATOR_BASE}/packages/:id`,
+    UPDATE: `${OPERATOR_BASE}/packages/:id`,
+    DELETE: `${OPERATOR_BASE}/packages/:id`,
+    TOGGLE_STATUS: `${OPERATOR_BASE}/packages/:id/status`,
+    BOOKINGS: `${OPERATOR_BASE}/packages/:id/bookings`,
+    PERFORMANCE: `${OPERATOR_BASE}/packages/:id/performance`,
+    AVAILABILITY: `${OPERATOR_BASE}/packages/:id/availability`,
+    AGGREGATE_PERFORMANCE: `${OPERATOR_BASE}/packages/performance`,
+  },
+
+  // Bookings
+  BOOKINGS: {
+    LIST: `${OPERATOR_BASE}/bookings`,
+    URGENT_TASKS: `${OPERATOR_BASE}/bookings/urgent-tasks`,
+    RECENT_TRAVELERS: `${OPERATOR_BASE}/bookings/recent`,
+    BY_ID: `${OPERATOR_BASE}/bookings/:id`,
+    DETAILED: `${OPERATOR_BASE}/bookings/:id/detailed`,
+    ADJUST_PAYMENT: `${OPERATOR_BASE}/bookings/:id/adjust-payment`,
+    APPROVE: `${OPERATOR_BASE}/bookings/:id/approve`,
+    REJECT: `${OPERATOR_BASE}/bookings/:id/reject`,
+    REFUND: `${OPERATOR_BASE}/bookings/:id/refund`,
+  },
+
+  // Wallet & Transactions
+  WALLET: {
+    TRANSACTIONS: `${OPERATOR_BASE}/wallet/transactions`,
+    FILTERED_TRANSACTIONS: `${OPERATOR_BASE}/wallet/transactions/filtered`,
+    REQUEST_PAYOUT: `${OPERATOR_BASE}/wallet/payout`,
+    PAYMENT_STATS: `${OPERATOR_BASE}/wallet/payment-stats`,
+  },
+
+  // Notifications & Communications
+  NOTIFICATIONS: {
+    LIST: `${OPERATOR_BASE}/notifications`,
+    MARK_READ: `${OPERATOR_BASE}/notifications/:id/read`,
+    MARK_ALL_READ: `${OPERATOR_BASE}/notifications/read-all`,
+    BROADCAST: `${OPERATOR_BASE}/notifications/broadcast`,
+    COMMUNICATIONS_HISTORY: `${OPERATOR_BASE}/notifications/communications-history`,
+    SEND: `${OPERATOR_BASE}/notifications/send`,
+  },
+
+  // Reports & Analytics
+  REPORTS: {
+    REVENUE: `${OPERATOR_BASE}/reports/revenue`,
+    BOOKINGS: `${OPERATOR_BASE}/reports/bookings`,
+    POPULAR_PACKAGES: `${OPERATOR_BASE}/reports/popular-packages`,
+    MONTHLY_TREND: `${OPERATOR_BASE}/reports/monthly-trend`,
+    DASHBOARD_STATS: `${OPERATOR_BASE}/reports/dashboard-stats`,
+    REVENUE_FLOW: `${OPERATOR_BASE}/reports/revenue-flow`,
+    EXPORT: `${OPERATOR_BASE}/reports/export`,
+  },
+
+  // Bank Account
+  BANK_ACCOUNT: {
+    ADD_AND_VERIFY: `${OPERATOR_BASE}/bank-account`,
+    GET: `${OPERATOR_BASE}/bank-account`,
   },
 
   // Tier System
   TIER: {
-    INFO: `${OPERATOR_BASE}/tier`,
-    COMPARISON: `${OPERATOR_BASE}/tier/comparison`,
-    UPGRADE_ELIGIBILITY: `${OPERATOR_BASE}/tier/upgrade-eligibility`,
+    INFO: `${OPERATOR_BASE}/tier/info`,
     RESTRICTIONS: `${OPERATOR_BASE}/tier/restrictions`,
+    COMPARISON: `${OPERATOR_BASE}/tier/comparison`,
+    BADGES: `${OPERATOR_BASE}/tier/badges`,
+    UPGRADE_ELIGIBILITY: `${OPERATOR_BASE}/tier/upgrade-eligibility`,
   },
 
   // Documents & Verification
@@ -51,85 +117,12 @@ export const ENDPOINTS = {
     RESUBMIT: `${OPERATOR_BASE}/documents/:id/resubmit`,
   },
 
-  // Metrics & Performance
+   // Metrics & Performance
   METRICS: {
     OVERVIEW: `${OPERATOR_BASE}/metrics`,
     TRUST_SCORE: `${OPERATOR_BASE}/metrics/trust-score`,
     PERFORMANCE: `${OPERATOR_BASE}/metrics/performance`,
     BADGES: `${OPERATOR_BASE}/metrics/badges`,
-  },
-
-  // Packages
-  PACKAGES: {
-    LIST: `${OPERATOR_BASE}/packages`,
-    CREATE: `${OPERATOR_BASE}/packages`,
-    BY_ID: `${OPERATOR_BASE}/packages/:id`,
-    UPDATE: `${OPERATOR_BASE}/packages/:id`,
-    DELETE: `${OPERATOR_BASE}/packages/:id`,
-    PERFORMANCE: `${OPERATOR_BASE}/packages/performance`,
-    AGGREGATE_PERFORMANCE: `${OPERATOR_BASE}/packages/aggregate-performance`,
-  },
-
-  // Bookings
-  BOOKINGS: {
-    LIST: `${OPERATOR_BASE}/bookings`,
-    CREATE: `${OPERATOR_BASE}/bookings`,
-    BY_ID: `${OPERATOR_BASE}/bookings/:id`,
-    UPDATE: `${OPERATOR_BASE}/bookings/:id`,
-    CANCEL: `${OPERATOR_BASE}/bookings/:id/cancel`,
-    CONFIRM: `${OPERATOR_BASE}/bookings/:id/confirm`,
-    STATISTICS: `${OPERATOR_BASE}/bookings/statistics`,
-  },
-
-  // Applicants
-  APPLICANTS: {
-    LIST: `${OPERATOR_BASE}/applicants`,
-    BY_ID: `${OPERATOR_BASE}/applicants/:id`,
-    UPDATE_STATUS: `${OPERATOR_BASE}/applicants/:id/status`,
-    DOCUMENTS: `${OPERATOR_BASE}/applicants/:id/documents`,
-  },
-
-  // Payments & Financial
-  PAYMENTS: {
-    LIST: `${OPERATOR_BASE}/payments`,
-    BY_ID: `${OPERATOR_BASE}/payments/:id`,
-    INITIATE: `${OPERATOR_BASE}/payments/initiate`,
-    VERIFY: `${OPERATOR_BASE}/payments/verify`,
-    STATISTICS: `${OPERATOR_BASE}/payments/statistics`,
-    TOP_PACKAGES: `${OPERATOR_BASE}/payments/top-packages`,
-  },
-
-  // Wallet & Transactions
-  WALLET: {
-    BALANCE: `${OPERATOR_BASE}/wallet/balance`,
-    TRANSACTIONS: `${OPERATOR_BASE}/wallet/transactions`,
-    WITHDRAW: `${OPERATOR_BASE}/wallet/withdraw`,
-    ESCROW_STATUS: `${OPERATOR_BASE}/wallet/escrow`,
-  },
-
-  // Bank Accounts
-  BANK_ACCOUNTS: {
-    LIST: `${OPERATOR_BASE}/bank-accounts`,
-    CREATE: `${OPERATOR_BASE}/bank-accounts`,
-    BY_ID: `${OPERATOR_BASE}/bank-accounts/:id`,
-    DELETE: `${OPERATOR_BASE}/bank-accounts/:id`,
-    SET_PRIMARY: `${OPERATOR_BASE}/bank-accounts/:id/set-primary`,
-  },
-
-  // Notifications
-  NOTIFICATIONS: {
-    LIST: `${OPERATOR_BASE}/notifications`,
-    MARK_READ: `${OPERATOR_BASE}/notifications/:id/read`,
-    MARK_ALL_READ: `${OPERATOR_BASE}/notifications/mark-all-read`,
-    PREFERENCES: `${OPERATOR_BASE}/notifications/preferences`,
-  },
-
-  // Analytics & Reports
-  ANALYTICS: {
-    OVERVIEW: `${OPERATOR_BASE}/analytics/overview`,
-    BOOKINGS: `${OPERATOR_BASE}/analytics/bookings`,
-    REVENUE: `${OPERATOR_BASE}/analytics/revenue`,
-    PERFORMANCE: `${OPERATOR_BASE}/analytics/performance`,
   },
 } as const
 
@@ -137,15 +130,12 @@ export const ENDPOINTS = {
  * Helper function to build endpoints with dynamic path parameters
  *
  * @example
- * buildEndpoint(ENDPOINTS.DOCUMENTS.BY_ID, { id: '123' })
- * // Returns: '/operator/documents/123'
+ * buildEndpoint(ENDPOINTS.PACKAGES.BY_ID, { id: '123' })
+ * // Returns: '/operator/packages/123'
  *
  * @example
- * buildEndpoint('/operator/packages/:packageId/items/:itemId', {
- *   packageId: '1',
- *   itemId: '2'
- * })
- * // Returns: '/operator/packages/1/items/2'
+ * buildEndpoint('/operator/bookings/:id/detailed', { id: '456' })
+ * // Returns: '/operator/bookings/456/detailed'
  */
 export function buildEndpoint(endpoint: string, params: Record<string, string | number>): string {
   let result = endpoint
@@ -164,12 +154,8 @@ export function buildEndpoint(endpoint: string, params: Record<string, string | 
 }
 
 /**
- * Type-safe endpoint builder with autocomplete
+ * Type-safe endpoint access
  */
 export type EndpointKey = keyof typeof ENDPOINTS
-export type EndpointValue<K extends EndpointKey> = (typeof ENDPOINTS)[K]
-
-/**
- * Extract all endpoint paths as a union type for type safety
- */
-export type EndpointPath = (typeof ENDPOINTS)[EndpointKey][keyof (typeof ENDPOINTS)[EndpointKey]] | string
+export type SubEndpointKey<K extends EndpointKey> = keyof (typeof ENDPOINTS)[K]
+export type EndpointPath = string // Covers all static and dynamic paths
