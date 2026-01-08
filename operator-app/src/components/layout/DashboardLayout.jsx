@@ -1,18 +1,41 @@
+"use client"
+
+import { useState } from "react"
 import { Sidebar } from "./Sidebar"
 import { Header } from "./Header"
 
 export const DashboardLayout = ({ children, title }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
-    <div className="flex min-h-screen bg-bg text-fg">
-      <Sidebar />
+    <div
+      className="min-h-screen bg-bg"
+      style={{
+        "--sidebar-width": "16rem",
+        "--header-height": "4rem",
+      }}
+    >
+      {/* Sidebar */}
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 flex flex-col">
-        <Header title={title} />
+      {/* Header */}
+      <Header
+        title={title}
+        onMenuClick={() => setSidebarOpen(true)}
+      />
 
-        <main className="flex-1 p-8 bg-bg">
-          {children}
-        </main>
-      </div>
+      {/* Main content */}
+      <main
+        className="
+          pt-24
+          transition-[margin-left] duration-200
+          ml-0
+          lg:ml-[var(--sidebar-width)]
+          px-4 lg:px-6
+        "
+      >
+        {children}
+      </main>
     </div>
   )
 }

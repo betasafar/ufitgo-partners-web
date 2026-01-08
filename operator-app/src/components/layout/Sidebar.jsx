@@ -10,49 +10,75 @@ const navigation = [
   { name: "Settings", href: "/settings", icon: "⚙️" },
 ]
 
-export const Sidebar = () => {
+export const Sidebar = ({ open, onClose }) => {
   const { logout } = useAuth()
 
   return (
-    <div className="w-64 bg-card border-r border-border min-h-screen flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b border-border">
-        <h1 className="text-2xl font-bold text-primary">UfitGo</h1>
-        <p className="text-sm text-fg/70">Operator Portal</p>
-      </div>
+    <>
+      {/* Mobile overlay */}
+      <div
+        onClick={onClose}
+        className={`
+          fixed inset-0 bg-black/50 z-40 lg:hidden
+          ${open ? "block" : "hidden"}
+        `}
+      />
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4">
-        {navigation.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.href}
-            className={({ isActive }) =>
-              [
-                "flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors",
-                isActive
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed top-0 left-0 z-50
+          h-screen w-[var(--sidebar-width)]
+          bg-card border-r border-border
+          flex flex-col
+          transition-transform duration-200
+          lg:translate-x-0
+          ${open ? "translate-x-0" : "-translate-x-full"}
+        `}
+        style={{ "--sidebar-width": "16rem" }}
+      >
+        {/* Header (fixed) */}
+        <div className="h-16 px-6 flex items-center border-b border-border shrink-0">
+          <div>
+            <h1 className="text-xl font-bold text-primary">UfitGo</h1>
+            <p className="text-xs text-fg/70">Operator Portal</p>
+          </div>
+        </div>
+
+        {/* Scrollable menu */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+          {navigation.map((item) => (
+            <NavLink
+              key={item.name}
+              to={item.href}
+              onClick={onClose}
+              className={({ isActive }) =>
+                `
+                  flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                  ${isActive
                   ? "bg-primary text-white"
-                  : "text-fg hover:bg-bg/60",
-              ].join(" ")
-            }
-          >
-            <span className="text-xl">{item.icon}</span>
-            <span className="font-medium">{item.name}</span>
-          </NavLink>
-        ))}
-      </nav>
+                  : "text-fg hover:bg-bg/60"}
+                `
+              }
+            >
+              <span className="text-lg">{item.icon}</span>
+              <span className="font-medium">{item.name}</span>
+            </NavLink>
+          ))}
+        </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-border">
-        <button
-          onClick={logout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
-                     text-fg hover:bg-bg/60"
-        >
-          <span className="text-xl">🚪</span>
-          <span className="font-medium">Logout</span>
-        </button>
-      </div>
-    </div>
+        {/* Footer (fixed) */}
+        <div className="p-4 border-t border-border shrink-0">
+          <button
+            onClick={logout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg
+                       text-fg hover:bg-bg/60 transition-colors"
+          >
+            <span className="text-lg">🚪</span>
+            <span className="font-medium">Logout</span>
+          </button>
+        </div>
+      </aside>
+    </>
   )
 }

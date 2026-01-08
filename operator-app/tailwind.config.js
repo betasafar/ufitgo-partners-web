@@ -9,6 +9,9 @@ export default {
 
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-sans)"],
+      },
       colors: {
         /* Core theme tokens */
         bg: "rgb(var(--bg) / <alpha-value>)",

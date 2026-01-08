@@ -7,10 +7,20 @@
    BASE LAYER
    ================================ */
 @layer base {
+  :root {
+    --font-sans: "Bricolage Grotesque", system-ui, -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+
   body {
     @apply bg-bg text-fg antialiased;
   }
 }
+
 
 /* ================================
    COMPONENTS
@@ -76,4 +86,14 @@
   --primary: 239 68 68;
   --primary-soft: 254 226 226;
   --primary-contrast: 255 255 255;
+}
+
+
+nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+nav::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { Eye, EyeOff } from "lucide-react"
 import { useAuth } from "../../context/AuthContext.jsx"
 import { Input } from "../../components/common/Input.jsx"
 import { Button } from "../../components/common/Button.jsx"
@@ -9,6 +10,7 @@ import { Button } from "../../components/common/Button.jsx"
 function LoginScreen() {
   const [email, setEmail] = useState("elite@travels.com")
   const [password, setPassword] = useState("user@123")
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -32,15 +34,18 @@ function LoginScreen() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+    <div className="min-h-screen flex items-center justify-center bg-bg text-fg px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-card border border-border rounded-2xl shadow-card p-8">
+
+          {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">UfitGo</h1>
-            <p className="text-gray-600 mt-2">Operator Portal</p>
+            <h1 className="text-3xl font-bold">UfitGo</h1>
+            <p className="text-sm opacity-70 mt-2">Operator Portal</p>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
             <Input
               label="Email Address"
               type="email"
@@ -50,27 +55,60 @@ function LoginScreen() {
               required
             />
 
-            <Input
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
+            {/* Password + Toggle */}
+            <div className="relative">
+              <Input
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+              />
 
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-[38px] text-fg/60 hover:text-fg"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            {/* Error */}
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="p-3 rounded-lg bg-danger/10 border border-danger/20">
+                <p className="text-sm text-danger">{error}</p>
               </div>
             )}
 
+            {/* Submit */}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Logging in..." : "Login"}
             </Button>
           </form>
 
-          <p className="text-center text-sm text-gray-600 mt-6">Need help? Contact support</p>
+          {/* CTAs */}
+          <div className="mt-6 flex items-center justify-between text-sm">
+            <button
+              onClick={() => navigate("/forgot-password")}
+              className="text-primary hover:underline"
+            >
+              Forgot password?
+            </button>
+
+            <button
+              onClick={() => navigate("/signup")}
+              className="text-primary hover:underline font-medium"
+            >
+              Create account
+            </button>
+          </div>
+
+          {/* Footer */}
+          <p className="text-center text-xs opacity-60 mt-6">
+            Need help? Contact support
+          </p>
         </div>
       </div>
     </div>
