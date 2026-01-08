@@ -31,12 +31,20 @@ export default function SettingsPreferencesScreen() {
                 key={t.id}
                 onClick={() => setTheme(t.id)}
                 className={`border rounded-xl p-4 text-left transition bg-card
-                  ${theme === t.id
+        ${theme === t.id
                     ? "border-primary ring-2 ring-primary/40"
                     : "border-border hover:border-primary/40"
                   }`}
               >
-                <div className="h-24 rounded-md bg-bg mb-3" />
+                {/* Dynamic preview background based on theme label */}
+                <div
+                  className={`h-24 rounded-md mb-3 ${t.label === "Light Mode"
+                    ? "bg-white/60"
+                    : t.label === "System Default"
+                      ? "bg-info"
+                      : "bg-black" // This covers Dark Mode or any other theme
+                    }`}
+                />
                 <p className="font-medium">{t.label}</p>
               </button>
             ))}
