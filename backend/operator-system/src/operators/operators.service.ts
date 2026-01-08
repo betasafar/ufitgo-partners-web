@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
 import type { Repository } from "typeorm"
-import type { Operator } from "./entities/operator.entity"
+import type { Operator, OperatorTier } from "./entities/operator.entity"
 
 @Injectable()
 export class OperatorsService {
@@ -14,13 +14,18 @@ export class OperatorsService {
     return operator
   }
 
+  // In OperatorsService
+  async findById(id: number): Promise<Operator> {
+    return this.findOne(id); // or directly use findOne logic
+  }
+
   async findByEmail(email: string): Promise<Operator | null> {
     return this.operatorRepo.findOne({ where: { email } })
   }
 
   async updateTier(id: number, tier: string): Promise<Operator> {
     const operator = await this.findOne(id)
-    operator.tier = tier
+    operator.tier = tier as OperatorTier
     return this.operatorRepo.save(operator)
   }
 

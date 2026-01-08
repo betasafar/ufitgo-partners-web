@@ -25,7 +25,7 @@ export class TierRestrictionGuard implements CanActivate {
 
     // Check booking restrictions
     if (restrictionType === "CREATE_BOOKING") {
-      const canCreate = await this.tierRestrictionService.canCreateBooking(operator)
+      const canCreate = await this.tierRestrictionService.canCreateBooking(operator.id)
       if (!canCreate) {
         throw new ForbiddenException(
           `Tier ${operator.tier} has reached the maximum booking limit for this month. Upgrade to increase your limits.`,
@@ -35,7 +35,7 @@ export class TierRestrictionGuard implements CanActivate {
 
     // Check package restrictions
     if (restrictionType === "CREATE_PACKAGE") {
-      const canCreate = await this.tierRestrictionService.canCreatePackage(operator)
+      const canCreate = await this.tierRestrictionService.canCreatePackage(operator.id)
       if (!canCreate) {
         throw new ForbiddenException(
           `Tier ${operator.tier} has reached the maximum active package limit. Upgrade to create more packages.`,

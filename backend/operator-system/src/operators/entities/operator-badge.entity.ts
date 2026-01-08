@@ -7,7 +7,7 @@ export class OperatorBadge {
   id: number
 
   @Column({ type: "varchar", length: 100 })
-  type: string
+  badgeType: string
 
   @Column({ type: "varchar", length: 255 })
   title: string

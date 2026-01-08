@@ -2,7 +2,7 @@ import { Test, type TestingModule } from "@nestjs/testing"
 import type { Repository } from "typeorm"
 import { getRepositoryToken } from "@nestjs/typeorm"
 import { VerificationService } from "./verification.service"
-import { OperatorDocument } from "../entities/operator-document.entity"
+import { OperatorDocument, DocumentType, DocumentStatus } from "../entities/operator-document.entity"
 import { OperatorBadge } from "../entities/operator-badge.entity"
 import { Operator } from "../entities/operator.entity"
 import { NotFoundException } from "@nestjs/common"
@@ -17,9 +17,9 @@ describe("VerificationService", () => {
   const mockDocument: Partial<OperatorDocument> = {
     id: 1,
     operatorId: 1,
-    documentType: "business_license",
-    fileUrl: "https://example.com/doc.pdf",
-    verificationStatus: "pending",
+    type: DocumentType.LICENSE,
+    url: "https://example.com/doc.pdf",
+    status: DocumentStatus.PENDING,
   }
 
   beforeEach(async () => {

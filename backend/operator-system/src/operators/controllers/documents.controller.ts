@@ -16,7 +16,7 @@ import { FilesInterceptor } from "@nestjs/platform-express"
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger"
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard"
 import type { VerificationService } from "../services/verification.service"
-import type { Express } from "express"
+import { DocumentType, DocumentStatus } from "../entities/operator-document.entity"
 
 @ApiTags("Operator Documents")
 @ApiBearerAuth("JWT-auth")
@@ -33,19 +33,33 @@ export class DocumentsController {
   async uploadDocuments(
     operatorId: number,
     @UploadedFiles() files: Express.Multer.File[],
-    @Body('documentType') documentType: string,
+    @Body("documentType") documentType: string,
   ) {
     if (!files || files.length === 0) {
       throw new BadRequestException("No files uploaded")
     }
 
-    const uploadedDocs = []
+    // Safely map incoming string -> enum
+    if (!Object.values(DocumentType).includes(documentType as DocumentType)) {
+      throw new BadRequestException("Invalid document type")
+    }
+
+    const uploadedDocs: any[] = []
+
     for (const file of files) {
-      const doc = await this.verificationService.uploadDocument(operatorId, documentType, file.path || file.filename, {
-        originalName: file.originalname,
-        mimeType: file.mimetype,
-        size: file.size,
-      })
+      const doc = await this.verificationService.uploadDocument(
+        operatorId,
+        
+        documentType as DocumentType,
+
+        file.path || file.filename,
+        {
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          size: file.size,
+        },
+      )
+
       uploadedDocs.push(doc)
     }
 
@@ -98,7 +112,7 @@ export class DocumentsController {
       throw new BadRequestException("Document not found or access denied")
     }
 
-    if (document.status === "pending") {
+    if (document.status === DocumentStatus.PENDING || document.status === DocumentStatus.UNDER_REVIEW) {
       throw new BadRequestException("Cannot delete documents under review")
     }
 
@@ -115,18 +129,27 @@ export class DocumentsController {
     const documents = await this.verificationService.getDocuments(operatorId)
     const badges = await this.verificationService.getBadges(operatorId)
 
-    const requiredDocs = ["business_license", "cac_certificate"]
+    // use enums — not arbitrary strings
+    const requiredDocs = [DocumentType.LICENSE, DocumentType.CAC]
+
     const uploadedTypes = documents.map((d) => d.type)
-    const approvedTypes = documents.filter((d) => d.status === "approved").map((d) => d.type)
+
+    const approvedTypes = documents
+      .filter((d) => d.status === DocumentStatus.APPROVED)
+      .map((d) => d.type)
 
     const status = {
       documentsUploaded: documents.length,
-      documentsApproved: documents.filter((d) => d.status === "approved").length,
-      documentsPending: documents.filter((d) => d.status === "pending").length,
-      documentsRejected: documents.filter((d) => d.status === "rejected").length,
+      documentsApproved: documents.filter((d) => d.status === DocumentStatus.APPROVED).length,
+      documentsPending: documents.filter((d) => d.status === DocumentStatus.PENDING).length,
+      documentsRejected: documents.filter((d) => d.status === DocumentStatus.REJECTED).length,
+
       requiredDocuments: requiredDocs,
+
       missingDocuments: requiredDocs.filter((type) => !uploadedTypes.includes(type)),
+
       isFullyVerified: requiredDocs.every((type) => approvedTypes.includes(type)),
+
       badges: badges.length,
     }
 

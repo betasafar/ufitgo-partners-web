@@ -1,9 +1,9 @@
 import { Injectable, BadRequestException } from "@nestjs/common"
-import type { Repository } from "typeorm"
-import type { Operator } from "../entities/operator.entity"
-import type { Package } from "../../packages/entities/package.entity"
-import type { Booking } from "../../bookings/entities/booking.entity"
-import type { TierConfig } from "../../config/entities/tier-config.entity"
+import  { Repository } from "typeorm"
+import  { Operator } from "../entities/operator.entity"
+import  { Package, PackageStatus } from "../../packages/entities/package.entity"
+import  { Booking } from "../../bookings/entities/booking.entity"
+import  { TierConfig } from "../../config/entities/tier-config.entity"
 
 @Injectable()
 export class TierRestrictionService {
@@ -20,6 +20,44 @@ export class TierRestrictionService {
       throw new BadRequestException(`No active configuration found for tier ${tier}`)
     }
     return config
+  }
+
+  // Add these methods to TierRestrictionService
+
+  async canCreateBooking(operatorId: number): Promise<boolean> {
+    try {
+      await this.checkBookingLimit(operatorId);
+      return true;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        return false;
+      }
+      throw error; // re-throw unexpected errors
+    }
+  }
+
+  async canCreatePackage(operatorId: number): Promise<boolean> {
+    try {
+      await this.checkPackageLimit(operatorId);
+      return true;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  async canAddPilgrims(operatorId: number, pilgrimCount: number): Promise<boolean> {
+    try {
+      await this.checkPilgrimLimit(operatorId, pilgrimCount);
+      return true;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        return false;
+      }
+      throw error;
+    }
   }
 
   async checkBookingLimit(operatorId: number): Promise<void> {
@@ -65,7 +103,7 @@ export class TierRestrictionService {
     }
 
     const activePackages = await this.packageRepo.count({
-      where: { operatorId, status: "active" },
+      where: { operatorId, status: PackageStatus.ACTIVE },
     })
 
     if (activePackages >= config.maxActivePackages) {
@@ -124,7 +162,7 @@ export class TierRestrictionService {
     })
 
     const activePackages = await this.packageRepo.count({
-      where: { operatorId, status: "active" },
+      where: { operatorId, status: PackageStatus.ACTIVE },
     })
 
     return {

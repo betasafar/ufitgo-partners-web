@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from "typeorm"
 import { Operator } from "./operator.entity"
 
-export enum DocumentType {
+export enum DocumentType { 
   CAC = "cac",
   LICENSE = "license",
   INSURANCE = "insurance",
@@ -65,4 +65,16 @@ export class OperatorDocument {
 
   @UpdateDateColumn()
   updatedAt: Date
+
+
+
+  @Column({ type: "timestamp", nullable: true })
+  verifiedAt?: Date
+
+  @Column({ type: "text", nullable: true })
+  adminNotes?: string
+
+  @Column({ type: "jsonb", nullable: true })
+  metadata?: Record<string, any>
+
 }
