@@ -29,4 +29,14 @@ export const ENDPOINTS = {
   VERIFICATION: {
     STATUS: "/operator/verification/status",
   },
+  FINANCIAL: {
+    SUMMARY: "/operator/financial/summary",
+    TRANSACTIONS: "/operator/financial/transactions",
+    REQUEST_PAYOUT: "/operator/financial/payout-request",
+    BANK_DETAILS: "/operator/financial/bank-details",
+  },
+  SETTINGS: {
+    CHANGE_PASSWORD: "/operator/settings/password",
+    NOTIFICATIONS: "/operator/settings/notifications",
+  },
 }
