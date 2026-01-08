@@ -1,5 +1,5 @@
-import apiClient from "../client"
-import { ENDPOINTS } from "../endpoints"
+import { apiClient } from "../client.js"
+import { ENDPOINTS } from "../endpoints.js"
 
 export const bookingsService = {
   getAll: async () => {

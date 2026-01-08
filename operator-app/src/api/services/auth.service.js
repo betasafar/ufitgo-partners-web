@@ -1,11 +1,11 @@
-import apiClient from "../client"
-import { ENDPOINTS } from "../endpoints"
+import { apiClient } from "../client.js"
+import { ENDPOINTS } from "../endpoints.js"
 
 export const authService = {
   login: async (email, password) => {
     const response = await apiClient.post(ENDPOINTS.AUTH.LOGIN, { email, password })
-    if (response.token) {
-      localStorage.setItem("auth_token", response.token)
+    if (response.access_token) {
+      localStorage.setItem("auth_token", response.access_token)
       localStorage.setItem("operator", JSON.stringify(response.operator))
     }
     return response

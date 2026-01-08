@@ -1,4 +1,4 @@
-"use client"
+
 
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
@@ -8,7 +8,7 @@ import { Spinner } from "../../components/common/Spinner"
 import { packagesService } from "../../api/services/packages.service"
 import { usePackages } from "../../hooks/usePackages"
 
-export const EditPackageScreen = () => {
+const EditPackageScreen = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { updatePackage } = usePackages()
@@ -77,3 +77,4 @@ export const EditPackageScreen = () => {
     </DashboardLayout>
   )
 }
+export default EditPackageScreen

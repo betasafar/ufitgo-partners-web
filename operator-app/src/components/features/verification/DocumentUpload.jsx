@@ -1,4 +1,4 @@
-"use client"
+
 
 import { useState } from "react"
 import { Card } from "../../common/Card"
@@ -56,13 +56,12 @@ export const DocumentUpload = ({ title, description, documentType, onUpload, upl
 
       {document && (
         <div
-          className={`mb-4 p-3 rounded-lg border-2 ${
-            statusColor === "green"
+          className={`mb-4 p-3 rounded-lg border-2 ${statusColor === "green"
               ? "bg-green-50 border-green-300"
               : statusColor === "red"
                 ? "bg-red-50 border-red-300"
                 : "bg-yellow-50 border-yellow-300"
-          }`}
+            }`}
         >
           <p className="text-sm font-medium">
             Status:{" "}
@@ -83,9 +82,8 @@ export const DocumentUpload = ({ title, description, documentType, onUpload, upl
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-          dragActive ? "border-primary bg-blue-50" : "border-gray-300 hover:border-gray-400"
-        }`}
+        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${dragActive ? "border-primary bg-blue-50" : "border-gray-300 hover:border-gray-400"
+          }`}
       >
         <input
           type="file"

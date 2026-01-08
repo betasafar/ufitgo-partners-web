@@ -1,28 +1,24 @@
-import { apiClient } from "../client"
-import { ENDPOINTS } from "../endpoints"
+import { apiClient } from "../client.js"
+import { ENDPOINTS } from "../endpoints.js"
 
 export const verificationService = {
-  getStatus: async () => {
-    const response = await apiClient.get(ENDPOINTS.VERIFICATION.STATUS)
-    return response.data
+  getStatus: async (operatorId) => {
+    return await apiClient.get(`${ENDPOINTS.VERIFICATION.STATUS}?operatorId=${operatorId}`)
   },
 
   getDocuments: async () => {
-    const response = await apiClient.get(ENDPOINTS.DOCUMENTS.LIST)
-    return response.data
+    return await apiClient.get(ENDPOINTS.DOCUMENTS.LIST)
   },
 
   uploadDocument: async (formData) => {
-    const response = await apiClient.post(ENDPOINTS.DOCUMENTS.UPLOAD, formData, {
+    return await apiClient.post(ENDPOINTS.DOCUMENTS.UPLOAD, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     })
-    return response.data
   },
 
   getDocument: async (id) => {
-    const response = await apiClient.get(ENDPOINTS.DOCUMENTS.GET(id))
-    return response.data
+    return await apiClient.get(ENDPOINTS.DOCUMENTS.GET(id))
   },
 }

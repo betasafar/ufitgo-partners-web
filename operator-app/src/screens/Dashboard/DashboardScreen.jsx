@@ -5,11 +5,11 @@ import { DashboardLayout } from "../../components/layout/DashboardLayout"
 import { StatCard } from "../../components/features/dashboard/StatCard"
 import { AccountStatusCard } from "../../components/features/dashboard/AccountStatusCard"
 import { Spinner } from "../../components/common/Spinner"
-import { tierService } from "../../api/services/tier.service"
-import { bookingsService } from "../../api/services/bookings.service"
-import { packagesService } from "../../api/services/packages.service"
+import { tierService } from "../../api/services/tier.service.js"
+import { bookingsService } from "../../api/services/bookings.service.js"
+import { packagesService } from "../../api/services/packages.service.js"
 
-export const DashboardScreen = () => {
+export default function DashboardScreen() {
   const [loading, setLoading] = useState(true)
   const [metrics, setMetrics] = useState(null)
   const [verification, setVerification] = useState(null)
@@ -23,17 +23,45 @@ export const DashboardScreen = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      const [metricsData, tierData, bookingsData, packagesData] = await Promise.all([
-        tierService.getMetrics(),
+
+      const [
+        tierData,
+        bookingsData,
+        packagesData,
+        trustScoreData,
+        performanceData,
+      ] = await Promise.allSettled([
         tierService.getTierInfo(),
         bookingsService.getAll(),
         packagesService.getAll(),
+        tierService.getTrustScore(),
+        tierService.getPerformance(),
       ])
 
-      setMetrics(metricsData)
-      setVerification(tierData)
-      setBookings(bookingsData)
-      setPackages(packagesData)
+      if (tierData.status === "fulfilled") {
+        setVerification(tierData.value.data || tierData.value)
+      }
+
+      if (bookingsData.status === "fulfilled") {
+        const bookingsArray = bookingsData.value.data || bookingsData.value
+        setBookings(Array.isArray(bookingsArray) ? bookingsArray : [])
+      }
+
+      if (packagesData.status === "fulfilled") {
+        const packagesArray = packagesData.value.data || packagesData.value
+        setPackages(Array.isArray(packagesArray) ? packagesArray : [])
+      }
+
+      setMetrics({
+        trustScore:
+          trustScoreData.status === "fulfilled"
+            ? trustScoreData.value.data || trustScoreData.value
+            : null,
+        performance:
+          performanceData.status === "fulfilled"
+            ? performanceData.value.data || performanceData.value
+            : null,
+      })
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error)
     } finally {
@@ -53,49 +81,69 @@ export const DashboardScreen = () => {
 
   const pendingBookings = bookings.filter((b) => b.status === "pending").length
   const confirmedBookings = bookings.filter((b) => b.status === "confirmed").length
+  const totalBookings = metrics?.performance?.totalBookings || 0
+  const monthlyBookings = metrics?.performance?.currentMonthBookings || 0
+  const activePackages = metrics?.performance?.activePackages || packages.length
 
   return (
     <DashboardLayout title="Dashboard">
+      {/* Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard title="Total Bookings" value={metrics?.totalBookings || 0} subtitle="All time" icon="📅" />
+        <StatCard title="Total Bookings" value={totalBookings} subtitle="All time" icon="📅" />
         <StatCard
           title="Active Packages"
-          value={packages.length}
+          value={activePackages}
           subtitle={`${pendingBookings} pending approval`}
           icon="📦"
         />
         <StatCard
           title="This Month"
-          value={metrics?.monthlyBookings || 0}
+          value={monthlyBookings}
           subtitle={`${confirmedBookings} confirmed`}
           icon="📊"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Activity */}
         <div className="lg:col-span-2">
           <div className="card">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+            <h3 className="text-lg font-semibold text-fg mb-4">
+              Recent Activity
+            </h3>
+
             {bookings.length === 0 ? (
-              <p className="text-gray-600">No recent bookings</p>
+              <p className="text-fg/70">No recent bookings</p>
             ) : (
               <div className="space-y-3">
                 {bookings.slice(0, 5).map((booking) => (
-                  <div key={booking.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={booking.id}
+                    className="flex justify-between items-center p-3 rounded-lg
+                               bg-bg border border-border"
+                  >
                     <div>
-                      <p className="font-medium text-gray-900">{booking.packageName}</p>
-                      <p className="text-sm text-gray-600">{booking.pilgrimName}</p>
+                      <p className="font-medium text-fg">
+                        {booking.pilgrimName}
+                      </p>
+                      <p className="text-sm text-fg/70">
+                        {booking.numberOfPilgrims} pilgrim(s) • ₦
+                        {Number(booking.totalAmount).toLocaleString()}
+                      </p>
                     </div>
+
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        booking.status === "confirmed"
-                          ? "bg-green-100 text-green-800"
+                      className={`px-3 py-1 rounded-full text-sm font-medium capitalize
+                        ${booking.status === "confirmed"
+                          ? "bg-green-500/10 text-green-600"
                           : booking.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                      }`}
+                            ? "bg-yellow-500/10 text-yellow-600"
+                            : booking.status === "deposit_paid"
+                              ? "bg-blue-500/10 text-blue-600"
+                              : "bg-gray-500/10 text-gray-600"
+                        }`}
                     >
-                      {booking.status}
+                      {booking.status.replace("_", " ")}
                     </span>
                   </div>
                 ))}
@@ -104,6 +152,7 @@ export const DashboardScreen = () => {
           </div>
         </div>
 
+        {/* Account Status */}
         <div>
           <AccountStatusCard verification={verification} metrics={metrics} />
         </div>

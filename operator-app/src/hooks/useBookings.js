@@ -1,4 +1,4 @@
-"use client"
+
 
 import { useState, useEffect } from "react"
 import { bookingsService } from "../api/services/bookings.service"

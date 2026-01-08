@@ -1,4 +1,4 @@
-"use client"
+
 
 export const BookingCard = ({ booking, onStatusUpdate, isUpdating }) => {
   const statusColors = {

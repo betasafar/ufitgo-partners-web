@@ -1,13 +1,15 @@
-"use client"
+import { Navigate, Outlet } from "react-router-dom"
+import { useAuth } from "../context/AuthContext.jsx"
+import { Spinner } from "../components/common/Spinner.jsx"
 
-import { Navigate } from "react-router-dom"
-import { useAuth } from "../context/AuthContext"
-import { Spinner } from "../components/common/Spinner"
-
-export const ProtectedRoute = ({ children }) => {
+export const ProtectedRoute = () => {
   const { operator, loading } = useAuth()
 
+  console.log("[v0] ProtectedRoute - loading:", loading)
+  console.log("[v0] ProtectedRoute - operator:", operator)
+
   if (loading) {
+    console.log("[v0] ProtectedRoute - showing spinner")
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spinner />
@@ -16,8 +18,10 @@ export const ProtectedRoute = ({ children }) => {
   }
 
   if (!operator) {
+    console.log("[v0] ProtectedRoute - no operator, redirecting to login")
     return <Navigate to="/login" replace />
   }
 
-  return children
+  console.log("[v0] ProtectedRoute - authenticated, rendering outlet")
+  return <Outlet />
 }

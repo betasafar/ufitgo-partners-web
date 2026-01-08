@@ -1,27 +1,79 @@
+/* operator-app/src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ================================
+   BASE LAYER
+   ================================ */
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-bg text-fg antialiased;
   }
 }
 
+/* ================================
+   COMPONENTS
+   ================================ */
 @layer components {
   .btn-primary {
     @apply bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply bg-gray-200 text-gray-900 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors;
+    @apply bg-card text-fg border border-border px-4 py-2 rounded-lg hover:bg-bg transition-colors;
   }
 
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none;
+    @apply w-full px-4 py-2 rounded-lg bg-bg text-fg border border-border focus:ring-2 focus:ring-primary focus:border-transparent outline-none;
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+    @apply bg-card text-fg rounded-lg border border-border shadow-sm p-6;
   }
+}
+
+/* ================================
+   LIGHT MODE (DEFAULT)
+================================ */
+:root {
+  --bg: 248 250 252;
+  --fg: 15 23 42;
+  --card: 255 255 255;
+  --border: 226 232 240;
+
+  --primary: 37 99 235;
+  --primary-soft: 219 234 254;
+  --primary-contrast: 255 255 255;
+}
+
+/* ================================
+   DARK MODE
+================================ */
+[data-theme="dark"] {
+  --bg: 2 6 23;
+  --fg: 226 232 240;
+  --card: 15 23 42;
+  --border: 30 41 59;
+}
+
+/* ================================
+   ACCENTS
+================================ */
+[data-accent="gold"] {
+  --primary: 234 179 8;
+  --primary-soft: 254 243 199;
+  --primary-contrast: 17 24 39;
+}
+
+[data-accent="blue"] {
+  --primary: 59 130 246;
+  --primary-soft: 219 234 254;
+  --primary-contrast: 255 255 255;
+}
+
+[data-accent="red"] {
+  --primary: 239 68 68;
+  --primary-soft: 254 226 226;
+  --primary-contrast: 255 255 255;
 }

@@ -1,8 +1,14 @@
 import { Card } from "../../common/Card"
 
 export const DocumentCard = ({ document }) => {
+  // Early return if document is invalid
+  if (!document || !document.documentType) {
+    return null; // or return a placeholder
+  }
+
   const getStatusBadge = () => {
-    switch (document.status) {
+    const status = document.status || 'unknown';
+    switch (status.toLowerCase()) {
       case "approved":
         return <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">✅ Approved</span>
       case "rejected":
@@ -14,12 +20,28 @@ export const DocumentCard = ({ document }) => {
     }
   }
 
+  const formatDocumentType = (type) => {
+    return type ? type.replace(/_/g, " ") : "Unknown Document";
+  }
+
+  const formatDate = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch {
+      return "Invalid Date";
+    }
+  }
+
   return (
     <Card className="p-4">
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="font-semibold capitalize">{document.documentType.replace("_", " ")}</h3>
-          <p className="text-sm text-gray-600 mt-1">Uploaded: {new Date(document.uploadedAt).toLocaleDateString()}</p>
+          <h3 className="font-semibold capitalize">
+            {formatDocumentType(document.documentType)}
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Uploaded: {formatDate(document.uploadedAt)}
+          </p>
           {document.rejectionReason && (
             <p className="text-sm text-red-600 mt-2">
               <strong>Reason:</strong> {document.rejectionReason}

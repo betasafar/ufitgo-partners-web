@@ -2,6 +2,10 @@
 
 # dependencies
 /node_modules
+/operator-app/node_modules
+/operator-app/package-lock.json
+/operator-app/yarn.lock
+/operator-app/pnpm-lock.yaml
 
 # next.js
 /.next/

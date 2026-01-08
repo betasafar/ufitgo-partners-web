@@ -8,9 +8,15 @@ import { Spinner } from "../../components/common/Spinner"
 import { usePackages } from "../../hooks/usePackages"
 import { PackageCard } from "../../components/features/packages/PackageCard"
 
-export const PackagesScreen = () => {
+const PackagesScreen = () => {
   const navigate = useNavigate()
+
+  console.log("[v0] PackagesScreen mounting...")
+
   const { packages, loading, error, deletePackage } = usePackages()
+
+  console.log("[v0] PackagesScreen state:", { packages, loading, error })
+
   const [deleting, setDeleting] = useState(null)
 
   const handleDelete = async (id) => {
@@ -81,3 +87,5 @@ export const PackagesScreen = () => {
     </DashboardLayout>
   )
 }
+
+export default PackagesScreen

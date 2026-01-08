@@ -1,181 +1,70 @@
 "use client"
 
-import { useState } from "react"
-import { useAuth } from "../../context/AuthContext"
-import { settingsService } from "../../api/services/settings.service"
-import { Button } from "../../components/common/Button"
-import { Card } from "../../components/common/Card"
-import { Input } from "../../components/common/Input"
+import { DashboardLayout } from "../../components/layout/DashboardLayout"
+import { useTheme } from "../../context/ThemeContext"
 
-export const SettingsScreen = () => {
-  const { user, updateUser } = useAuth()
-  const [activeTab, setActiveTab] = useState("profile")
+const themes = [
+  { id: "light", label: "Light Mode" },
+  { id: "dark", label: "Dark Mode" },
+  { id: "system", label: "System Default" },
+]
 
-  const [profileData, setProfileData] = useState({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    companyName: user?.companyName || "",
-  })
+const accents = [
+  { id: "gold", label: "Gold" },
+  { id: "blue", label: "Blue" },
+  { id: "red", label: "Red" },
+]
 
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  })
-
-  const [saving, setSaving] = useState(false)
-
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault()
-    try {
-      setSaving(true)
-      const result = await settingsService.updateProfile(profileData)
-      updateUser(result)
-      alert("Profile updated successfully!")
-    } catch (err) {
-      alert("Failed to update profile: " + err.message)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handlePasswordChange = async (e) => {
-    e.preventDefault()
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert("New passwords do not match")
-      return
-    }
-
-    try {
-      setSaving(true)
-      await settingsService.changePassword({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword,
-      })
-      alert("Password changed successfully!")
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      })
-    } catch (err) {
-      alert("Failed to change password: " + err.message)
-    } finally {
-      setSaving(false)
-    }
-  }
+export default function SettingsPreferencesScreen() {
+  const { theme, setTheme, accent, setAccent } = useTheme()
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
+    <DashboardLayout title="Theme & Preferences">
+      <div className="max-w-5xl space-y-10 text-fg">
+
+        {/* Interface Theme */}
+        <section>
+          <h2 className="text-lg font-semibold mb-4">Interface Theme</h2>
+          <div className="grid grid-cols-3 gap-6">
+            {themes.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTheme(t.id)}
+                className={`border rounded-xl p-4 text-left transition bg-card
+                  ${theme === t.id
+                    ? "border-primary ring-2 ring-primary/40"
+                    : "border-border hover:border-primary/40"
+                  }`}
+              >
+                <div className="h-24 rounded-md bg-bg mb-3" />
+                <p className="font-medium">{t.label}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Accent Color */}
+        <section>
+          <h2 className="text-lg font-semibold mb-4">Accent Color</h2>
+          <div className="flex gap-4">
+            {accents.map((a) => (
+              <button
+                key={a.id}
+                onClick={() => setAccent(a.id)}
+                className={`px-5 py-3 rounded-lg font-medium transition
+                  ${accent === a.id
+                    ? "bg-primary text-primary-contrast"
+                    : "bg-card border border-border hover:border-primary"
+                  }`}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+
       </div>
-
-      <div className="flex gap-4 border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab("profile")}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "profile" ? "border-b-2 border-primary text-primary" : "text-gray-600 hover:text-gray-900"
-          }`}
-        >
-          Profile
-        </button>
-        <button
-          onClick={() => setActiveTab("security")}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "security" ? "border-b-2 border-primary text-primary" : "text-gray-600 hover:text-gray-900"
-          }`}
-        >
-          Security
-        </button>
-      </div>
-
-      {activeTab === "profile" && (
-        <Card>
-          <h2 className="text-xl font-semibold mb-6">Profile Information</h2>
-          <form onSubmit={handleProfileUpdate} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="First Name"
-                value={profileData.firstName}
-                onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
-                required
-              />
-              <Input
-                label="Last Name"
-                value={profileData.lastName}
-                onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
-                required
-              />
-            </div>
-
-            <Input
-              label="Email"
-              type="email"
-              value={profileData.email}
-              onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-              required
-            />
-
-            <Input
-              label="Phone Number"
-              value={profileData.phone}
-              onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-              required
-            />
-
-            <Input
-              label="Company Name"
-              value={profileData.companyName}
-              onChange={(e) => setProfileData({ ...profileData, companyName: e.target.value })}
-              required
-            />
-
-            <Button type="submit" disabled={saving}>
-              {saving ? "Saving..." : "Save Changes"}
-            </Button>
-          </form>
-        </Card>
-      )}
-
-      {activeTab === "security" && (
-        <Card>
-          <h2 className="text-xl font-semibold mb-6">Change Password</h2>
-          <form onSubmit={handlePasswordChange} className="space-y-4">
-            <Input
-              label="Current Password"
-              type="password"
-              value={passwordData.currentPassword}
-              onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-              required
-            />
-
-            <Input
-              label="New Password"
-              type="password"
-              value={passwordData.newPassword}
-              onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-              required
-            />
-
-            <Input
-              label="Confirm New Password"
-              type="password"
-              value={passwordData.confirmPassword}
-              onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-              required
-            />
-
-            <Button type="submit" disabled={saving}>
-              {saving ? "Changing..." : "Change Password"}
-            </Button>
-          </form>
-        </Card>
-      )}
-    </div>
+    </DashboardLayout>
   )
 }

@@ -1,4 +1,4 @@
-"use client"
+
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -6,7 +6,7 @@ import { DashboardLayout } from "../../components/layout/DashboardLayout"
 import { PackageForm } from "../../components/features/packages/PackageForm"
 import { usePackages } from "../../hooks/usePackages"
 
-export const CreatePackageScreen = () => {
+const CreatePackageScreen = () => {
   const navigate = useNavigate()
   const { createPackage } = usePackages()
   const [error, setError] = useState(null)
@@ -33,3 +33,5 @@ export const CreatePackageScreen = () => {
     </DashboardLayout>
   )
 }
+
+export default CreatePackageScreen 

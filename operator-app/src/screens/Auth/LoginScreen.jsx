@@ -2,13 +2,13 @@
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useAuth } from "../../context/AuthContext"
-import { Input } from "../../components/common/Input"
-import { Button } from "../../components/common/Button"
+import { useAuth } from "../../context/AuthContext.jsx"
+import { Input } from "../../components/common/Input.jsx"
+import { Button } from "../../components/common/Button.jsx"
 
-export const LoginScreen = () => {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+function LoginScreen() {
+  const [email, setEmail] = useState("elite@travels.com")
+  const [password, setPassword] = useState("user@123")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -22,6 +22,7 @@ export const LoginScreen = () => {
 
     try {
       await login(email, password)
+      localStorage.setItem("login_time", Date.now().toString())
       navigate("/dashboard")
     } catch (err) {
       setError(err.message || "Login failed. Please check your credentials.")
@@ -75,3 +76,5 @@ export const LoginScreen = () => {
     </div>
   )
 }
+
+export default LoginScreen

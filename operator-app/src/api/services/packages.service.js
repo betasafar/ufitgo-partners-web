@@ -1,4 +1,5 @@
-import apiClient from "../client"
+
+import { apiClient } from "../client.js"
 import { ENDPOINTS } from "../endpoints"
 
 export const packagesService = {

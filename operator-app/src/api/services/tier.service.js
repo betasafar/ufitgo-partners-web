@@ -1,12 +1,20 @@
-import apiClient from "../client"
-import { ENDPOINTS } from "../endpoints"
+import { apiClient } from "../client.js"
+import { ENDPOINTS } from "../endpoints.js"
 
 export const tierService = {
   getTierInfo: async () => {
     return await apiClient.get(ENDPOINTS.TIER.INFO)
   },
 
-  getMetrics: async () => {
-    return await apiClient.get(ENDPOINTS.TIER.METRICS)
+  getTrustScore: async () => {
+    return await apiClient.get(ENDPOINTS.METRICS.TRUST_SCORE)
+  },
+
+  getPerformance: async () => {
+    return await apiClient.get(ENDPOINTS.METRICS.PERFORMANCE)
+  },
+
+  getUpgradeProgress: async () => {
+    return await apiClient.get(ENDPOINTS.METRICS.UPGRADE_PROGRESS)
   },
 }
