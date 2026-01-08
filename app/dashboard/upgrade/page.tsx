@@ -1,11 +1,15 @@
-import { getCurrentUser } from "@/lib/api-proxy"
-import { redirect } from "next/navigation"
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { CheckCircle2, Circle, Upload, MessageCircle, TrendingUp, Award } from "lucide-react"
 import { TierBadge } from "@/components/tier-badge"
 import Link from "next/link"
+import { api } from "@/lib/api-client"
+import { ENDPOINTS } from "@/lib/api-endpoints"
 
 interface UpgradeRequirement {
   id: string
@@ -52,12 +56,46 @@ async function getUpgradeProgress(operatorId: number, currentTier: string) {
   return requirements[currentTier] || []
 }
 
-export default async function UpgradePage() {
-  const user = await getCurrentUser()
-  if (!user) redirect("/login")
+export default function UpgradePage() {
+  const router = useRouter()
+  const [user, setUser] = useState(null)
+  const [requirements, setRequirements] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const currentTier = user.tier || "BRONZE"
+  useEffect(() => {
+    fetchUserData()
+  }, [])
+
+  const fetchUserData = async () => {
+    try {
+      const userData = await api.get(ENDPOINTS.PROFILE.GET)
+      if (!userData) {
+        router.push("/login")
+        return
+      }
+      setUser(userData)
+
+      const currentTier = userData.tier || "BRONZE"
+      const reqs = await getUpgradeProgress(userData.id, currentTier)
+      setRequirements(reqs)
+    } catch (error) {
+      console.error("Failed to load user data:", error)
+      router.push("/login")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const currentTier = user?.tier || "BRONZE"
   const nextTier = currentTier === "BRONZE" ? "SILVER" : currentTier === "SILVER" ? "GOLD" : null
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
 
   if (!nextTier) {
     return (
@@ -81,7 +119,6 @@ export default async function UpgradePage() {
     )
   }
 
-  const requirements = await getUpgradeProgress(user.id, currentTier)
   const completedCount = requirements.filter((r) => r.completed).length
   const totalCount = requirements.length
   const progressPercent = Math.round((completedCount / totalCount) * 100)

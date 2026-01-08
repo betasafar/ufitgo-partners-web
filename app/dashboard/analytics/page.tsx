@@ -1,10 +1,14 @@
-import { getCurrentUser } from "@/lib/api-proxy"
-import { redirect } from "next/navigation"
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { LockedChartOverlay } from "@/components/locked-chart-overlay"
 import { TierBadge } from "@/components/tier-badge"
 import { TrendingUp, Users, DollarSign, Calendar, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { api } from "@/lib/api-client"
+import { ENDPOINTS } from "@/lib/api-endpoints"
 
 async function getAnalyticsData(operatorId: number, tier: string) {
   // Basic metrics available to all tiers
@@ -46,12 +50,46 @@ async function getAnalyticsData(operatorId: number, tier: string) {
   return { basicMetrics, advancedMetrics, premiumMetrics }
 }
 
-export default async function AnalyticsPage() {
-  const user = await getCurrentUser()
-  if (!user) redirect("/login")
+export default function AnalyticsPage() {
+  const router = useRouter()
+  const [user, setUser] = useState(null)
+  const [analytics, setAnalytics] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const tier = user.tier || "BRONZE"
-  const analytics = await getAnalyticsData(user.id, tier)
+  useEffect(() => {
+    const fetchUserAndAnalytics = async () => {
+      try {
+        const fetchedUser = await api.get(ENDPOINTS.PROFILE.GET)
+        if (!fetchedUser) {
+          router.push("/login")
+          return
+        }
+
+        const tier = fetchedUser.tier || "BRONZE"
+        const fetchedAnalytics = await getAnalyticsData(fetchedUser.id, tier)
+
+        setUser(fetchedUser)
+        setAnalytics(fetchedAnalytics)
+      } catch (error) {
+        console.error("Failed to load user data:", error)
+        router.push("/login")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserAndAnalytics()
+  }, [router])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (!user || !analytics) return null
 
   return (
     <div className="p-6 space-y-6">
@@ -62,8 +100,8 @@ export default async function AnalyticsPage() {
           <p className="text-muted-foreground">Track your business performance</p>
         </div>
         <div className="flex items-center gap-3">
-          <TierBadge tier={tier} size="lg" showLabel />
-          {tier === "GOLD" && (
+          <TierBadge tier={user.tier} size="lg" showLabel />
+          {user.tier === "GOLD" && (
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               Export Report
@@ -120,7 +158,7 @@ export default async function AnalyticsPage() {
       </div>
 
       {/* Booking Trends - SILVER+ */}
-      <LockedChartOverlay title="Booking Trends" requiredTier="SILVER" currentTier={tier} previewMode>
+      <LockedChartOverlay title="Booking Trends" requiredTier="SILVER" currentTier={user.tier} previewMode>
         <Card>
           <CardHeader>
             <CardTitle>Booking Trends</CardTitle>
@@ -133,7 +171,7 @@ export default async function AnalyticsPage() {
       </LockedChartOverlay>
 
       {/* Customer Demographics - SILVER+ */}
-      <LockedChartOverlay title="Customer Demographics" requiredTier="SILVER" currentTier={tier} previewMode>
+      <LockedChartOverlay title="Customer Demographics" requiredTier="SILVER" currentTier={user.tier} previewMode>
         <Card>
           <CardHeader>
             <CardTitle>Customer Demographics</CardTitle>
@@ -148,7 +186,7 @@ export default async function AnalyticsPage() {
       </LockedChartOverlay>
 
       {/* Predictive Analytics - GOLD only */}
-      <LockedChartOverlay title="Predictive Analytics" requiredTier="GOLD" currentTier={tier} previewMode>
+      <LockedChartOverlay title="Predictive Analytics" requiredTier="GOLD" currentTier={user.tier} previewMode>
         <Card>
           <CardHeader>
             <CardTitle>Predictive Analytics</CardTitle>
@@ -161,7 +199,7 @@ export default async function AnalyticsPage() {
       </LockedChartOverlay>
 
       {/* Industry Benchmarks - GOLD only */}
-      <LockedChartOverlay title="Industry Benchmarks" requiredTier="GOLD" currentTier={tier} previewMode>
+      <LockedChartOverlay title="Industry Benchmarks" requiredTier="GOLD" currentTier={user.tier} previewMode>
         <Card>
           <CardHeader>
             <CardTitle>Industry Benchmarks</CardTitle>

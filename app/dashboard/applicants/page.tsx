@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { ENDPOINTS } from "@/lib/api-endpoints"
 import { TierLimitIndicator } from "@/components/tier-limit-indicator"
-import { getTierInfo } from "@/lib/api-proxy"
+import { api } from "@/lib/api-client"
 import type { TierInfo } from "@/lib/types"
 
 interface Booking {
@@ -76,7 +76,7 @@ export default function ApplicantsPage() {
 
   const fetchTierInfo = async () => {
     try {
-      const data = await getTierInfo()
+      const data = await api.get(ENDPOINTS.TIER.INFO)
       setTierInfo(data.tierInfo)
     } catch (error) {
       console.error("Failed to fetch tier info:", error)

@@ -1,6 +1,10 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { AlertTriangle, CreditCard, UserPlus, Clock } from "lucide-react"
-import { apiRequest } from "@/lib/api-proxy"
+import { api } from "@/lib/api-client"
+import { ENDPOINTS } from "@/lib/api-endpoints"
 import Link from "next/link"
 
 interface UrgentTask {
@@ -12,18 +16,26 @@ interface UrgentTask {
   action?: string
 }
 
-async function getUrgentTasks() {
-  try {
-    const data: { tasks: UrgentTask[]; totalUrgent: number } = await apiRequest("/operator/bookings/urgent-tasks")
-    return { tasks: data.tasks || [], totalUrgent: data.totalUrgent || 0 }
-  } catch (error) {
-    console.error("[v0] Failed to load urgent tasks:", error)
-    return { tasks: [], totalUrgent: 0 }
-  }
-}
+export function UrgentTasks() {
+  const [tasks, setTasks] = useState<UrgentTask[]>([])
+  const [totalUrgent, setTotalUrgent] = useState(0)
+  const [loading, setLoading] = useState(true)
 
-export async function UrgentTasks() {
-  const { tasks, totalUrgent } = await getUrgentTasks()
+  useEffect(() => {
+    fetchUrgentTasks()
+  }, [])
+
+  const fetchUrgentTasks = async () => {
+    try {
+      const data = await api.get(ENDPOINTS.BOOKINGS.URGENT_TASKS)
+      setTasks(data.tasks || [])
+      setTotalUrgent(data.totalUrgent || 0)
+    } catch (error) {
+      console.error("Failed to load urgent tasks:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getTaskIcon = (taskId: string) => {
     switch (taskId) {
@@ -38,6 +50,18 @@ export async function UrgentTasks() {
       default:
         return AlertTriangle
     }
+  }
+
+  if (loading) {
+    return (
+      <Card className="p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 bg-muted rounded w-1/2"></div>
+          <div className="h-4 bg-muted rounded"></div>
+          <div className="h-4 bg-muted rounded"></div>
+        </div>
+      </Card>
+    )
   }
 
   return (

@@ -1,10 +1,14 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Download, Search, Filter, Calendar } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { apiRequest } from "@/lib/api-proxy"
+import { api } from "@/lib/api-client"
+import { ENDPOINTS } from "@/lib/api-endpoints"
 import { RevenueFlowChart } from "@/components/revenue-flow-chart"
+import { useEffect, useState } from "react"
 
 interface PaymentStats {
   monthlyCollected: number
@@ -47,37 +51,36 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-async function getPaymentData() {
-  try {
-    const statsData = await apiRequest<PaymentStats>("/operator/wallet/payment-stats", {
-      next: { revalidate: 60 },
-    })
-    const txData = await apiRequest<Transaction[]>("/operator/wallet/transactions/filtered?limit=20&type=credit", {
-      next: { revalidate: 30 },
-    })
+export default function PaymentsPage() {
+  const [stats, setStats] = useState({
+    monthlyCollected: 0,
+    pendingWithdrawals: 0,
+    totalTransactions: 0,
+    averageTransaction: 0,
+  })
+  const [transactions, setTransactions] = useState([])
+  const [loading, setLoading] = useState(true)
 
-    return {
-      stats: statsData,
-      transactions: Array.isArray(txData) ? txData : [],
-    }
-  } catch (error) {
-    console.error("[v0] Failed to load payment data:", error)
-    return {
-      stats: {
-        monthlyCollected: 0,
-        pendingWithdrawals: 0,
-        totalTransactions: 0,
-        averageTransaction: 0,
-      },
-      transactions: [],
+  useEffect(() => {
+    fetchPaymentData()
+  }, [])
+
+  const fetchPaymentData = async () => {
+    try {
+      const [statsData, txData] = await Promise.all([
+        api.get(ENDPOINTS.WALLET.PAYMENT_STATS),
+        api.get(ENDPOINTS.WALLET.TRANSACTIONS),
+      ])
+
+      setStats(statsData || stats)
+      setTransactions(Array.isArray(txData) ? txData : [])
+    } catch (error) {
+      console.error("Failed to load payment data:", error)
+    } finally {
+      setLoading(false)
     }
   }
-}
 
-export default async function PaymentsPage() {
-  const { stats, transactions } = await getPaymentData()
-
-  // Revenue flow mock
   const revenueFlow = [
     { month: "May", revenue: 18500000 },
     { month: "Jun", revenue: 22000000 },
@@ -86,6 +89,14 @@ export default async function PaymentsPage() {
     { month: "Sep", revenue: 30500000 },
     { month: "Oct", revenue: stats.monthlyCollected || 30000000 },
   ]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

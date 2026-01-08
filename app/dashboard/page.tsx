@@ -1,3 +1,6 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import type { DashboardStats, Booking } from "@/lib/types"
 import { StatsCards } from "@/components/stats-cards"
 import { VerificationBanner } from "@/components/verification-banner"
@@ -5,76 +8,79 @@ import { RevenueChart } from "@/components/revenue-chart"
 import { UrgentTasks } from "@/components/urgent-tasks"
 import { RecentApplicants } from "@/components/recent-applicants"
 import { AccountStatusCard } from "@/components/account-status-card"
-import { Suspense } from "react"
-import { apiRequest, getCurrentUser, getTierInfo, getOperatorMetrics } from "@/lib/api-proxy"
+import { api } from "@/lib/api-client"
+import { ENDPOINTS } from "@/lib/api-endpoints"
 
-async function getDashboardData() {
-  try {
-    const [statsResult, revenueResult, bookingsResult, userResult, tierResult, metricsResult] =
-      await Promise.allSettled([
-        apiRequest("/operator/reports/dashboard-stats", { next: { revalidate: 60 } }),
-        apiRequest("/operator/reports/revenue-flow", { next: { revalidate: 120 } }),
-        apiRequest("/operator/bookings/recent", { next: { revalidate: 90 } }),
-        getCurrentUser(),
-        getTierInfo(),
-        getOperatorMetrics(),
-      ])
+export default function DashboardPage() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalRevenue: 0,
+    revenueChange: 0,
+    totalBookings: 0,
+    bookingsChange: 0,
+    pendingPayments: 0,
+    paymentsChange: 0,
+    visaExpiring: 0,
+    visaChange: 0,
+    activePackages: 0,
+    seatsFilled: 0,
+    totalSeats: 0,
+    revenueProjected: 0,
+  })
+  const [revenueData, setRevenueData] = useState([])
+  const [recentBookings, setRecentBookings] = useState<Booking[]>([])
+  const [operator, setOperator] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-    const stats = statsResult.status === "fulfilled" ? statsResult.value : null
-    const revenueDataResponse = revenueResult.status === "fulfilled" ? revenueResult.value : []
-    const recentBookings = bookingsResult.status === "fulfilled" ? bookingsResult.value : []
-    const userData = userResult.status === "fulfilled" ? userResult.value : null
-    const tierData = tierResult.status === "fulfilled" ? tierResult.value : null
-    const metrics = metricsResult.status === "fulfilled" ? metricsResult.value : null
+  useEffect(() => {
+    fetchDashboardData()
+  }, [])
 
-    const revenueData = Array.isArray(revenueDataResponse)
-      ? revenueDataResponse
-      : (revenueDataResponse as any)?.data || []
+  const fetchDashboardData = async () => {
+    try {
+      const [statsResult, revenueResult, bookingsResult, userResult, tierResult, metricsResult] =
+        await Promise.allSettled([
+          api.get(ENDPOINTS.REPORTS.DASHBOARD_STATS),
+          api.get(ENDPOINTS.REPORTS.REVENUE_FLOW),
+          api.get(ENDPOINTS.BOOKINGS.RECENT),
+          api.get(ENDPOINTS.PROFILE.GET),
+          api.get(ENDPOINTS.TIER.INFO),
+          api.get(ENDPOINTS.METRICS.OVERVIEW),
+        ])
 
-    const mappedStats: DashboardStats = {
-      totalRevenue: stats?.totalRevenue || 0,
-      revenueChange: stats?.revenueChange || 0,
-      totalBookings: stats?.totalBookings || 0,
-      bookingsChange: stats?.bookingsChange || 0,
-      pendingPayments: stats?.pendingPayments || 0,
-      paymentsChange: 0,
-      visaExpiring: 0,
-      visaChange: 0,
-      activePackages: stats?.activePackages || 0,
-      seatsFilled: 0,
-      totalSeats: 0,
-      revenueProjected: 0,
-    }
+      if (statsResult.status === "fulfilled") {
+        setStats(statsResult.value)
+      }
 
-    const mappedBookings: Booking[] = (recentBookings as any[]).map((booking: any) => ({
-      id: String(booking.id),
-      packageId: String(booking.packageId || booking.package?.id || ""),
-      pilgrimId: String(booking.pilgrimId || booking.userId || ""),
-      pilgrimName: booking.pilgrimName || "Unknown",
-      pilgrimEmail: booking.pilgrimEmail || "",
-      packageTitle: booking.package?.title || "Unknown Package",
-      amount: Number(booking.totalAmount || booking.amount || 0),
-      paymentStatus:
-        booking.status === "fully_paid" ? "completed" : booking.status === "deposit_paid" ? "partial" : "pending",
-      travelDate: booking.travelDate || booking.package?.startDate || new Date().toISOString(),
-      createdAt: booking.createdAt || new Date().toISOString(),
-    }))
+      if (revenueResult.status === "fulfilled") {
+        setRevenueData(revenueResult.value)
+      }
 
-    const operatorWithTier = userData
-      ? {
+      if (bookingsResult.status === "fulfilled") {
+        const mappedBookings = (bookingsResult.value as any[]).map((booking: any) => ({
+          id: String(booking.id),
+          packageId: String(booking.packageId || booking.package?.id || ""),
+          pilgrimId: String(booking.pilgrimId || booking.userId || ""),
+          pilgrimName: booking.pilgrimName || "Unknown",
+          pilgrimEmail: booking.pilgrimEmail || "",
+          packageTitle: booking.package?.title || "Unknown Package",
+          amount: Number(booking.totalAmount || booking.amount || 0),
+          paymentStatus:
+            booking.status === "fully_paid" ? "completed" : booking.status === "deposit_paid" ? "partial" : "pending",
+          travelDate: booking.travelDate || booking.package?.startDate || new Date().toISOString(),
+          createdAt: booking.createdAt || new Date().toISOString(),
+        }))
+        setRecentBookings(mappedBookings)
+      }
+
+      const userData = userResult.status === "fulfilled" ? userResult.value : null
+      const tierData = tierResult.status === "fulfilled" ? tierResult.value : null
+      const metrics = metricsResult.status === "fulfilled" ? metricsResult.value : null
+
+      if (userData) {
+        setOperator({
           ...userData,
           tier: tierData?.tier || userData.tier || "BRONZE",
-          tierInfo: tierData?.tierInfo || {
-            level: userData.tier || "BRONZE",
-            maxPilgrimsPerBooking: 50,
-            maxActivePackages: 5,
-            maxMonthlyBookings: 50,
-            requiresEscrow: true,
-            canCreateCustomPackages: false,
-            hasAnalyticsAccess: false,
-            hasPrioritySupport: false,
-            features: [],
-          },
+          tierInfo: tierData?.tierInfo,
           trustScore: metrics?.trustScore || tierData?.trustScore || 0,
           trustBadges: tierData?.badges || [],
           documents: tierData?.documents || [],
@@ -83,36 +89,22 @@ async function getDashboardData() {
           cancelledBookings: metrics?.cancelledBookings || 0,
           monthlyBookingsCount: metrics?.monthlyBookingsCount || 0,
           activePackagesCount: metrics?.activePackagesCount || 0,
-        }
-      : null
-
-    return { stats: mappedStats, revenueData, recentBookings: mappedBookings, operator: operatorWithTier }
-  } catch (error) {
-    console.error("[v0] Dashboard data fetch error:", error)
-    return {
-      stats: {
-        totalRevenue: 0,
-        revenueChange: 0,
-        totalBookings: 0,
-        bookingsChange: 0,
-        pendingPayments: 0,
-        paymentsChange: 0,
-        visaExpiring: 0,
-        visaChange: 0,
-        activePackages: 0,
-        seatsFilled: 0,
-        totalSeats: 0,
-        revenueProjected: 0,
-      },
-      revenueData: [],
-      recentBookings: [],
-      operator: null,
+        })
+      }
+    } catch (error) {
+      console.error("Dashboard data fetch error:", error)
+    } finally {
+      setLoading(false)
     }
   }
-}
 
-export default async function DashboardPage() {
-  const { stats, revenueData, recentBookings, operator } = await getDashboardData()
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -122,10 +114,7 @@ export default async function DashboardPage() {
       </div>
 
       <StatsCards stats={stats} />
-
-      <Suspense fallback={<div>Loading...</div>}>
-        <VerificationBanner />
-      </Suspense>
+      <VerificationBanner />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3 space-y-6">
@@ -134,9 +123,7 @@ export default async function DashboardPage() {
         </div>
         <div className="space-y-6">
           {operator && <AccountStatusCard operator={operator} />}
-          <Suspense fallback={<div className="animate-pulse h-48 bg-muted/10 rounded-lg" />}>
-            <UrgentTasks />
-          </Suspense>
+          <UrgentTasks />
         </div>
       </div>
     </div>
