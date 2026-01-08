@@ -1,62 +1,76 @@
 "use client"
+
+import { useEffect, useState } from "react"
 import type { Package, DashboardStats } from "@/lib/types"
 import { PackagesStats } from "@/components/packages-stats"
 import { PackagesTable } from "@/components/packages-table"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
-import { apiRequest } from "@/lib/api-server"
+import { api } from "@/lib/api-client"
+import { ENDPOINTS } from "@/lib/api-endpoints"
 
-async function getPackagesData() {
-  try {
-    const packages: Package[] = await apiRequest<Package[]>("/operator/packages", {
-      next: { revalidate: 60 },
-    })
+export default function PackagesPage() {
+  const [packages, setPackages] = useState<Package[]>([])
+  const [stats, setStats] = useState<DashboardStats>({
+    totalRevenue: 0,
+    revenueChange: 0,
+    totalBookings: 0,
+    bookingsChange: 0,
+    pendingPayments: 0,
+    paymentsChange: 0,
+    visaExpiring: 0,
+    visaChange: 0,
+    activePackages: 0,
+    seatsFilled: 0,
+    totalSeats: 0,
+    revenueProjected: 0,
+  })
+  const [loading, setLoading] = useState(true)
 
-    const activePackages = packages.filter((p) => p.status === "active")
-    const totalSeats = packages.reduce((sum, p) => sum + p.capacity, 0)
-    const seatsFilled = packages.reduce((sum, p) => sum + p.booked, 0)
-    const revenueProjected = packages.reduce((sum, p) => sum + p.price * p.booked, 0)
+  useEffect(() => {
+    async function loadPackages() {
+      try {
+        const data = await api.get<Package[]>(ENDPOINTS.PACKAGES.LIST)
+        setPackages(data)
 
-    const stats: DashboardStats = {
-      totalRevenue: revenueProjected,
-      revenueChange: 12.5,
-      totalBookings: seatsFilled,
-      bookingsChange: 5.2,
-      pendingPayments: 0,
-      paymentsChange: -2.1,
-      visaExpiring: 0,
-      visaChange: 8.0,
-      activePackages: activePackages.length,
-      seatsFilled,
-      totalSeats,
-      revenueProjected,
+        // Calculate stats from packages
+        const activePackages = data.filter((p) => p.status === "active")
+        const totalSeats = data.reduce((sum, p) => sum + p.capacity, 0)
+        const seatsFilled = data.reduce((sum, p) => sum + p.booked, 0)
+        const revenueProjected = data.reduce((sum, p) => sum + p.price * p.booked, 0)
+
+        setStats({
+          totalRevenue: revenueProjected,
+          revenueChange: 12.5,
+          totalBookings: seatsFilled,
+          bookingsChange: 5.2,
+          pendingPayments: 0,
+          paymentsChange: -2.1,
+          visaExpiring: 0,
+          visaChange: 8.0,
+          activePackages: activePackages.length,
+          seatsFilled,
+          totalSeats,
+          revenueProjected,
+        })
+      } catch (error) {
+        console.error("Failed to load packages:", error)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    return { packages, stats }
-  } catch (error) {
-    return {
-      packages: [],
-      stats: {
-        totalRevenue: 0,
-        revenueChange: 0,
-        totalBookings: 0,
-        bookingsChange: 0,
-        pendingPayments: 0,
-        paymentsChange: 0,
-        visaExpiring: 0,
-        visaChange: 0,
-        activePackages: 0,
-        seatsFilled: 0,
-        totalSeats: 0,
-        revenueProjected: 0,
-      },
-    }
+    loadPackages()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-muted-foreground">Loading packages...</p>
+      </div>
+    )
   }
-}
-
-export default async function PackagesPage() {
-  const { packages, stats } = await getPackagesData()
 
   return (
     <div className="space-y-6">

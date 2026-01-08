@@ -12,8 +12,6 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
   const url = `${API_BASE_URL}${endpoint}`
   const token = getAuthToken()
 
-  console.log("[v0] Client API Request:", endpoint, "Token exists:", !!token)
-
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
@@ -31,7 +29,6 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
 
   if (!response.ok) {
     if (response.status === 401) {
-      console.error("[v0] Unauthorized - redirecting to login")
       if (typeof window !== "undefined") {
         window.location.href = "/login"
       }
@@ -43,4 +40,11 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
   }
 
   return response.json()
+}
+
+export const api = {
+  get: (endpoint: string) => apiRequest(endpoint, { method: "GET" }),
+  post: (endpoint: string, data?: any) => apiRequest(endpoint, { method: "POST", body: JSON.stringify(data) }),
+  put: (endpoint: string, data?: any) => apiRequest(endpoint, { method: "PUT", body: JSON.stringify(data) }),
+  delete: (endpoint: string) => apiRequest(endpoint, { method: "DELETE" }),
 }

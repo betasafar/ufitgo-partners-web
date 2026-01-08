@@ -1,18 +1,38 @@
-// app/dashboard/packages/new/page.tsx
-// Server Component - fetches authenticated operator data securely
+"use client"
 
-import { getTierInfo, getOperatorMetrics } from "@/lib/api-proxy-server"
-import CreatePackageClient from "@/components/create-package-client"
-import type { OperatorWithTier } from "@/lib/types"
+import { useEffect, useState } from "react"
+import { PackageForm } from "@/components/package-form"
+import { api } from "@/lib/api-client"
+import { ENDPOINTS } from "@/lib/api-endpoints"
 
-export const metadata = {
-  title: "Create New Package | Operator Dashboard",
-}
+export default function CreatePackagePage() {
+  const [tierData, setTierData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-export default async function CreatePackagePage() {
-  const [tierData, metrics] = await Promise.all([getTierInfo(), getOperatorMetrics()])
+  useEffect(() => {
+    async function loadTierData() {
+      try {
+        const data = await api.get(ENDPOINTS.TIER.INFO)
+        setTierData(data)
+      } catch (error) {
+        console.error("Failed to load tier data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  if (!tierData || !metrics) {
+    loadTierData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
+
+  if (!tierData) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <p className="text-lg text-red-600">Failed to load operator data.</p>
@@ -21,29 +41,22 @@ export default async function CreatePackagePage() {
     )
   }
 
-  const operator: OperatorWithTier = {
-    id: "current",
-    email: "",
-    companyName: "",
-    phone: "",
-    role: "operator",
-    verified: tierData.verificationStatus === "approved",
-    verificationStatus: tierData.verificationStatus || "pending",
-    cacRegistration: "",
-    nahconLicense: "",
-    tier: tierData.tier || "basic",
-    tierInfo: tierData.tierInfo,
-    trustScore: tierData.trustScore || 0,
-    trustBadges: tierData.badges || [],
-    documents: tierData.documents || [],
-    totalBookings: metrics.totalBookings || 0,
-    successfulBookings: metrics.successfulBookings || 0,
-    cancelledBookings: metrics.cancelledBookings || 0,
-    monthlyBookingsCount: metrics.monthlyBookingsCount || 0,
-    activePackagesCount: metrics.activePackagesCount || 0,
-  }
+  const maxPilgrims = tierData.tierInfo?.maxPilgrimsPerPackage || 50
+  const canSetFlexibleDates = tierData.tier !== "BRONZE"
+  const canSetCustomPricing = tierData.tier === "GOLD"
 
-  const canCreatePackage = operator.activePackagesCount < operator.tierInfo.maxActivePackages
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Create New Package</h1>
+        <p className="text-muted-foreground">Set up a new travel package for pilgrims</p>
+      </div>
 
-  return <CreatePackageClient operator={operator} canCreateInitially={canCreatePackage} />
+      <PackageForm
+        maxPilgrims={maxPilgrims}
+        canSetFlexibleDates={canSetFlexibleDates}
+        canSetCustomPricing={canSetCustomPricing}
+      />
+    </div>
+  )
 }
