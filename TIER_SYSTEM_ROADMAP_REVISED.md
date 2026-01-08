@@ -60,51 +60,51 @@ Both systems connect to the same PostgreSQL database to ensure data consistency.
 ### 3.1 Tier Information Endpoints
 **Controller:** `OperatorTierController`
 
-```typescript
+\`\`\`typescript
 GET /operator/tier/info
 GET /operator/tier/restrictions
 GET /operator/tier/comparison
 GET /operator/tier/badges
 GET /operator/tier/upgrade-requirements
-```
+\`\`\`
 
 ### 3.2 Document Upload Endpoints
 **Controller:** `OperatorDocumentsController`
 
-```typescript
+\`\`\`typescript
 POST /operator/documents/upload
 GET /operator/documents
 GET /operator/documents/:id
 DELETE /operator/documents/:id
 GET /operator/documents/verification-status
-```
+\`\`\`
 
 ### 3.3 Performance & Metrics
 **Controller:** `OperatorMetricsController`
 
-```typescript
+\`\`\`typescript
 GET /operator/metrics/trust-score
 GET /operator/metrics/performance
 GET /operator/metrics/upgrade-progress
-```
+\`\`\`
 
 ### 3.4 Booking Guards Enhancement
 **Guards:** Update existing booking creation
 
-```typescript
+\`\`\`typescript
 @UseGuards(TierRestrictionGuard)
 POST /operator/bookings
 // Enforces: maxBookingsPerMonth, requiresEscrow, pilgrimsPerBooking
-```
+\`\`\`
 
 ### 3.5 Package Guards Enhancement
 **Guards:** Update existing package creation
 
-```typescript
+\`\`\`typescript
 @UseGuards(TierRestrictionGuard)
 POST /operator/packages
 // Enforces: maxActivePackages, internationalTravelAllowed
-```
+\`\`\`
 
 ---
 
@@ -115,43 +115,43 @@ POST /operator/packages
 ### 4.1 Verification Management
 **Controller:** `AdminVerificationController`
 
-```typescript
+\`\`\`typescript
 GET /admin/operators/verification/pending
 GET /admin/operators/:id/documents
 PATCH /admin/operators/:id/documents/:docId/verify
 PATCH /admin/operators/:id/verification/:status
 POST /admin/operators/:id/tier-upgrade
-```
+\`\`\`
 
 ### 4.2 Badge Management
 **Controller:** `AdminBadgesController`
 
-```typescript
+\`\`\`typescript
 GET /admin/badges/templates
 POST /admin/operators/:id/badges
 DELETE /admin/operators/:id/badges/:badgeId
 GET /admin/badges/statistics
-```
+\`\`\`
 
 ### 4.3 Tier Configuration Management
 **Controller:** `AdminTierConfigController`
 
-```typescript
+\`\`\`typescript
 GET /admin/tier-config
 PATCH /admin/tier-config/:tier
 POST /admin/tier-config/feature-flags
 GET /admin/tier-config/audit-log
-```
+\`\`\`
 
 ### 4.4 Analytics & Reporting
 **Controller:** `AdminTierAnalyticsController`
 
-```typescript
+\`\`\`typescript
 GET /admin/analytics/tier-distribution
 GET /admin/analytics/verification-funnel
 GET /admin/analytics/upgrade-conversion
 GET /admin/analytics/trust-score-trends
-```
+\`\`\`
 
 ---
 
@@ -161,7 +161,7 @@ GET /admin/analytics/trust-score-trends
 
 ### 5.1 Cron Jobs & Background Tasks
 
-```typescript
+\`\`\`typescript
 @Cron('0 0 * * *') // Daily at midnight
 async evaluateTierUpgrades()
 
@@ -170,11 +170,11 @@ async updateTrustScores()
 
 @Cron('0 0 1 * *') // Monthly on 1st
 async resetMonthlyLimits()
-```
+\`\`\`
 
 ### 5.2 Event-Based Updates
 
-```typescript
+\`\`\`typescript
 @OnEvent('booking.completed')
 async handleBookingCompleted()
 
@@ -183,7 +183,7 @@ async handleBookingCancelled()
 
 @OnEvent('payment.received')
 async handlePaymentReceived()
-```
+\`\`\`
 
 ---
 
@@ -215,7 +215,7 @@ async handlePaymentReceived()
 **Duration:** 1-2 days
 
 ### 7.1 Logging
-```typescript
+\`\`\`typescript
 @Injectable()
 class TierAuditLogger {
   logTierChange()
@@ -223,7 +223,7 @@ class TierAuditLogger {
   logDocumentVerification()
   logBadgeAwarded()
 }
-```
+\`\`\`
 
 ### 7.2 Metrics & Alerts
 - Tier distribution tracking
@@ -258,19 +258,19 @@ class TierAuditLogger {
 ## Database Migrations
 
 ### Migration 1: Tier System Foundation
-```sql
+\`\`\`sql
 -- Add tier columns to operators table
 ALTER TABLE operators ADD COLUMN tier VARCHAR(10) DEFAULT 'bronze';
 ALTER TABLE operators ADD COLUMN trust_score INT DEFAULT 50;
 -- Create new tables: operator_documents, operator_badges, tier_configurations
-```
+\`\`\`
 
 ### Migration 2: Indexes for Performance
-```sql
+\`\`\`sql
 CREATE INDEX idx_operators_tier ON operators(tier);
 CREATE INDEX idx_documents_status ON operator_documents(verification_status);
 CREATE INDEX idx_badges_operator ON operator_badges(operator_id);
-```
+\`\`\`
 
 ---
 

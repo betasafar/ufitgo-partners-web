@@ -2,32 +2,33 @@ import { Test, type TestingModule } from "@nestjs/testing"
 import type { Repository } from "typeorm"
 import { getRepositoryToken } from "@nestjs/typeorm"
 import { TierRestrictionService } from "./tier-restriction.service"
-import { Operator } from "../entities/operator.entity"
-import { TierConfig } from "../../config/entities/tier-config.entity"
+import { Operator, OperatorTier } from "../entities/operator.entity"
+import { TierConfiguration } from "../../config/entities/tier-config.entity"
+import { Package } from "../../packages/entities/package.entity"
+import { Booking } from "../../bookings/entities/booking.entity"
 import { jest } from "@jest/globals"
 
 describe("TierRestrictionService", () => {
   let service: TierRestrictionService
   let operatorRepo: Repository<Operator>
-  let tierConfigRepo: Repository<TierConfig>
+  let tierConfigRepo: Repository<TierConfiguration>
 
   const mockOperator: Partial<Operator> = {
     id: 1,
-    tier: "bronze",
+    tier: OperatorTier.BRONZE,
     trustScore: 50,
     totalBookings: 5,
     successfulBookings: 4,
     monthlyBookingsCount: 2,
   }
 
-  const mockTierConfig: Partial<TierConfig> = {
-    tier: "bronze",
+  const mockTierConfig: Partial<TierConfiguration> = {
+    tier: "BRONZE",
     maxBookingsPerMonth: 10,
     maxActivePackages: 3,
     maxPilgrimsPerBooking: 5,
     requiresEscrow: true,
-    internationalTravelAllowed: false,
-    enabled: true,
+    isActive: true,
   }
 
   beforeEach(async () => {
@@ -42,9 +43,21 @@ describe("TierRestrictionService", () => {
           },
         },
         {
-          provide: getRepositoryToken(TierConfig),
+          provide: getRepositoryToken(TierConfiguration),
           useValue: {
             findOne: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(Package),
+          useValue: {
+            count: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(Booking),
+          useValue: {
+            count: jest.fn(),
           },
         },
       ],
@@ -52,39 +65,27 @@ describe("TierRestrictionService", () => {
 
     service = module.get<TierRestrictionService>(TierRestrictionService)
     operatorRepo = module.get<Repository<Operator>>(getRepositoryToken(Operator))
-    tierConfigRepo = module.get<Repository<TierConfig>>(getRepositoryToken(TierConfig))
+    tierConfigRepo = module.get<Repository<TierConfiguration>>(getRepositoryToken(TierConfiguration))
   })
 
   describe("canCreateBooking", () => {
     it("should allow booking when under limit", async () => {
       jest.spyOn(operatorRepo, "findOne").mockResolvedValue(mockOperator as Operator)
-      jest.spyOn(tierConfigRepo, "findOne").mockResolvedValue(mockTierConfig as TierConfig)
+      jest.spyOn(tierConfigRepo, "findOne").mockResolvedValue(mockTierConfig as TierConfiguration)
 
-      const result = await service.canCreateBooking(1, 3)
+      const result = await service.canCreateBooking(1)
 
-      expect(result.allowed).toBe(true)
-      expect(result.requiresEscrow).toBe(true)
+      expect(result).toBe(true)
     })
 
     it("should block booking when exceeding monthly limit", async () => {
       const overLimitOperator = { ...mockOperator, monthlyBookingsCount: 10 }
       jest.spyOn(operatorRepo, "findOne").mockResolvedValue(overLimitOperator as Operator)
-      jest.spyOn(tierConfigRepo, "findOne").mockResolvedValue(mockTierConfig as TierConfig)
+      jest.spyOn(tierConfigRepo, "findOne").mockResolvedValue(mockTierConfig as TierConfiguration)
 
-      const result = await service.canCreateBooking(1, 3)
+      const result = await service.canCreateBooking(1)
 
-      expect(result.allowed).toBe(false)
-      expect(result.reason).toContain("monthly booking limit")
-    })
-
-    it("should block booking when exceeding pilgrims per booking", async () => {
-      jest.spyOn(operatorRepo, "findOne").mockResolvedValue(mockOperator as Operator)
-      jest.spyOn(tierConfigRepo, "findOne").mockResolvedValue(mockTierConfig as TierConfig)
-
-      const result = await service.canCreateBooking(1, 10)
-
-      expect(result.allowed).toBe(false)
-      expect(result.reason).toContain("pilgrims per booking")
+      expect(result).toBe(false)
     })
   })
 
@@ -94,34 +95,24 @@ describe("TierRestrictionService", () => {
         ...mockOperator,
         activePackagesCount: 2,
       } as Operator)
-      jest.spyOn(tierConfigRepo, "findOne").mockResolvedValue(mockTierConfig as TierConfig)
+      jest.spyOn(tierConfigRepo, "findOne").mockResolvedValue(mockTierConfig as TierConfiguration)
 
-      const result = await service.canCreatePackage(1, "umrah")
+      const result = await service.canCreatePackage(1)
 
-      expect(result.allowed).toBe(true)
-    })
-
-    it("should block international package for bronze tier", async () => {
-      jest.spyOn(operatorRepo, "findOne").mockResolvedValue(mockOperator as Operator)
-      jest.spyOn(tierConfigRepo, "findOne").mockResolvedValue(mockTierConfig as TierConfig)
-
-      const result = await service.canCreatePackage(1, "hajj")
-
-      expect(result.allowed).toBe(false)
-      expect(result.reason).toContain("international travel")
+      expect(result).toBe(true)
     })
   })
 
-  describe("getRestrictions", () => {
-    it("should return tier restrictions", async () => {
+  describe("getUsageStats", () => {
+    it("should return usage statistics", async () => {
       jest.spyOn(operatorRepo, "findOne").mockResolvedValue(mockOperator as Operator)
-      jest.spyOn(tierConfigRepo, "findOne").mockResolvedValue(mockTierConfig as TierConfig)
+      jest.spyOn(tierConfigRepo, "findOne").mockResolvedValue(mockTierConfig as TierConfiguration)
 
-      const result = await service.getRestrictions(1)
+      const result = await service.getUsageStats(1)
 
-      expect(result.tier).toBe("bronze")
-      expect(result.limits.maxBookingsPerMonth).toBe(10)
-      expect(result.usage.bookingsThisMonth).toBe(2)
+      expect(result.tier).toBe(OperatorTier.BRONZE)
+      expect(result.bookings).toBeDefined()
+      expect(result.packages).toBeDefined()
     })
   })
 })

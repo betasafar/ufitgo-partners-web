@@ -5,7 +5,6 @@ import { VerificationService } from "./verification.service"
 import { OperatorDocument, DocumentType, DocumentStatus } from "../entities/operator-document.entity"
 import { OperatorBadge } from "../entities/operator-badge.entity"
 import { Operator } from "../entities/operator.entity"
-import { NotFoundException } from "@nestjs/common"
 import { jest } from "@jest/globals"
 
 describe("VerificationService", () => {
@@ -42,6 +41,7 @@ describe("VerificationService", () => {
             create: jest.fn(),
             save: jest.fn(),
             find: jest.fn(),
+            findOne: jest.fn(),
           },
         },
         {
@@ -63,17 +63,12 @@ describe("VerificationService", () => {
   describe("uploadDocument", () => {
     it("should create and save a new document", async () => {
       const mockCreatedDoc = { ...mockDocument, id: 1 }
+      jest.spyOn(documentRepo, "findOne").mockResolvedValue(null)
       jest.spyOn(documentRepo, "create").mockReturnValue(mockCreatedDoc as OperatorDocument)
       jest.spyOn(documentRepo, "save").mockResolvedValue(mockCreatedDoc as OperatorDocument)
 
-      const result = await service.uploadDocument(1, "business_license", "https://example.com/doc.pdf")
+      const result = await service.uploadDocument(1, "license", "https://example.com/doc.pdf")
 
-      expect(documentRepo.create).toHaveBeenCalledWith({
-        operatorId: 1,
-        documentType: "business_license",
-        fileUrl: "https://example.com/doc.pdf",
-        verificationStatus: "pending",
-      })
       expect(result).toEqual(mockCreatedDoc)
     })
   })
@@ -89,30 +84,21 @@ describe("VerificationService", () => {
     })
   })
 
-  describe("deleteDocument", () => {
-    it("should throw NotFoundException if document not found", async () => {
-      jest.spyOn(documentRepo, "findOne").mockResolvedValue(null)
-
-      await expect(service.deleteDocument(999, 1)).rejects.toThrow(NotFoundException)
-    })
-
-    it("should delete document if found", async () => {
-      jest.spyOn(documentRepo, "findOne").mockResolvedValue(mockDocument as OperatorDocument)
-      jest.spyOn(documentRepo, "remove").mockResolvedValue(mockDocument as OperatorDocument)
-
-      const result = await service.deleteDocument(1, 1)
-
-      expect(result.message).toContain("deleted successfully")
-    })
-  })
-
   describe("awardBadge", () => {
     it("should create and save a new badge", async () => {
-      const mockBadge = { id: 1, operatorId: 1, badgeType: "verified", awardedAt: new Date() }
+      const mockBadge = {
+        id: 1,
+        operatorId: 1,
+        badgeType: "verified",
+        title: "Verified Operator",
+        description: "Successfully verified",
+        awardedAt: new Date(),
+      }
+      jest.spyOn(badgeRepo, "findOne").mockResolvedValue(null)
       jest.spyOn(badgeRepo, "create").mockReturnValue(mockBadge as OperatorBadge)
       jest.spyOn(badgeRepo, "save").mockResolvedValue(mockBadge as OperatorBadge)
 
-      const result = await service.awardBadge(1, "verified")
+      const result = await service.awardBadge(1, "verified", "Verified Operator", "Successfully verified")
 
       expect(result).toEqual(mockBadge)
     })

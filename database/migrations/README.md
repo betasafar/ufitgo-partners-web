@@ -30,14 +30,14 @@ Inserts sample operators and test data for development/staging environments.
 ## How to Run
 
 ### Option 1: Using psql command line
-```bash
+\`\`\`bash
 # Connect to your database
 psql -h localhost -U your_user -d your_database
 
 # Run migrations in order
 \i database/migrations/001_tier_system_foundation.sql
 \i database/migrations/003_update_existing_operators_with_tiers.sql
-```
+\`\`\`
 
 ### Option 2: Using GUI tools (pgAdmin, DBeaver, etc.)
 1. Open the SQL file
@@ -45,13 +45,13 @@ psql -h localhost -U your_user -d your_database
 3. Review the output for any errors
 
 ### Option 3: Using TypeORM migrations
-```bash
+\`\`\`bash
 # Generate TypeORM migration from entities
 npm run migration:generate -- -n TierSystem
 
 # Run migrations
 npm run migration:run
-```
+\`\`\`
 
 ## What Gets Updated
 
@@ -74,7 +74,7 @@ The `003_update_existing_operators_with_tiers.sql` script will:
 
 After running the migrations, verify the results:
 
-```sql
+\`\`\`sql
 -- Check tier distribution
 SELECT tier, COUNT(*) as count, ROUND(AVG(trust_score), 2) as avg_score
 FROM operators
@@ -91,13 +91,13 @@ SELECT column_name, data_type, is_nullable, column_default
 FROM information_schema.columns
 WHERE table_name = 'operators'
 AND column_name IN ('tier', 'trust_score', 'escrow_required');
-```
+\`\`\`
 
 ## Rollback (if needed)
 
 If you need to rollback the tier system changes:
 
-```sql
+\`\`\`sql
 -- Remove tier columns from operators
 ALTER TABLE operators 
   DROP COLUMN IF EXISTS tier,
@@ -115,7 +115,7 @@ ALTER TABLE operators
 DROP TABLE IF EXISTS operator_badges;
 DROP TABLE IF EXISTS operator_documents;
 DROP TABLE IF EXISTS tier_configurations;
-```
+\`\`\`
 
 ## Notes
 

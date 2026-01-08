@@ -7,14 +7,14 @@ We've implemented a centralized API endpoints system to improve maintainability,
 ## What Changed?
 
 ### Before (Old Approach)
-```typescript
+\`\`\`typescript
 // Hardcoded endpoints scattered across files
 const response = await fetch('/operator/tier', ...)
 const response = await fetch(`/operator/documents/${id}`, ...)
-```
+\`\`\`
 
 ### After (New Approach)
-```typescript
+\`\`\`typescript
 import { ENDPOINTS, buildEndpoint } from '@/lib/api-endpoints'
 
 // Static endpoints
@@ -22,7 +22,7 @@ const response = await fetch(ENDPOINTS.TIER.INFO, ...)
 
 // Dynamic endpoints
 const response = await fetch(buildEndpoint(ENDPOINTS.DOCUMENTS.BY_ID, { id: '123' }), ...)
-```
+\`\`\`
 
 ## Benefits
 
@@ -36,7 +36,7 @@ const response = await fetch(buildEndpoint(ENDPOINTS.DOCUMENTS.BY_ID, { id: '123
 ## How to Use
 
 ### Static Endpoints
-```typescript
+\`\`\`typescript
 import { ENDPOINTS } from '@/lib/api-endpoints'
 
 // Authentication
@@ -50,10 +50,10 @@ ENDPOINTS.TIER.COMPARISON
 // Metrics
 ENDPOINTS.METRICS.OVERVIEW
 ENDPOINTS.METRICS.TRUST_SCORE
-```
+\`\`\`
 
 ### Dynamic Endpoints (with parameters)
-```typescript
+\`\`\`typescript
 import { buildEndpoint, ENDPOINTS } from '@/lib/api-endpoints'
 
 // Single parameter
@@ -66,7 +66,7 @@ const url = buildEndpoint('/operator/bookings/:bookingId/items/:itemId', {
   itemId: '2'
 })
 // Result: '/operator/bookings/1/items/2'
-```
+\`\`\`
 
 ## Migration Checklist
 
@@ -89,7 +89,7 @@ Continue updating remaining files to use centralized endpoints for consistency.
 
 When adding new API endpoints, update `lib/api-endpoints.ts`:
 
-```typescript
+\`\`\`typescript
 export const ENDPOINTS = {
   // ... existing endpoints ...
   
@@ -100,7 +100,7 @@ export const ENDPOINTS = {
     CREATE: '/operator/new-feature',
   },
 }
-```
+\`\`\`
 
 ## Pro Tips
 

@@ -6,7 +6,7 @@ This guide covers testing strategies for the tier system implementation across o
 ## Running Tests
 
 ### Unit Tests
-```bash
+\`\`\`bash
 # Run all tests
 npm run test
 
@@ -15,16 +15,16 @@ npm run test -- tier-restriction.service.spec
 
 # Run tests with coverage
 npm run test:cov
-```
+\`\`\`
 
 ### Integration Tests
-```bash
+\`\`\`bash
 # Run integration tests
 npm run test:e2e
 
 # Run specific integration test
 npm run test:e2e -- tier-system.e2e-spec
-```
+\`\`\`
 
 ## Test Coverage Requirements
 
@@ -71,53 +71,53 @@ npm run test:e2e -- tier-system.e2e-spec
 ## Manual Testing Scenarios
 
 ### Scenario 1: Bronze Operator Onboarding
-```
+\`\`\`
 1. Register new operator
 2. Verify default tier is 'bronze'
 3. Upload business license document
 4. Attempt to create international package (should fail)
 5. Create domestic package (should succeed)
 6. Attempt 11th booking in month (should fail)
-```
+\`\`\`
 
 ### Scenario 2: Tier Upgrade Flow
-```
+\`\`\`
 1. Bronze operator completes 50 successful bookings
 2. Trust score reaches 70+
 3. Admin reviews verification documents
 4. Admin approves operator
 5. System auto-upgrades to Silver tier
 6. Operator can now create international packages
-```
+\`\`\`
 
 ### Scenario 3: Document Verification
-```
+\`\`\`
 1. Operator uploads multiple documents
 2. Admin reviews documents in queue
 3. Admin approves some, rejects others
 4. Operator receives rejection notifications
 5. Operator re-uploads corrected documents
 6. Admin re-reviews and approves
-```
+\`\`\`
 
 ## Performance Testing
 
 ### Load Testing Endpoints
-```bash
+\`\`\`bash
 # Test tier restriction checks (should handle 1000 req/min)
 artillery quick --count 100 --num 10 http://localhost:3000/operator/tier/restrictions
 
 # Test document upload (should handle 50 concurrent uploads)
 artillery quick --count 50 --num 1 -p test-upload.json http://localhost:3000/operator/documents/upload
-```
+\`\`\`
 
 ### Database Query Performance
-```sql
+\`\`\`sql
 -- Verify indexes are used (EXPLAIN ANALYZE)
 EXPLAIN ANALYZE SELECT * FROM operators WHERE tier = 'bronze' AND verification_status = 'pending';
 
 -- Should use idx_operators_tier and idx_operators_verification_status
-```
+\`\`\`
 
 ## Security Audit Checklist
 
@@ -145,7 +145,7 @@ EXPLAIN ANALYZE SELECT * FROM operators WHERE tier = 'bronze' AND verification_s
 ## Continuous Integration
 
 ### Pre-commit Hooks
-```bash
+\`\`\`bash
 # Run linter
 npm run lint
 
@@ -154,17 +154,17 @@ npm run test
 
 # Check test coverage
 npm run test:cov -- --coverageThreshold='{"global":{"branches":80,"functions":80,"lines":80}}'
-```
+\`\`\`
 
 ### CI Pipeline (GitHub Actions)
-```yaml
+\`\`\`yaml
 # .github/workflows/test.yml
 - Run unit tests
 - Run integration tests
 - Security scan (npm audit)
 - Code coverage report
 - Deploy to staging (if tests pass)
-```
+\`\`\`
 
 ## Monitoring & Alerts
 
@@ -186,7 +186,7 @@ npm run test:cov -- --coverageThreshold='{"global":{"branches":80,"functions":80
 ## Test Data Cleanup
 
 ### After Testing
-```sql
+\`\`\`sql
 -- Remove test operators
 DELETE FROM operators WHERE email LIKE '%@test.com';
 

@@ -9,8 +9,8 @@ describe("TierRestrictionGuard", () => {
   let tierRestrictionService: TierRestrictionService
 
   const mockTierRestrictionService = {
-    canCreateBooking: jest.fn(),
-    canCreatePackage: jest.fn(),
+    canCreateBooking: jest.fn<() => Promise<{ allowed: boolean; reason?: string }>>(),
+    canCreatePackage: jest.fn<() => Promise<{ allowed: boolean; reason?: string }>>(),
   }
 
   beforeEach(async () => {

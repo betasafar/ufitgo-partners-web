@@ -1,8 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { Cron, CronExpression } from "@nestjs/schedule"
 import type { Repository } from "typeorm"
-import type { Operator } from "../entities/operator.entity"
-import type { Booking } from "../../bookings/entities/booking.entity"
+import { type Operator, OperatorVerificationStatus, OperatorTier } from "../entities/operator.entity"
+import { type Booking, BookingStatus } from "../../bookings/entities/booking.entity"
 import type { OperatorBadge } from "../entities/operator-badge.entity"
 
 @Injectable()
@@ -20,7 +20,7 @@ export class TierAutomationService {
     this.logger.log("Starting daily tier upgrade evaluation")
 
     const operators = await this.operatorRepo.find({
-      where: { verificationStatus: "approved" },
+      where: { verificationStatus: OperatorVerificationStatus.APPROVED },
     })
 
     for (const operator of operators) {
@@ -32,29 +32,29 @@ export class TierAutomationService {
 
   private async evaluateOperatorTierUpgrade(operator: Operator) {
     const bookings = await this.bookingRepo.find({
-      where: { operatorId: operator.id, status: "confirmed" },
+      where: { operatorId: operator.id, status: BookingStatus.CONFIRMED },
     })
 
     const completedBookings = bookings.length
     const trustScore = operator.trustScore || 50
-    const currentTier = operator.tier || "bronze"
+    const currentTier = operator.tier || OperatorTier.BRONZE
 
-    if (currentTier === "bronze" && completedBookings >= 10 && trustScore > 70) {
-      operator.tier = "silver"
+    if (currentTier === OperatorTier.BRONZE && completedBookings >= 10 && trustScore > 70) {
+      operator.tier = OperatorTier.SILVER
       await this.operatorRepo.save(operator)
       await this.awardBadge(operator.id, "silver_partner", "Silver Partner", "Automatic upgrade")
       this.logger.log(`Upgraded operator ${operator.id} to SILVER`)
     }
 
-    if (currentTier === "silver" && completedBookings >= 50 && trustScore > 85) {
-      operator.tier = "gold"
+    if (currentTier === OperatorTier.SILVER && completedBookings >= 50 && trustScore > 85) {
+      operator.tier = OperatorTier.GOLD
       await this.operatorRepo.save(operator)
       await this.awardBadge(operator.id, "gold_partner", "Gold Partner", "Automatic upgrade")
       this.logger.log(`Upgraded operator ${operator.id} to GOLD`)
     }
 
-    if (currentTier === "gold" && completedBookings >= 200 && trustScore > 95) {
-      operator.tier = "platinum"
+    if (currentTier === OperatorTier.GOLD && completedBookings >= 200 && trustScore > 95) {
+      operator.tier = OperatorTier.PLATINUM
       await this.operatorRepo.save(operator)
       await this.awardBadge(operator.id, "platinum_elite", "Platinum Elite", "Automatic upgrade")
       this.logger.log(`Upgraded operator ${operator.id} to PLATINUM`)
@@ -82,8 +82,8 @@ export class TierAutomationService {
     })
 
     const totalBookings = bookings.length
-    const confirmedBookings = bookings.filter((b) => b.status === "confirmed").length
-    const cancelledBookings = bookings.filter((b) => b.status === "cancelled").length
+    const confirmedBookings = bookings.filter((b) => b.status === BookingStatus.CONFIRMED).length
+    const cancelledBookings = bookings.filter((b) => b.status === BookingStatus.CANCELLED).length
 
     let score = 50 // Base score
 
@@ -116,7 +116,7 @@ export class TierAutomationService {
       const badge = this.badgeRepo.create({
         operatorId,
         badgeType: type,
-        displayName: name,
+        title: name,
         description: reason,
         awardedAt: new Date(),
       })
