@@ -1,12 +1,11 @@
 "use client"
-// import { cookies } from "next/headers"
 import type { Package, DashboardStats } from "@/lib/types"
 import { PackagesStats } from "@/components/packages-stats"
 import { PackagesTable } from "@/components/packages-table"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
-import { apiRequest } from "@/lib/api-proxy"
+import { apiRequest } from "@/lib/api-server"
 
 async function getPackagesData() {
   try {
@@ -68,7 +67,7 @@ export default async function PackagesPage() {
             Overview of your current travel packages for religious pilgrimages and leisure tours.
           </p>
         </div>
-        <Link href="/dashboard/packages/create">
+        <Link href="/dashboard/packages/new">
           <Button className="bg-primary hover:bg-primary/90">
             <Plus className="h-4 w-4 mr-2" />
             Create New Package

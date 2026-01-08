@@ -1,20 +1,16 @@
 // app/dashboard/packages/new/page.tsx
 // Server Component - fetches authenticated operator data securely
 
-import { getTierInfo, getOperatorMetrics } from "@/lib/api-proxy"
+import { getTierInfo, getOperatorMetrics } from "@/lib/api-proxy-server"
 import CreatePackageClient from "@/components/create-package-client"
-import { OperatorWithTier } from "@/lib/types"
-import { redirect } from "next/navigation"
+import type { OperatorWithTier } from "@/lib/types"
 
 export const metadata = {
   title: "Create New Package | Operator Dashboard",
 }
 
 export default async function CreatePackagePage() {
-  const [tierData, metrics] = await Promise.all([
-    getTierInfo(),
-    getOperatorMetrics(),
-  ])
+  const [tierData, metrics] = await Promise.all([getTierInfo(), getOperatorMetrics()])
 
   if (!tierData || !metrics) {
     return (
@@ -26,7 +22,7 @@ export default async function CreatePackagePage() {
   }
 
   const operator: OperatorWithTier = {
-    id: "current", // placeholder — real ID comes from auth if needed
+    id: "current",
     email: "",
     companyName: "",
     phone: "",
@@ -48,11 +44,6 @@ export default async function CreatePackagePage() {
   }
 
   const canCreatePackage = operator.activePackagesCount < operator.tierInfo.maxActivePackages
-
-  // Optional: redirect if limit reached and not verified enough
-  // if (!canCreatePackage && operator.verificationStatus !== "approved") {
-  //   redirect("/dashboard/packages")
-  // }
 
   return <CreatePackageClient operator={operator} canCreateInitially={canCreatePackage} />
 }

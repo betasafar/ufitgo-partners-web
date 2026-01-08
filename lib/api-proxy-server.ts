@@ -1,8 +1,4 @@
-// lib/api-proxy.ts
-// This file is now a SERVER-ONLY module. It uses "next/headers" which is server-only.
-// Do NOT import it directly in Client Components ("use client").
-// Instead, use Server Components, Route Handlers, or Server Actions to fetch data.
-
+// Server-only API functions that use next/headers
 import { cookies } from "next/headers"
 import { cache } from "react"
 import { ENDPOINTS } from "./api-endpoints"
@@ -20,97 +16,96 @@ class APIError extends Error {
   }
 }
 
-export const apiRequest = cache(
-  async <T = any>(endpoint: string, options: RequestInit = {}): Promise<T> => {
-    try {
-      const cookieStore = await cookies() // Use sync cookies() in server context
-      const token = cookieStore.get("auth_token")?.value
+export const apiRequest = cache(async <T = any>(endpoint: string, options: RequestInit = {}): Promise<T> => {
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get("auth_token")?.value
 
-      if (!token) {
-        console.warn("[api-proxy] No authentication token found")
-        throw new APIError("No authentication token found", 401)
-      }
+    if (!token) {
+      console.warn("[v0] No authentication token found")
+      throw new APIError("No authentication token found", 401)
+    }
 
-      const url = `${API_BASE_URL}${endpoint}`
+    const url = `${API_BASE_URL}${endpoint}`
 
-      const fetchOptions: RequestInit = {
-        ...options,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          ...options.headers,
-        },
-      }
+    const fetchOptions: RequestInit = {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...options.headers,
+      },
+    }
 
-      if (options.next?.revalidate) {
-        fetchOptions.next = options.next
-      } else {
-        fetchOptions.cache = options.cache || "no-store"
-      }
+    if (options.next?.revalidate) {
+      fetchOptions.next = options.next
+    } else {
+      fetchOptions.cache = options.cache || "no-store"
+    }
 
-      const response = await fetch(url, fetchOptions)
+    const response = await fetch(url, fetchOptions)
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({
-          message: response.statusText,
-          statusCode: response.status,
-        }))
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        message: response.statusText,
+        statusCode: response.status,
+      }))
 
-        console.error("[api-proxy] API Error:", {
-          endpoint,
-          status: response.status,
-          error: error.message || error,
-        })
-
-        throw new APIError(error.message || `API Error: ${response.status}`, response.status, error)
-      }
-
-      return await response.json() as T
-    } catch (error) {
-      if (error instanceof APIError) throw error
-
-      console.error("[api-proxy] API Request failed:", {
+      console.error("[v0] API Error:", {
         endpoint,
-        error: error instanceof Error ? error.message : String(error),
+        status: response.status,
+        error: error.message || error,
       })
 
-      throw new APIError("Network request failed", 500)
+      throw new APIError(error.message || `API Error: ${response.status}`, response.status, error)
     }
-  }
-)
 
-// All other functions remain server-only
+    return (await response.json()) as T
+  } catch (error) {
+    if (error instanceof APIError) throw error
+
+    console.error("[v0] API Request failed:", {
+      endpoint,
+      error: error instanceof Error ? error.message : String(error),
+    })
+
+    throw new APIError("Network request failed", 500)
+  }
+})
+
 export const getCurrentUser = cache(async () => {
   try {
     const cookieStore = await cookies()
 
+    // First, try to get operator data from cookie (stored during login)
     const operatorDataCookie = cookieStore.get("operator_data")?.value
 
     if (operatorDataCookie) {
       try {
         const operatorData = JSON.parse(operatorDataCookie)
-        console.log("[api-proxy] User loaded from cookie:", {
+        console.log("[v0] User loaded from cookie:", {
           email: operatorData.email,
           company: operatorData.companyName,
         })
         return operatorData
       } catch (parseError) {
-        console.error("[api-proxy] Failed to parse operator_data cookie:", parseError)
+        console.error("[v0] Failed to parse operator_data cookie:", parseError)
       }
     }
 
+    // Fallback: Try to fetch from API if cookie not available
     const token = cookieStore.get("auth_token")?.value
     if (token) {
-      console.log("[api-proxy] No cookie data, attempting to fetch from API")
+      console.log("[v0] No cookie data, attempting to fetch from API")
       return await apiRequest(ENDPOINTS.PROFILE.GET, {
         next: { revalidate: 300 },
       })
     }
 
-    console.warn("[api-proxy] No authentication token or operator data found")
+    console.warn("[v0] No authentication token or operator data found")
     return null
   } catch (error) {
-    console.error("[api-proxy] Failed to get current user:", error)
+    console.error("[v0] Failed to get current user:", error)
     return null
   }
 })
@@ -121,7 +116,7 @@ export const getTierInfo = cache(async (): Promise<any | null> => {
       next: { revalidate: 300 },
     })
   } catch (error) {
-    console.error("[api-proxy] Failed to get tier info:", error)
+    console.error("[v0] Failed to get tier info:", error)
     return null
   }
 })
@@ -171,7 +166,7 @@ export const getOperatorMetrics = cache(async () => {
 export const getTierComparison = cache(async () => {
   try {
     return await apiRequest(ENDPOINTS.TIER.COMPARISON, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
+      next: { revalidate: 3600 },
     })
   } catch (error) {
     console.error("[v0] Failed to get tier comparison:", error)
@@ -200,5 +195,3 @@ export const getTierRestrictions = cache(async () => {
     return null
   }
 })
-
-export { buildEndpoint, ENDPOINTS } from "./api-endpoints"
