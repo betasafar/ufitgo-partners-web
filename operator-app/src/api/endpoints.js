@@ -21,6 +21,10 @@ export const ENDPOINTS = {
     UPDATE: (id) => `/operator/packages/${id}`,
     DELETE: (id) => `/operator/packages/${id}`,
     GET: (id) => `/operator/packages/${id}`,
+
+    // 🔥 NEW
+    TYPES: "/operator/packages/package-types",
+    SERVICE_LEVELS: "/operator/packages/service-levels",
   },
   BOOKINGS: {
     LIST: "/operator/bookings",
