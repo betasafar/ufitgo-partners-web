@@ -42,4 +42,9 @@ export const packagesService = {
     const res = await apiClient.get(ENDPOINTS.PACKAGES.SERVICE_LEVELS)
     return res.data
   },
+
+  suggest: async (data) => {
+    const res = await apiClient.post(ENDPOINTS.PACKAGES.SUGGEST, data);
+    return res.data;
+  },
 }

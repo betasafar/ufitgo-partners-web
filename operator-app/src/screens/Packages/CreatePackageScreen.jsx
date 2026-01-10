@@ -14,13 +14,13 @@ const CreatePackageScreen = () => {
   const handleSubmit = async (data) => {
 
     console.log("data", data)
-    // try {
-    //   setError(null)
-    //   await createPackage(data)
-    //   navigate("/packages")
-    // } catch (err) {
-    //   setError(err.message)
-    // }
+    try {
+      setError(null)
+      await createPackage(data)
+      navigate("/packages")
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   return (

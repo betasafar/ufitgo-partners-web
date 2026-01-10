@@ -3,31 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Input } from "../../common/Input"
 import { Button } from "../../common/Button"
-
-/* ---------- CONSTANTS ---------- */
-
-export const PACKAGE_TYPES = [
-  { label: "Hajj", value: "hajj" },
-  { label: "Umrah", value: "umrah" },
-  { label: "Tour", value: "tour" },
-  { label: "Leisure Travel", value: "leisure" },
-  { label: "Adventure Travel", value: "adventure" },
-  { label: "Cultural Tour", value: "cultural" },
-  { label: "Eco Tourism", value: "eco_tourism" },
-  { label: "Wildlife Safari", value: "wildlife" },
-  { label: "Honeymoon", value: "honeymoon" },
-  { label: "Others", value: "others" },
-]
-
-const SERVICE_LEVELS = [
-  { label: "Standard", value: "standard" },
-  { label: "Family", value: "family" },
-  { label: "VIP", value: "vip" },
-  { label: "Economy", value: "economy" },
-  { label: "Budget", value: "budget" },
-  { label: "Premium", value: "premium" },
-  { label: "Luxury", value: "luxury" },
-]
+import { usePackages } from "../../../hooks/usePackages.js"
 
 const INCLUSIONS_LIST = [
   { key: "visa", label: "Visa Processing" },
@@ -38,26 +14,24 @@ const INCLUSIONS_LIST = [
   { key: "transfers", label: "Airport Transfers" },
 ]
 
-/* ---------- HUMANIZE HELPER ---------- */
-const humanize = (str) => {
-  if (!str) return ""
-  return str
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ")
-}
-
-/* ---------- MAIN COMPONENT ---------- */
 export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
   const [dateError, setDateError] = useState("")
+  const [generating, setGenerating] = useState(false)
+
+  const {
+    packageTypes = [],
+    serviceLevels = [],
+    metadataLoading,
+    suggestPackageContent,
+  } = usePackages()
 
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     description: initialData?.description || "",
     itinerary: initialData?.itinerary || "",
 
-    packageType: initialData?.packageType || "umrah",
-    serviceLevel: initialData?.serviceLevel || "standard",
+    packageType: initialData?.packageType || "",
+    serviceLevel: initialData?.serviceLevel || "",
 
     isGroupPackage: initialData?.isGroupPackage ?? true,
 
@@ -90,10 +64,34 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
     },
   })
 
-  /* ---------- AUTO-CALCULATE DURATION ---------- */
+  const handleGenerateSuggestions = async () => {
+    if (!formData.name.trim()) {
+      alert("Please enter a package name first.")
+      return
+    }
+
+    setGenerating(true)
+    try {
+      const { description, itinerary } = await suggestPackageContent({
+        name: formData.name,
+        packageType: formData.packageType || "tour",
+        serviceLevel: formData.serviceLevel || "standard",
+      })
+
+      setFormData((prev) => ({
+        ...prev,
+        description: description || prev.description,
+        itinerary: itinerary || prev.itinerary,
+      }))
+    } catch (err) {
+      console.error("Unexpected AI error:", err)
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   useEffect(() => {
     const { departureDate, returnDate } = formData
-
     if (!departureDate || !returnDate) {
       setFormData((p) => ({ ...p, duration: "" }))
       setDateError("")
@@ -102,7 +100,6 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
 
     const start = new Date(departureDate)
     const end = new Date(returnDate)
-
     if (end < start) {
       setDateError("Return date cannot be earlier than departure date")
       setFormData((p) => ({ ...p, duration: "" }))
@@ -114,23 +111,19 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
     setFormData((p) => ({ ...p, duration: diffDays }))
   }, [formData.departureDate, formData.returnDate])
 
-  /* ---------- TOTAL PRICE CALCULATION ---------- */
   const totalPrice = useMemo(() => {
     return formData.isGroupPackage
       ? Number(formData.prices.adult || 0)
       : Number(formData.prices.individual || 0)
   }, [formData.isGroupPackage, formData.prices])
 
-  /* ---------- INSTALLMENT VALIDATION ---------- */
   const installmentTotal =
     Number(formData.installments.registrationFee || 0) +
     Number(formData.installments.firstDeposit || 0) +
     Number(formData.installments.balance || 0)
 
-  const installmentValid =
-    !formData.installmentsEnabled || installmentTotal === totalPrice
+  const installmentValid = !formData.installmentsEnabled || installmentTotal === totalPrice
 
-  /* ---------- HANDLERS ---------- */
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -160,7 +153,7 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!installmentValid) return
+    if (!installmentValid || totalPrice === 0) return
 
     await onSubmit({
       ...formData,
@@ -177,35 +170,35 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
     })
   }
 
-  /* ---------- RENDER ---------- */
   return (
     <>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 xl:grid-cols-3 gap-6 pb-32">
-        {/* LEFT COLUMN */}
         <div className="xl:col-span-2 space-y-6">
-          {/* Package Details */}
           <section className="bg-card border border-border rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-fg mb-4">🟡 Package Details</h2>
+            <h2 className="text-lg font-semibold text-fg mb-6">Package Details</h2>
 
             <Input
               label="Package Name *"
-              placeholder="e.g Trip to Mecca"
+              placeholder="e.g Luxury Hajj Experience 2026"
               name="name"
               value={formData.name}
               onChange={handleChange}
               required
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              {/* PACKAGE TYPE */}
+
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-fg mb-2">Package Type</label>
                 <select
                   value={formData.packageType}
                   onChange={(e) => setFormData((prev) => ({ ...prev, packageType: e.target.value }))}
+                  disabled={metadataLoading}
                   className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-fg"
                 >
-                  {PACKAGE_TYPES.map((type) => (
+                  <option value="">Select Package Type</option>
+                  {packageTypes.map((type) => (
                     <option key={type.value} value={type.value}>
                       {type.label}
                     </option>
@@ -213,15 +206,16 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
                 </select>
               </div>
 
-              {/* SERVICE LEVEL */}
               <div>
                 <label className="block text-sm font-medium text-fg mb-2">Service Level</label>
                 <select
                   value={formData.serviceLevel}
                   onChange={(e) => setFormData((prev) => ({ ...prev, serviceLevel: e.target.value }))}
+                  disabled={metadataLoading}
                   className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-fg"
                 >
-                  {SERVICE_LEVELS.map((level) => (
+                  <option value="">Select Service Level</option>
+                  {serviceLevels.map((level) => (
                     <option key={level.value} value={level.value}>
                       {level.label}
                     </option>
@@ -231,80 +225,73 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <Input
-                label="Departure Date *"
-                name="departureDate"
-                type="date"
-                value={formData.departureDate}
-                onChange={handleChange}
-                required
-              />
-              <Input
-                label="Return Date *"
-                name="returnDate"
-                type="date"
-                value={formData.returnDate}
-                onChange={handleChange}
-                required
-              />
+              <Input label="Departure Date *" name="departureDate" type="date" value={formData.departureDate} onChange={handleChange} required />
+              <Input label="Return Date *" name="returnDate" type="date" value={formData.returnDate} onChange={handleChange} required />
             </div>
 
             {dateError && <p className="text-red-500 text-sm mt-2">{dateError}</p>}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <Input
-                label="Duration (Days)"
-                value={formData.duration}
-                readOnly
-                className="bg-bg/40 cursor-not-allowed"
-              />
-              <Input
-                label="Maximum Pilgrims"
-                name="maxPilgrims"
-                type="number"
-                value={formData.maxPilgrims}
-                onChange={handleChange}
-                placeholder="e.g 50"
-              />
+              <Input label="Duration (Days)" value={formData.duration} readOnly className="bg-bg/40 cursor-not-allowed" />
+              <Input label="Maximum Pilgrims" name="maxPilgrims" type="number" value={formData.maxPilgrims} onChange={handleChange} placeholder="e.g 50" />
             </div>
 
-            <div className="mt-4">
+            {/* AI CTA – Perfect spot: right after name */}
+            <div className="my-6 flex justify-center">
+              <button
+                type="button"
+                onClick={handleGenerateSuggestions}
+                disabled={!formData.name.trim() || generating || metadataLoading}
+                className="px-8 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 transition shadow-lg"
+              >
+                {generating ? (
+                  <>
+                    <span className="animate-pulse">Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>✨</span> Generate Description & Itinerary with AI
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="mt-6">
               <label className="block text-sm font-medium text-fg mb-2">Description</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Provide a brief overview of the package..."
-                rows={4}
-                className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-fg"
+                placeholder="A compelling overview of your package..."
+                rows={5}
+                className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-fg resize-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
           </section>
 
-          {/* Itinerary */}
           <section className="bg-card border border-border rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-fg mb-4 flex items-center gap-2">
-              🧭 Itinerary Highlights
+              Itinerary Highlights
             </h2>
             <textarea
               name="itinerary"
               value={formData.itinerary}
               onChange={handleChange}
-              rows={6}
-              placeholder={`Day 1: Arrival in Jeddah\nDay 2: Umrah rituals\nDay 3: Ziyarah...`}
-              className="w-full rounded-xl bg-bg border border-border px-4 py-3 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              rows={8}
+              placeholder="Day 1: Arrival in Jeddah...\nDay 2: Umrah rituals...\nDay 3: Ziyarah in Madinah..."
+              className="w-full rounded-xl bg-bg border border-border px-4 py-3 text-sm text-fg resize-none focus:ring-2 focus:ring-primary/50"
             />
-            <p className="text-xs text-fg/60 mt-2">
-              Provide a quick summary. Full itinerary can be uploaded later.
-            </p>
+            <p className="text-xs text-fg/60 mt-2">Quick summary. Full detailed itinerary can be added later.</p>
           </section>
         </div>
 
-        {/* RIGHT COLUMN */}
+
+
+        {/* RIGHT COLUMN - Pricing, Installments, Inclusions */}
         <div className="space-y-6">
           {/* Pricing */}
           <section className="bg-card border border-border rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-fg mb-4">💰 Pricing</h2>
+            <h2 className="text-lg font-semibold text-fg mb-4">Pricing</h2>
 
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-medium text-fg">Group Package?</span>
@@ -312,7 +299,7 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
                 type="checkbox"
                 checked={formData.isGroupPackage}
                 onChange={() => setFormData((p) => ({ ...p, isGroupPackage: !p.isGroupPackage }))}
-                className="w-5 h-5"
+                className="w-5 h-5 accent-primary"
               />
             </div>
 
@@ -323,7 +310,7 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
                   type="number"
                   value={formData.prices.adult}
                   onChange={(e) => handlePriceChange("adult", e.target.value)}
-                  placeholder="e.g 1,000,000"
+                  placeholder="e.g 1000000"
                   required
                 />
                 <Input
@@ -331,16 +318,16 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
                   type="number"
                   value={formData.prices.child}
                   onChange={(e) => handlePriceChange("child", e.target.value)}
-                  placeholder="e.g 950,000"
+                  placeholder="e.g 950000"
                 />
               </>
             ) : (
               <Input
                 label="Price per Person (₦)"
                 type="number"
-                placeholder="e.g 1,200,000"
                 value={formData.prices.individual}
                 onChange={(e) => handlePriceChange("individual", e.target.value)}
+                placeholder="e.g 1200000"
                 required
               />
             )}
@@ -348,56 +335,50 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
 
           {/* Installments */}
           <section className="bg-card border border-border rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-fg mb-4">💳 Installments</h2>
+            <h2 className="text-lg font-semibold text-fg mb-4">Installments</h2>
 
-            <div className="flex items-center justify-between mt-2">
+            <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-medium text-fg">Enable Installments?</span>
               <button
                 type="button"
-                onClick={() =>
-                  setFormData((p) => ({
-                    ...p,
-                    installmentsEnabled: !p.installmentsEnabled,
-                  }))
-                }
-                className={`w-12 h-6 rounded-full transition ${formData.installmentsEnabled ? "bg-primary" : "bg-border"}`}
+                onClick={() => setFormData((p) => ({ ...p, installmentsEnabled: !p.installmentsEnabled }))}
+                className={`relative w-12 h-6 rounded-full transition ${formData.installmentsEnabled ? "bg-primary" : "bg-border"}`}
               >
                 <span
-                  className={`block w-5 h-5 bg-white rounded-full transform transition ${formData.installmentsEnabled ? "translate-x-6" : "translate-x-1"
-                    }`}
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${formData.installmentsEnabled ? "translate-x-6" : ""}`}
                 />
               </button>
             </div>
 
             {formData.installmentsEnabled && (
-              <div className="mt-4 space-y-3">
+              <div className="space-y-3">
                 <Input
                   label="Registration Fee (₦)"
                   name="registrationFee"
-                  placeholder="e.g 100000"
                   type="number"
                   value={formData.installments.registrationFee}
                   onChange={handleInstallmentChange}
+                  placeholder="e.g 100000"
                 />
                 <Input
                   label="First Deposit (₦)"
                   name="firstDeposit"
-                  placeholder="e.g 300000"
                   type="number"
                   value={formData.installments.firstDeposit}
                   onChange={handleInstallmentChange}
+                  placeholder="e.g 300000"
                 />
                 <Input
                   label="Balance (₦)"
                   name="balance"
                   type="number"
-                  placeholder="e.g 600000"
                   value={formData.installments.balance}
                   onChange={handleInstallmentChange}
+                  placeholder="e.g 600000"
                 />
                 {!installmentValid && totalPrice > 0 && (
-                  <p className="text-sm text-red-500 mt-2">
-                    Total installments must equal ₦{totalPrice.toLocaleString()}
+                  <p className="text-sm text-red-500">
+                    Total must equal ₦{totalPrice.toLocaleString()}
                   </p>
                 )}
               </div>
@@ -406,25 +387,27 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
 
           {/* Inclusions */}
           <section className="bg-card border border-border rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-fg mb-4">✅ Inclusions</h2>
+            <h2 className="text-lg font-semibold text-fg mb-4">Inclusions</h2>
             <div className="space-y-3">
               {INCLUSIONS_LIST.map((item) => (
                 <button
                   type="button"
                   key={item.key}
                   onClick={() => toggleInclusion(item.key)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border ${formData.inclusions[item.key]
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition ${formData.inclusions[item.key]
                     ? "bg-primary/10 border-primary text-primary"
                     : "border-border text-fg/70"
                     }`}
                 >
-                  <span
-                    className={`w-5 h-5 rounded-md border flex items-center justify-center ${formData.inclusions[item.key] ? "bg-primary text-white" : "border-border"
+                  <div
+                    className={`w-5 h-5 rounded-md border flex items-center justify-center transition ${formData.inclusions[item.key]
+                      ? "bg-primary border-primary text-white"
+                      : "border-border"
                       }`}
                   >
                     {formData.inclusions[item.key] && "✓"}
-                  </span>
-                  {item.label}
+                  </div>
+                  <span>{item.label}</span>
                 </button>
               ))}
             </div>
@@ -433,7 +416,7 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
       </form>
 
       {/* FIXED FOOTER */}
-      <div className="fixed bottom-0 right-0 w-full md:w-[calc(100%-16rem)] md:ml-64 bg-card border-t border-border px-6 py-4 flex justify-between items-center z-20">
+      <div className="fixed bottom-0 right-0 w-full md:w-[calc(100%-16rem)] bg-card border-t border-border px-6 py-4 flex justify-between items-center z-20">
         <span className="font-semibold text-lg">
           Total: ₦{totalPrice.toLocaleString()}
         </span>
@@ -442,11 +425,15 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
           <button
             type="button"
             onClick={onCancel}
-            className="px-5 py-2 rounded-lg border border-border text-fg hover:bg-border/50"
+            className="px-5 py-2 rounded-lg border border-border text-fg hover:bg-border/50 transition"
           >
             Cancel
           </button>
-          <Button disabled={!installmentValid || !totalPrice} onClick={handleSubmit}>
+          <Button
+            type="submit"
+            disabled={!installmentValid || totalPrice === 0}
+            onClick={handleSubmit}
+          >
             {initialData ? "Update Package" : "Create Package"}
           </Button>
         </div>

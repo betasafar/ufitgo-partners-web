@@ -5,78 +5,113 @@ import { packagesService } from "../api/services/packages.service.js"
 
 export const usePackages = () => {
   console.log("[v0] usePackages hook initializing...")
-  console.log("[v0] packagesService:", packagesService)
 
+  // Packages state
   const [packages, setPackages] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [packagesLoading, setPackagesLoading] = useState(true)
+  const [packagesError, setPackagesError] = useState(null)
 
+  // Metadata state
+  const [packageTypes, setPackageTypes] = useState([])
+  const [serviceLevels, setServiceLevels] = useState([])
+  const [metadataLoading, setMetadataLoading] = useState(true)
+  const [metadataError, setMetadataError] = useState(null)
+
+  // Fetch packages
   const fetchPackages = async () => {
     try {
-      console.log("[v0] Starting fetchPackages...")
-      setLoading(true)
-      setError(null)
-
-      console.log("[v0] Calling packagesService.getAll()...")
+      setPackagesLoading(true)
+      setPackagesError(null)
       const data = await packagesService.getAll()
-      console.log("[v0] Packages fetched successfully:", data)
-
-      setPackages(data)
+      setPackages(data || [])
     } catch (err) {
-      console.error("[v0] Error in fetchPackages:", err)
-      setError(err.message || "Failed to load packages")
+      console.error("[v0] Error fetching packages:", err)
+      setPackagesError(err.message || "Failed to load packages")
     } finally {
-      setLoading(false)
+      setPackagesLoading(false)
     }
   }
 
-  const createPackage = async (packageData) => {
+  // Fetch metadata
+  const fetchMetadata = async () => {
     try {
-      console.log("[v0] Creating package:", packageData)
-      const newPackage = await packagesService.create(packageData)
-      setPackages((prev) => [...prev, newPackage])
-      return newPackage
+      setMetadataLoading(true)
+      setMetadataError(null)
+
+      const [typesRes, levelsRes] = await Promise.all([
+        packagesService.getPackageTypes(),
+        packagesService.getServiceLevels(),
+      ])
+
+      setPackageTypes(typesRes || [])
+      setServiceLevels(levelsRes || [])
     } catch (err) {
-      console.error("[v0] Error creating package:", err)
-      throw err
+      console.error("[v0] Error fetching metadata:", err)
+      setMetadataError(err.message || "Failed to load package options")
+    } finally {
+      setMetadataLoading(false)
     }
+  }
+
+  // AI Suggestion — now centralized
+  const suggestPackageContent = async ({ name, packageType = "tour", serviceLevel = "standard" }) => {
+    try {
+      const res = await packagesService.suggest({ name, packageType, serviceLevel })
+      return {
+        description: res?.data.description?.trim() || "",
+        itinerary: res?.data.itinerary?.trim() || "",
+      }
+    } catch (err) {
+      console.warn("AI suggestion failed — using fallback content")
+      return {
+        description: `Embark on a spiritually enriching ${packageType} journey with "${name}". Enjoy comfortable accommodations, expert guidance, and culturally sensitive arrangements tailored to your needs.`,
+        itinerary: `Day 1: Arrival and hotel check-in\nDay 2: Begin sacred rituals\nDay 3: Guided visits to holy sites\nDay 4: Cultural and historical exploration\nDay 5: Personal reflection and prayer\nDay 6: Final preparations and shopping\nDay 7: Departure with peace and lasting memories`,
+      }
+    }
+  }
+
+  // CRUD
+  const createPackage = async (packageData) => {
+    const newPackage = await packagesService.create(packageData)
+    setPackages((prev) => [...prev, newPackage])
+    return newPackage
   }
 
   const updatePackage = async (id, packageData) => {
-    try {
-      console.log("[v0] Updating package:", id, packageData)
-      const updated = await packagesService.update(id, packageData)
-      setPackages((prev) => prev.map((pkg) => (pkg.id === id ? updated : pkg)))
-      return updated
-    } catch (err) {
-      console.error("[v0] Error updating package:", err)
-      throw err
-    }
+    const updated = await packagesService.update(id, packageData)
+    setPackages((prev) => prev.map((pkg) => (pkg.id === id ? updated : pkg)))
+    return updated
   }
 
   const deletePackage = async (id) => {
-    try {
-      console.log("[v0] Deleting package:", id)
-      await packagesService.delete(id)
-      setPackages((prev) => prev.filter((pkg) => pkg.id !== id))
-    } catch (err) {
-      console.error("[v0] Error deleting package:", err)
-      throw err
-    }
+    await packagesService.delete(id)
+    setPackages((prev) => prev.filter((pkg) => pkg.id !== id))
   }
 
   useEffect(() => {
-    console.log("[v0] usePackages useEffect running...")
     fetchPackages()
+    fetchMetadata()
   }, [])
+
+  const loading = packagesLoading || metadataLoading
 
   return {
     packages,
+    packagesLoading,
+    packagesError,
+
+    packageTypes,
+    serviceLevels,
+    metadataLoading,
+    metadataError,
+
     loading,
-    error,
+
     fetchPackages,
+    fetchMetadata,
     createPackage,
     updatePackage,
     deletePackage,
+    suggestPackageContent, // ← Now properly exposed
   }
 }

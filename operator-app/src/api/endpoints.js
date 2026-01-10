@@ -25,6 +25,7 @@ export const ENDPOINTS = {
     // 🔥 NEW
     TYPES: "/operator/packages/package-types",
     SERVICE_LEVELS: "/operator/packages/service-levels",
+    SUGGEST: "/operator/packages/suggest",
   },
   BOOKINGS: {
     LIST: "/operator/bookings",
