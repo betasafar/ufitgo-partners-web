@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff } from "lucide-react"
 import { useAuth } from "../../context/AuthContext.jsx"
-import { Input } from "../../components/common/Input.jsx"
+import { Input } from "../../components/common/Input"
 import { Button } from "../../components/common/Button.jsx"
 
 function LoginScreen() {

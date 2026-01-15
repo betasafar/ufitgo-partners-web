@@ -6,9 +6,11 @@ import { ProtectedRoute } from "./routes/ProtectedRoute.jsx"
 
 /* Auth Screens */
 import LoginScreen from "./screens/Auth/LoginScreen.jsx"
-import SignupScreen from "./screens/Auth/SignupScreen.jsx"
+import SignupScreen from "./screens/Auth/SignupScreen"
 import ForgotPasswordScreen from "./screens/Auth/ForgotPasswordScreen.jsx"
 import ResetPasswordScreen from "./screens/Auth/ResetPasswordScreen.jsx"
+import SignupSuccess from "./screens/Auth/SignupSuccess"
+
 
 /* App Screens */
 import DashboardScreen from "./screens/Dashboard/DashboardScreen.jsx"
@@ -35,6 +37,7 @@ function App() {
             <Route path="/signup" element={<SignupScreen />} />
             <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
             <Route path="/reset-password" element={<ResetPasswordScreen />} />
+            <Route path="/signup-success" element={<SignupSuccess />} />
 
             {/* ===================== */}
             {/* PROTECTED APP ROUTES */}

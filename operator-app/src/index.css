@@ -97,3 +97,101 @@ nav::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.15);
   border-radius: 999px;
 }
+
+
+/* Phone input wrapper */
+.ufitgo-phone-input {
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(212, 175, 55, 0.6);
+  /* gold accent */
+  --bg-color: rgba(10, 15, 30, 0.8);
+  --text-color: #e5e7eb;
+  --placeholder-color: #6b7280;
+
+  display: flex;
+  align-items: center;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  padding: 0 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Focus state */
+.ufitgo-phone-input:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 1px var(--border-focus);
+}
+
+/* Country select */
+.ufitgo-phone-input .PhoneInputCountry {
+  margin-right: 10px;
+}
+
+/* Flag */
+.ufitgo-phone-input .PhoneInputCountryIcon {
+  width: 22px;
+  height: 16px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+/* Country dropdown arrow */
+.ufitgo-phone-input .PhoneInputCountrySelectArrow {
+  color: #9ca3af;
+  opacity: 0.8;
+}
+
+/* Input itself */
+.ufitgo-phone-input .PhoneInputInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-color);
+  font-size: 15px;
+}
+
+/* Placeholder */
+.ufitgo-phone-input .PhoneInputInput::placeholder {
+  color: var(--placeholder-color);
+}
+
+/* Remove ugly default focus */
+.ufitgo-phone-input .PhoneInputInput:focus {
+  outline: none;
+}
+
+/* Disabled state */
+.ufitgo-phone-input--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Country select (closed state) */
+.ufitgo-phone-input .PhoneInputCountrySelect {
+  background: transparent;
+  color: #e5e7eb;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Force dark UI where supported */
+.ufitgo-phone-input .PhoneInputCountrySelect {
+  color-scheme: dark;
+}
+
+/* Dropdown list items (limited browser support) */
+.ufitgo-phone-input .PhoneInputCountrySelect option {
+  background-color: #0a0f1e;
+  color: #e5e7eb;
+}
+
+/* Selected / hover option (some browsers only) */
+.ufitgo-phone-input .PhoneInputCountrySelect option:checked,
+.ufitgo-phone-input .PhoneInputCountrySelect option:hover {
+  background-color: #111827;
+}

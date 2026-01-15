@@ -11,6 +11,22 @@ export const authService = {
     return response
   },
 
+  register: async (data) => {
+    try {
+      const response = await apiClient.post("/auth/register", data); // Adjust endpoint if different
+      // If backend returns token/operator immediately, store them
+      if (response.data.access_token) {
+        localStorage.setItem("auth_token", response.data.access_token);
+      }
+      if (response.data.operator) {
+        localStorage.setItem("operator", JSON.stringify(response.data.operator));
+      }
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Registration failed";
+    }
+  },
+
   logout: async () => {
     try {
       await apiClient.post(ENDPOINTS.AUTH.LOGOUT)

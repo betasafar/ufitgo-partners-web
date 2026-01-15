@@ -1,3 +1,4 @@
+// src/endpoint.js
 // Centralized API endpoints
 export const ENDPOINTS = {
   AUTH: {
