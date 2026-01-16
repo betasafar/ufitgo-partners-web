@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { Eye, EyeOff, CheckCircle } from "lucide-react"
 import { useForm } from "react-hook-form"
 
@@ -25,10 +25,13 @@ type SignupFormData = {
 
 export default function SignupScreen() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [step, setStep] = useState(0)
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [isFromWhatsApp, setIsFromWhatsApp] = useState(false)
+  const [waPhone, setWaPhone] = useState<string | null>(null)
 
   const {
     register,
@@ -51,12 +54,29 @@ export default function SignupScreen() {
 
   const password = watch("password")
 
+  // Detect WhatsApp origin on mount
+ useEffect(() => {
+  const source = searchParams.get("source")
+  let phoneFromQuery = searchParams.get("wa_phone")
+
+  if (source === "whatsapp" && phoneFromQuery) {
+    // Make sure it starts with + (in case URL decoding removed it)
+    if (!phoneFromQuery.startsWith("+")) {
+      phoneFromQuery = "+" + phoneFromQuery
+    }
+
+    setIsFromWhatsApp(true)
+    setWaPhone(phoneFromQuery)
+    setValue("phone", phoneFromQuery, { shouldValidate: true, shouldDirty: false })
+  }
+}, [searchParams, setValue])
+
   // Prevent Enter key submit on early steps
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Enter" && step !== steps.length - 1) {
         e.preventDefault()
-        next() // Optional: treat Enter as "Continue"
+        next()
       }
     }
 
@@ -131,10 +151,7 @@ export default function SignupScreen() {
   const prev = () => setStep((s) => Math.max(s - 1, 0))
 
   const onSubmit = async (data: SignupFormData) => {
-    if (step !== steps.length - 1) {
-      console.warn("Submit called too early – ignoring")
-      return
-    }
+    if (step !== steps.length - 1) return
 
     setFormError(null)
 
@@ -154,10 +171,25 @@ export default function SignupScreen() {
 
     setLoading(true)
     try {
-      await authService.register(cleanedData)
+      const response = await authService.register(cleanedData, {
+        source: isFromWhatsApp ? "whatsapp" : "web",
+        waPhone: waPhone ?? undefined,
+      })
+
+      // Store continuation data for success page
+      if (response.continuationUrl) {
+        localStorage.setItem(
+          "signupContinuation",
+          JSON.stringify({
+            url: response.continuationUrl,
+            message: response.continuationMessage || "Return to WhatsApp to verify instantly",
+          })
+        )
+      }
+
       navigate("/signup-success")
     } catch (err: any) {
-      setFormError(err.message || "Registration failed. Please try again.")
+      setFormError(err || "Registration failed. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -168,8 +200,13 @@ export default function SignupScreen() {
       <div className="w-full max-w-xl">
         <div className="bg-card border border-border rounded-2xl shadow-card p-8">
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold">Create Operator Account</h1>
-            <p className="text-sm opacity-70 mt-1">Join UfitGo to manage packages</p>
+            <h1 className="text-3xl font-bold">UfitGo</h1>
+            <h2 className="text-2xl font-bold mt-2">Create Operator Account</h2>
+            <p className="text-sm opacity-70 mt-1">
+              {isFromWhatsApp
+                ? "Continuing from WhatsApp – let's finish your registration"
+                : "Join UfitGo to manage Hajj & Umrah packages"}
+            </p>
           </div>
 
           {/* Stepper */}
@@ -220,7 +257,14 @@ export default function SignupScreen() {
                   name="phone"
                   setValue={setValue}
                   error={errors.phone?.message}
+                  disabled={isFromWhatsApp} // ← Disable if from WhatsApp
+                  value={waPhone ?? undefined} // ← Prefill
                 />
+                {isFromWhatsApp && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Phone number pre-filled from WhatsApp
+                  </p>
+                )}
               </>
             )}
 
@@ -287,23 +331,22 @@ export default function SignupScreen() {
                 </button>
               )}
 
-              <Button
+                <Button
                 type={step === steps.length - 1 ? "submit" : "button"}
-                onClick={async (e: { preventDefault: () => void }) => {
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                   if (step < steps.length - 1) {
-                    e.preventDefault()
-                    next()
+                  e.preventDefault()
+                  next()
                   }
-                  // Final step: let form submit handle it
                 }}
                 disabled={loading}
-              >
+                >
                 {loading
                   ? "Creating..."
                   : step < steps.length - 1
                   ? "Continue"
                   : "Create Account"}
-              </Button>
+                </Button>
             </div>
           </form>
 
