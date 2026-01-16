@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form"
 import { PasswordStrengthMeter } from "../../components/common/PasswordStrengthMeter"
 import { Input } from "../../components/common/Input"
 import { Button } from "../../components/common/Button"
-import { authService } from "../../api/services/auth.service"
+import { onboardingService } from "../../api/services/auth.service"
 import { PhoneInputField } from "../../components/common/PhoneInput"
 
 const steps = ["Personal", "Organization", "Security"]
@@ -171,7 +171,7 @@ export default function SignupScreen() {
 
     setLoading(true)
     try {
-      const response = await authService.register(cleanedData, {
+      const response = await onboardingService.register(cleanedData, {
         source: isFromWhatsApp ? "whatsapp" : "web",
         waPhone: waPhone ?? undefined,
       })

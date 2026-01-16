@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await authService.login(email, password)
-
+      console.log("response:", response)
       if (response.access_token) {
         localStorage.setItem(TOKEN_KEY, response.access_token)
       }

@@ -5,6 +5,8 @@ import { ENDPOINTS } from "../endpoints.js"
 export const authService = {
   login: async (email: string, password: string) => {
     const response = await apiClient.post(ENDPOINTS.AUTH.LOGIN, { email, password })
+
+    console.log("response ath-s", response)
     if (response.data.access_token) {
       localStorage.setItem("auth_token", response.data.access_token)
       localStorage.setItem("operator", JSON.stringify(response.data.operator))
@@ -12,6 +14,33 @@ export const authService = {
     return response.data
   },
 
+  logout: async () => {
+    try {
+      await apiClient.post(ENDPOINTS.AUTH.LOGOUT)
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      localStorage.removeItem("auth_token")
+      localStorage.removeItem("operator")
+    }
+  },
+
+  getProfile: async () => {
+    return await apiClient.get(ENDPOINTS.AUTH.PROFILE)
+  },
+
+  isAuthenticated: () => {
+    return !!localStorage.getItem("auth_token")
+  },
+
+  getStoredOperator: () => {
+    const operator = localStorage.getItem("operator")
+    return operator ? JSON.parse(operator) : null
+  },
+}
+
+
+export const onboardingService =  {
   register: async (
     data: {
       email: string
@@ -56,30 +85,5 @@ export const authService = {
     } catch (error: any) {
       throw error.response?.data?.message || "Registration failed. Please try again."
     }
-  },
-
-
-  logout: async () => {
-    try {
-      await apiClient.post(ENDPOINTS.AUTH.LOGOUT)
-    } catch (error) {
-      console.error("Logout error:", error)
-    } finally {
-      localStorage.removeItem("auth_token")
-      localStorage.removeItem("operator")
-    }
-  },
-
-  getProfile: async () => {
-    return await apiClient.get(ENDPOINTS.AUTH.PROFILE)
-  },
-
-  isAuthenticated: () => {
-    return !!localStorage.getItem("auth_token")
-  },
-
-  getStoredOperator: () => {
-    const operator = localStorage.getItem("operator")
-    return operator ? JSON.parse(operator) : null
   },
 }
