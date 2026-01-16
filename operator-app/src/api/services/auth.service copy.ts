@@ -3,11 +3,15 @@ import { apiClient } from "../client.js"
 import { ENDPOINTS } from "../endpoints.js"
 
 export const authService = {
-  // Also removed localStorage saving here since AuthContext handles it
   login: async (email: string, password: string) => {
     const response = await apiClient.post(ENDPOINTS.AUTH.LOGIN, { email, password })
-    // response is already { access_token, operator } - no need to access .data
-    return response
+
+    console.log("response ath-s", response)
+    if (response.data.access_token) {
+      localStorage.setItem("auth_token", response.data.access_token)
+      localStorage.setItem("operator", JSON.stringify(response.data.operator))
+    }
+    return response.data
   },
 
   logout: async () => {
@@ -15,6 +19,9 @@ export const authService = {
       await apiClient.post(ENDPOINTS.AUTH.LOGOUT)
     } catch (error) {
       console.error("Logout error:", error)
+    } finally {
+      localStorage.removeItem("auth_token")
+      localStorage.removeItem("operator")
     }
   },
 
@@ -31,6 +38,7 @@ export const authService = {
     return operator ? JSON.parse(operator) : null
   },
 }
+
 
 export const onboardingService =  {
   register: async (

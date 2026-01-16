@@ -7,6 +7,7 @@ const AuthContext = createContext(null)
 
 const TOKEN_KEY = "auth_token"
 const OPERATOR_KEY = "operator"
+const LOGIN_TIME_KEY = "login_time"
 
 export const AuthProvider = ({ children }) => {
   const [operator, setOperator] = useState(null)
@@ -37,9 +38,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await authService.login(email, password)
-      console.log("response:", response)
+
+      // Save token and operator to localStorage
       if (response.access_token) {
         localStorage.setItem(TOKEN_KEY, response.access_token)
+        localStorage.setItem(LOGIN_TIME_KEY, Date.now().toString())
       }
       if (response.operator) {
         localStorage.setItem(OPERATOR_KEY, JSON.stringify(response.operator))
@@ -61,6 +64,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       localStorage.removeItem(TOKEN_KEY)
       localStorage.removeItem(OPERATOR_KEY)
+      localStorage.removeItem(LOGIN_TIME_KEY)
       setOperator(null)
     }
   }
