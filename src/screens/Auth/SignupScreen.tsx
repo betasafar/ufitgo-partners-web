@@ -14,11 +14,21 @@ import { PhoneInputField } from "../../components/common/PhoneInput"
 
 const steps = ["Personal", "Organization", "Security"]
 
+const NIGERIAN_STATES = [
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", 
+  "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe", 
+  "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", 
+  "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", 
+  "Taraba", "Yobe", "Zamfara"
+];
+
 type SignupFormData = {
   email?: string
   phone?: string
   companyName?: string
   cacNumber?: string
+  location?: string
+  foundedAt?: number // year
   password?: string
   confirmPassword?: string
 }
@@ -32,6 +42,7 @@ export default function SignupScreen() {
   const [formError, setFormError] = useState<string | null>(null)
   const [isFromWhatsApp, setIsFromWhatsApp] = useState(false)
   const [waPhone, setWaPhone] = useState<string | null>(null)
+  const [stateSearch, setStateSearch] = useState("")
 
   const {
     register,
@@ -47,12 +58,15 @@ export default function SignupScreen() {
       phone: "",
       companyName: "",
       cacNumber: "",
+      location: "",
+      foundedAt: undefined,
       password: "",
       confirmPassword: "",
     },
   })
 
   const password = watch("password")
+  const selectedLocation = watch("location")
 
   // Detect WhatsApp origin on mount
  useEffect(() => {
@@ -98,36 +112,28 @@ export default function SignupScreen() {
       const phone = safeTrim(values.phone)
       if (!phone) return { valid: false, error: "Phone number is required" }
       if (!/^\+\d{8,15}$/.test(phone.replace(/\s/g, "")))
-        return { valid: false, error: "Invalid phone number format (use international format)" }
+        return { valid: false, error: "Invalid phone number format" }
     }
 
     if (step === 1) {
-      const companyName = safeTrim(values.companyName)
-      if (!companyName) return { valid: false, error: "Company name is required" }
-      if (companyName.length < 2)
-        return { valid: false, error: "Company name is too short" }
-
-      const cacNumber = safeTrim(values.cacNumber)
-      if (!cacNumber) return { valid: false, error: "CAC number is required" }
-      if (cacNumber.length < 5)
-        return { valid: false, error: "CAC number is too short" }
+      if (!safeTrim(values.companyName)) return { valid: false, error: "Company name is required" }
+      if (!safeTrim(values.cacNumber)) return { valid: false, error: "CAC number is required" }
+      if (!values.location) return { valid: false, error: "Please select a state (location)" }
+      if (!values.foundedAt) return { valid: false, error: "Founding year is required" }
+      
+      const year = Number(values.foundedAt)
+      const currentYear = new Date().getFullYear()
+      if (isNaN(year) || year < 1900 || year > currentYear) {
+        return { valid: false, error: `Invalid founding year (1900-${currentYear})` }
+      }
     }
 
     if (step === 2) {
       const passwordVal = safeTrim(values.password)
-      if (!passwordVal) return { valid: false, error: "Password is required" }
-      if (passwordVal.length < 8)
+      if (!passwordVal || passwordVal.length < 8)
         return { valid: false, error: "Password must be at least 8 characters" }
-      if (!/[A-Z]/.test(passwordVal))
-        return { valid: false, error: "Password must contain at least one uppercase letter" }
-      if (!/[a-z]/.test(passwordVal))
-        return { valid: false, error: "Password must contain at least one lowercase letter" }
-      if (!/[0-9]/.test(passwordVal))
-        return { valid: false, error: "Password must contain at least one number" }
 
-      const confirm = safeTrim(values.confirmPassword)
-      if (!confirm) return { valid: false, error: "Please confirm your password" }
-      if (passwordVal !== confirm)
+      if (passwordVal !== safeTrim(values.confirmPassword))
         return { valid: false, error: "Passwords do not match" }
     }
 
@@ -161,11 +167,18 @@ export default function SignupScreen() {
       return
     }
 
+    const currentYear = new Date().getFullYear()
+    const foundedYear = Number(data.foundedAt)
+    const yearsOfExp = Math.max(0, currentYear - foundedYear)
+
     const cleanedData = {
       email: safeTrim(data.email),
       phone: safeTrim(data.phone),
       companyName: safeTrim(data.companyName),
       cacNumber: safeTrim(data.cacNumber),
+      location: data.location,
+      foundedAt: foundedYear,
+      yearsOfExperience: yearsOfExp,
       password: safeTrim(data.password),
     }
 
@@ -283,6 +296,30 @@ export default function SignupScreen() {
                   placeholder="RC-1234567"
                   {...register("cacNumber")}
                   error={errors.cacNumber?.message}
+                />
+
+                <div>
+                  <label className="block text-sm font-medium mb-1.5 opacity-90">State (Location)</label>
+                  <input
+                    list="nigerian-states"
+                    placeholder="Search for your state..."
+                    className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-fg focus:ring-2 focus:ring-primary focus:outline-none transition-all"
+                    {...register("location")}
+                  />
+                  <datalist id="nigerian-states">
+                    {NIGERIAN_STATES.map((state) => (
+                      <option key={state} value={state} />
+                    ))}
+                  </datalist>
+                  {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location.message}</p>}
+                </div>
+
+                <Input
+                  label="Founding Year"
+                  type="number"
+                  placeholder="e.g 2010"
+                  {...register("foundedAt")}
+                  error={errors.foundedAt?.message}
                 />
               </>
             )}
