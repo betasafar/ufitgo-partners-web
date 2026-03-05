@@ -4,7 +4,8 @@ import { useAuth } from "../../context/AuthContext"
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: "📊" },
   { name: "Packages", href: "/packages", icon: "📦" },
-  { name: "Bookings", href: "/bookings", icon: "📅" },
+  { name: "Pilgrims", href: "/bookings", icon: "👤" },
+  { name: "PTA Requests", href: "/pta-requests", icon: "✈️" },
   { name: "Verification", href: "/verification", icon: "🛡️" },
   { name: "Financial", href: "/financial", icon: "💰" },
   { name: "Settings", href: "/settings", icon: "⚙️" },

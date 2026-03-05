@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext.jsx"
 import { ThemeProvider } from "./context/ThemeContext.jsx"
 import { ProtectedRoute } from "./routes/ProtectedRoute.jsx"
+import { SessionTimeoutManager } from "./components/common/SessionTimeoutManager.jsx"
 
 /* Auth Screens */
 import LoginScreen from "./screens/Auth/LoginScreen.jsx"
@@ -22,11 +23,13 @@ import VerificationScreen from "./screens/Verification/VerificationScreen.jsx"
 import FinancialScreen from "./screens/Financial/FinancialScreen.jsx"
 import SettingsScreen from "./screens/Settings/SettingsScreen.jsx"
 import Profile from "./screens/Settings/Profile.jsx"
+import PTARequestsScreen from "./screens/PTA/PTARequestsScreen.jsx"
 
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <SessionTimeoutManager />
         <BrowserRouter>
           <Routes>
 
@@ -52,6 +55,7 @@ function App() {
               <Route path="/financial" element={<FinancialScreen />} />
               <Route path="/settings" element={<SettingsScreen />} />
               <Route path="/settings/profile" element={<Profile />} />
+              <Route path="/pta-requests" element={<PTARequestsScreen />} />
             </Route>
 
             {/* ===================== */}
