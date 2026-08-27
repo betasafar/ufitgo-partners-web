@@ -9,7 +9,7 @@ import { Input } from "../../components/common/Input"
 import { DashboardLayout } from "../../components/layout/DashboardLayout"
 
 export const SettingsScreen = () => {
-  const { user, updateUser } = useAuth()
+  const { operator: user, updateOperator: updateUser } = useAuth()
   const [activeTab, setActiveTab] = useState("profile")
 
   const [profileData, setProfileData] = useState({

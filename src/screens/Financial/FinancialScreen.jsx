@@ -1,23 +1,24 @@
 
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { useFinancial } from "../../hooks/useFinancial"
 import { Button } from "../../components/common/Button"
 import { Card } from "../../components/common/Card"
 import { Input } from "../../components/common/Input"
 import { TransactionCard } from "../../components/features/financial/TransactionCard"
-import { BankDetailsForm } from "../../components/features/financial/BankDetailsForm"
 import { DashboardLayout } from "../../components/layout/DashboardLayout"
+import { useSettlement } from "../../hooks/useSettlement"
 
 const FinancialScreen = () => {
-  const { summary, transactions, bankDetails, loading, error, requestPayout, updateBankDetails, refetch } =
+  const navigate = useNavigate()
+  const { summary, transactions, loading, error, requestPayout, refetch } =
     useFinancial()
+  const { bankAccount } = useSettlement()
 
   const [showPayoutForm, setShowPayoutForm] = useState(false)
   const [payoutAmount, setPayoutAmount] = useState("")
   const [requesting, setRequesting] = useState(false)
-
-  const [showBankForm, setShowBankForm] = useState(false)
 
   const handleRequestPayout = async () => {
     if (!payoutAmount || Number.parseFloat(payoutAmount) <= 0) {
@@ -153,33 +154,25 @@ const FinancialScreen = () => {
         <Card>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Bank Details</h2>
-            <Button variant="secondary" onClick={() => setShowBankForm(!showBankForm)}>
-              {showBankForm ? "Cancel" : bankDetails ? "Update" : "Add Bank Details"}
+            <Button variant="secondary" onClick={() => navigate("/settlement/setup")}>
+              {bankAccount ? "Update" : "Add Bank Details"}
             </Button>
           </div>
 
-          {showBankForm ? (
-            <BankDetailsForm
-              bankDetails={bankDetails}
-              onSubmit={async (data) => {
-                await updateBankDetails(data)
-                setShowBankForm(false)
-              }}
-            />
-          ) : bankDetails ? (
+          {bankAccount ? (
             <div className="space-y-2 text-sm">
               <p>
-                <span className="font-medium">Bank:</span> {bankDetails.bankName}
+                <span className="font-medium">Bank:</span> {bankAccount.bankName}
               </p>
               <p>
-                <span className="font-medium">Account Name:</span> {bankDetails.accountName}
+                <span className="font-medium">Account Name:</span> {bankAccount.accountName}
               </p>
               <p>
-                <span className="font-medium">Account Number:</span> {bankDetails.accountNumber}
+                <span className="font-medium">Account Number:</span> {bankAccount.accountNumber}
               </p>
             </div>
           ) : (
-            <p className="text-gray-500">No bank details added yet</p>
+            <p className="text-gray-500">No bank details added yet. Set up your settlement account to receive payouts.</p>
           )}
         </Card>
 

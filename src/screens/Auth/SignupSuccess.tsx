@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CheckCircle, ArrowRight, MessageCircle } from "lucide-react"
+import { CheckCircle, ArrowRight, MessageCircle, CreditCard } from "lucide-react"
 import { Button } from "../../components/common/Button"
 import { useNavigate } from "react-router-dom"
 
@@ -14,13 +14,11 @@ export default function SignupSuccess() {
   } | null>(null)
 
   useEffect(() => {
-    // Retrieve continuation data saved during registration
     const stored = localStorage.getItem("signupContinuation")
     if (stored) {
       try {
         const data = JSON.parse(stored)
         setContinuation(data)
-        // Clean up so it doesn't persist on refresh
         localStorage.removeItem("signupContinuation")
       } catch (err) {
         console.error("Failed to parse continuation data", err)
@@ -62,18 +60,36 @@ export default function SignupSuccess() {
             </Button>
           </div>
         ) : (
-          <p className="mb-8 opacity-70">
-            We've sent your virtual account details via email.
-            <br />
-            Fund your wallet to start creating packages.
-          </p>
+          <div className="mb-8 space-y-4">
+            <p className="opacity-70">
+              We've sent your virtual account details via email. Fund your wallet to start creating packages.
+            </p>
+
+            {/* Settlement Account CTA */}
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
+              <CreditCard className="w-10 h-10 mx-auto text-primary mb-3" />
+              <h3 className="font-semibold text-lg mb-2">Set Up Your Settlement Account</h3>
+              <p className="text-sm opacity-70 mb-4">
+                Add your bank account to receive payouts from bookings. You can do this now or later from your dashboard.
+              </p>
+              <Button
+                onClick={() => navigate("/settlement/setup")}
+                className="w-full"
+              >
+                Set Up Settlement Account
+                <ArrowRight className="ml-2" size={18} />
+              </Button>
+            </div>
+          </div>
         )}
 
         <div className="space-y-4">
-          <Button onClick={() => navigate("/login")} className="w-full">
-            Continue to Login
-            <ArrowRight className="ml-2" size={18} />
-          </Button>
+          {!continuation && (
+            <Button onClick={() => navigate("/login")} className="w-full">
+              Continue to Login
+              <ArrowRight className="ml-2" size={18} />
+            </Button>
+          )}
 
           <Button
             variant="outline"

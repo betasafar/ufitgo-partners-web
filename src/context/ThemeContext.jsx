@@ -4,11 +4,11 @@ const ThemeContext = createContext(null)
 
 export function ThemeProvider({ children }) {
     const [theme, setTheme] = useState(
-        () => localStorage.getItem("theme") || "system"
+        () => localStorage.getItem("theme") || "light"
     )
 
     const [accent, setAccent] = useState(
-        () => localStorage.getItem("accent") || "gold"
+        () => localStorage.getItem("accent") || "green"
     )
 
     useEffect(() => {

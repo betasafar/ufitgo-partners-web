@@ -62,6 +62,10 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
       hotel: initialData?.inclusions?.hotel ?? true,
       transfers: initialData?.inclusions?.transfers ?? false,
     },
+
+    groupDiscountEnabled: initialData?.groupDiscountEnabled ?? false,
+    groupDiscountThreshold: initialData?.groupDiscountThreshold || "",
+    groupDiscountPercentage: initialData?.groupDiscountPercentage || "",
   })
 
   const handleGenerateSuggestions = async () => {
@@ -167,6 +171,9 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
           balance: Number(formData.installments.balance),
         }
         : null,
+      groupDiscountEnabled: formData.groupDiscountEnabled,
+      groupDiscountThreshold: formData.groupDiscountEnabled ? Number(formData.groupDiscountThreshold) : null,
+      groupDiscountPercentage: formData.groupDiscountEnabled ? Number(formData.groupDiscountPercentage) : null,
     })
   }
 
@@ -381,6 +388,45 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
                     Total must equal ₦{totalPrice.toLocaleString()}
                   </p>
                 )}
+              </div>
+            )}
+          </section>
+
+          {/* Group Volume Discounts */}
+          <section className="bg-card border border-border rounded-2xl p-6">
+            <h2 className="text-lg font-semibold text-fg mb-4">Group Volume Discounts</h2>
+
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-medium text-fg">Enable Group Discounts?</span>
+              <button
+                type="button"
+                onClick={() => setFormData((p) => ({ ...p, groupDiscountEnabled: !p.groupDiscountEnabled }))}
+                className={`relative w-12 h-6 rounded-full transition ${formData.groupDiscountEnabled ? "bg-primary" : "bg-border"}`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${formData.groupDiscountEnabled ? "translate-x-6" : ""}`}
+                />
+              </button>
+            </div>
+
+            {formData.groupDiscountEnabled && (
+              <div className="space-y-3">
+                <Input
+                  label="Minimum Pilgrims (Threshold)"
+                  name="groupDiscountThreshold"
+                  type="number"
+                  value={formData.groupDiscountThreshold}
+                  onChange={handleChange}
+                  placeholder="e.g 5"
+                />
+                <Input
+                  label="Discount Percentage (%)"
+                  name="groupDiscountPercentage"
+                  type="number"
+                  value={formData.groupDiscountPercentage}
+                  onChange={handleChange}
+                  placeholder="e.g 10"
+                />
               </div>
             )}
           </section>

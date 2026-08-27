@@ -61,8 +61,18 @@ export const ENDPOINTS = {
   FINANCIAL: {
     SUMMARY: "/operator/wallet/payment-stats",
     TRANSACTIONS: "/operator/wallet/transactions",
-    TRANSACTIONS_FILTERED: "/operator/wallet/transactions/filtered", // if needed
+    TRANSACTIONS_FILTERED: "/operator/wallet/transactions/filtered",
     REQUEST_PAYOUT: "/operator/wallet/payout",
-    // Remove BANK_DETAILS entirely — it does not exist!
+  },
+  COMMISSIONS: {
+    SUMMARY: "/operator/commissions/summary",
+    HISTORY: "/operator/commissions/history",
+    CONFIG: "/operator/commissions/config",
+    POLICY_STATUS: "/operator/commissions/policy/status",
+    POLICY_ACKNOWLEDGE: "/operator/commissions/policy/acknowledge",
+  },
+  SETTLEMENT: {
+    BANK_ACCOUNT: "/operator/bank-account",
+    SETUP: "/operator/settlement/setup",
   },
 }

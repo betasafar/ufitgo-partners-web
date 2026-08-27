@@ -45,15 +45,15 @@
 
 /* ================================
    LIGHT MODE (DEFAULT)
-================================ */
+=============================== */
 :root {
   --bg: 248 250 252;
   --fg: 15 23 42;
   --card: 255 255 255;
   --border: 226 232 240;
 
-  --primary: 37 99 235;
-  --primary-soft: 219 234 254;
+  --primary: 42 122 79;
+  --primary-soft: 220 252 231;
   --primary-contrast: 255 255 255;
 }
 
@@ -70,6 +70,12 @@
 /* ================================
    ACCENTS
 ================================ */
+[data-accent="green"] {
+  --primary: 42 122 79;
+  --primary-soft: 220 252 231;
+  --primary-contrast: 255 255 255;
+}
+
 [data-accent="gold"] {
   --primary: 234 179 8;
   --primary-soft: 254 243 199;
@@ -102,8 +108,8 @@ nav::-webkit-scrollbar-thumb {
 /* Phone input wrapper */
 .ufitgo-phone-input {
   --border-color: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(212, 175, 55, 0.6);
-  /* gold accent */
+  --border-focus: rgba(42, 122, 79, 0.6);
+  /* green accent */
   --bg-color: rgba(10, 15, 30, 0.8);
   --text-color: #e5e7eb;
   --placeholder-color: #6b7280;

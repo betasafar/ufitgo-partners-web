@@ -1,20 +1,27 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { DashboardLayout } from "../../components/layout/DashboardLayout"
 import { StatCard } from "../../components/features/dashboard/StatCard"
 import { AccountStatusCard } from "../../components/features/dashboard/AccountStatusCard"
 import { Spinner } from "../../components/common/Spinner"
+import { Button } from "../../components/common/Button"
 import { tierService } from "../../api/services/tier.service.js"
 import { bookingsService } from "../../api/services/bookings.service.js"
 import { packagesService } from "../../api/services/packages.service.js"
+import { settlementService } from "../../api/services/settlement.service.js"
+import { useAuth } from "../../context/AuthContext"
 
 export default function DashboardScreen() {
+  const navigate = useNavigate()
+  const { operator } = useAuth()
   const [loading, setLoading] = useState(true)
   const [metrics, setMetrics] = useState(null)
   const [verification, setVerification] = useState(null)
   const [bookings, setBookings] = useState([])
   const [packages, setPackages] = useState([])
+  const [hasBankAccount, setHasBankAccount] = useState(false)
 
   useEffect(() => {
     fetchDashboardData()
@@ -30,12 +37,14 @@ export default function DashboardScreen() {
         packagesData,
         trustScoreData,
         performanceData,
+        bankData,
       ] = await Promise.allSettled([
         tierService.getTierInfo(),
         bookingsService.getAll(),
         packagesService.getAll(),
         tierService.getTrustScore(),
         tierService.getPerformance(),
+        settlementService.getBankAccount(),
       ])
 
       if (tierData.status === "fulfilled") {
@@ -62,6 +71,10 @@ export default function DashboardScreen() {
             ? performanceData.value.data || performanceData.value
             : null,
       })
+
+      if (bankData.status === "fulfilled" && bankData.value) {
+        setHasBankAccount(true)
+      }
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error)
     } finally {
@@ -87,6 +100,22 @@ export default function DashboardScreen() {
 
   return (
     <DashboardLayout title="Dashboard">
+      {/* Settlement Account Prompt */}
+      {!hasBankAccount && (
+        <div className="mb-6 bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🏦</span>
+            <div>
+              <p className="font-semibold">Set Up Your Settlement Account</p>
+              <p className="text-sm opacity-70">Add your bank account to receive payouts from bookings.</p>
+            </div>
+          </div>
+          <Button onClick={() => navigate("/settlement/setup")} size="sm">
+            Set Up
+          </Button>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <StatCard title="Total Bookings" value={totalBookings} subtitle="All time" icon="📅" />
@@ -127,7 +156,7 @@ export default function DashboardScreen() {
                         {booking.pilgrimName}
                       </p>
                       <p className="text-sm text-fg/70">
-                        {booking.numberOfPilgrims} pilgrim(s) • ₦
+                        {booking.numberOfPilgrims} pilgrim(s) - N
                         {Number(booking.totalAmount).toLocaleString()}
                       </p>
                     </div>

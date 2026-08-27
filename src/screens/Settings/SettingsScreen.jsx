@@ -10,6 +10,7 @@ const themes = [
 ]
 
 const accents = [
+  { id: "green", label: "Green" },
   { id: "gold", label: "Gold" },
   { id: "blue", label: "Blue" },
   { id: "red", label: "Red" },

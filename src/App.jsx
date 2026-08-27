@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext.jsx"
 import { ThemeProvider } from "./context/ThemeContext.jsx"
 import { ProtectedRoute } from "./routes/ProtectedRoute.jsx"
+import { PolicyInterceptorRoute } from "./routes/PolicyInterceptorRoute.jsx"
 import { SessionTimeoutManager } from "./components/common/SessionTimeoutManager.jsx"
 
 /* Auth Screens */
@@ -21,9 +22,14 @@ import EditPackageScreen from "./screens/Packages/EditPackageScreen.jsx"
 import BookingsScreen from "./screens/Bookings/BookingsScreen.jsx"
 import VerificationScreen from "./screens/Verification/VerificationScreen.jsx"
 import FinancialScreen from "./screens/Financial/FinancialScreen.jsx"
+import CommissionsScreen from "./screens/Financial/CommissionsScreen.jsx"
+import SettlementSetupScreen from "./screens/Settlement/SettlementSetupScreen.jsx"
 import SettingsScreen from "./screens/Settings/SettingsScreen.jsx"
 import Profile from "./screens/Settings/Profile.jsx"
+import PolicyAgreementScreen from "./screens/Settings/PolicyAgreementScreen.jsx"
 import PTARequestsScreen from "./screens/PTA/PTARequestsScreen.jsx"
+import { PromosScreen } from "./components/features/promos/PromosScreen.jsx"
+import { CreatePromoScreen } from "./components/features/promos/CreatePromoScreen.jsx"
 
 function App() {
   return (
@@ -46,16 +52,25 @@ function App() {
             {/* PROTECTED APP ROUTES */}
             {/* ===================== */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<DashboardScreen />} />
-              <Route path="/packages" element={<PackagesScreen />} />
-              <Route path="/packages/create" element={<CreatePackageScreen />} />
-              <Route path="/packages/:id/edit" element={<EditPackageScreen />} />
-              <Route path="/bookings" element={<BookingsScreen />} />
-              <Route path="/verification" element={<VerificationScreen />} />
-              <Route path="/financial" element={<FinancialScreen />} />
-              <Route path="/settings" element={<SettingsScreen />} />
-              <Route path="/settings/profile" element={<Profile />} />
-              <Route path="/pta-requests" element={<PTARequestsScreen />} />
+              <Route element={<PolicyInterceptorRoute />}>
+                <Route path="/dashboard" element={<DashboardScreen />} />
+                <Route path="/packages" element={<PackagesScreen />} />
+                <Route path="/packages/create" element={<CreatePackageScreen />} />
+                <Route path="/packages/:id/edit" element={<EditPackageScreen />} />
+                <Route path="/bookings" element={<BookingsScreen />} />
+                <Route path="/verification" element={<VerificationScreen />} />
+                <Route path="/financial" element={<FinancialScreen />} />
+                <Route path="/financial/commissions" element={<CommissionsScreen />} />
+                <Route path="/settlement/setup" element={<SettlementSetupScreen />} />
+                <Route path="/settings" element={<SettingsScreen />} />
+                <Route path="/settings/profile" element={<Profile />} />
+                <Route path="/pta-requests" element={<PTARequestsScreen />} />
+                <Route path="/promos" element={<PromosScreen />} />
+                <Route path="/promos/create" element={<CreatePromoScreen />} />
+              </Route>
+              
+              {/* Note: PolicyAgreementScreen is inside ProtectedRoute but OUTSIDE PolicyInterceptorRoute */}
+              <Route path="/policy-agreement" element={<PolicyAgreementScreen />} />
             </Route>
 
             {/* ===================== */}
