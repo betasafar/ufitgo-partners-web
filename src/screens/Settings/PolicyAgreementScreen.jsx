@@ -84,16 +84,16 @@ const PolicyAgreementScreen = () => {
           <div className="flex gap-4">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">1</div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Registration is Yours</h3>
-              <p className="text-sm">Registration and onboarding fees paid by customers are non-commissionable. These belong entirely to you.</p>
+              <h3 className="font-semibold text-gray-900 mb-1">Referral Fee & Registration</h3>
+              <p className="text-sm">No upfront subscription fees. You only pay UfitGo when we bring you a customer. A small referral fee (₦6,000 for Umrah, ₦10,000 for Hajj) is deducted from the customer's initial registration payment.</p>
             </div>
           </div>
 
           <div className="flex gap-4">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">2</div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-1">When We Earn</h3>
-              <p className="text-sm">UfitGo commission is earned strictly on qualifying successful payments processed through our infrastructure.</p>
+              <h3 className="font-semibold text-gray-900 mb-1">When We Earn & PSP Fees</h3>
+              <p className="text-sm">The remainder of our fixed commission (₦75k total for Umrah, ₦150k total for Hajj) is earned on subsequent customer payments. UfitGo fully bears the Payment Service Provider (PSP) fees on all transactions.</p>
             </div>
           </div>
 
