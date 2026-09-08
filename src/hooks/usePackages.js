@@ -14,6 +14,7 @@ export const usePackages = () => {
   // Metadata state
   const [packageTypes, setPackageTypes] = useState([])
   const [serviceLevels, setServiceLevels] = useState([])
+  const [availableExtensions, setAvailableExtensions] = useState([])
   const [metadataLoading, setMetadataLoading] = useState(true)
   const [metadataError, setMetadataError] = useState(null)
 
@@ -38,13 +39,15 @@ export const usePackages = () => {
       setMetadataLoading(true)
       setMetadataError(null)
 
-      const [typesRes, levelsRes] = await Promise.all([
+      const [typesRes, levelsRes, extensionsRes] = await Promise.all([
         packagesService.getPackageTypes(),
         packagesService.getServiceLevels(),
+        packagesService.getExtensions(),
       ])
 
       setPackageTypes(typesRes || [])
       setServiceLevels(levelsRes || [])
+      setAvailableExtensions(extensionsRes?.data || [])
     } catch (err) {
       console.error("[v0] Error fetching metadata:", err)
       setMetadataError(err.message || "Failed to load package options")
@@ -99,9 +102,10 @@ export const usePackages = () => {
     packages,
     packagesLoading,
     packagesError,
-
     packageTypes,
     serviceLevels,
+    availableExtensions,
+    suggestPackageContent,
     metadataLoading,
     metadataError,
 

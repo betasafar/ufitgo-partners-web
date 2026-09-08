@@ -21,6 +21,7 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
   const {
     packageTypes = [],
     serviceLevels = [],
+    availableExtensions = [],
     metadataLoading,
     suggestPackageContent,
   } = usePackages()
@@ -66,6 +67,8 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
     groupDiscountEnabled: initialData?.groupDiscountEnabled ?? false,
     groupDiscountThreshold: initialData?.groupDiscountThreshold || "",
     groupDiscountPercentage: initialData?.groupDiscountPercentage || "",
+
+    extensionIds: initialData?.extensionIds || [],
   })
 
   const handleGenerateSuggestions = async () => {
@@ -155,6 +158,16 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
     }))
   }
 
+  const toggleExtension = (extId) => {
+    setFormData((prev) => {
+      const current = prev.extensionIds
+      if (current.includes(extId)) {
+        return { ...prev, extensionIds: current.filter(id => id !== extId) }
+      }
+      return { ...prev, extensionIds: [...current, extId] }
+    })
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!installmentValid || totalPrice === 0) return
@@ -174,6 +187,7 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
       groupDiscountEnabled: formData.groupDiscountEnabled,
       groupDiscountThreshold: formData.groupDiscountEnabled ? Number(formData.groupDiscountThreshold) : null,
       groupDiscountPercentage: formData.groupDiscountEnabled ? Number(formData.groupDiscountPercentage) : null,
+      extensionIds: formData.extensionIds,
     })
   }
 
@@ -427,6 +441,42 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
                   onChange={handleChange}
                   placeholder="e.g 10"
                 />
+              </div>
+            )}
+          </section>
+
+          {/* Add-ons / Extensions */}
+          <section className="bg-card border border-border rounded-2xl p-6">
+            <h2 className="text-lg font-semibold text-fg mb-4">Add-ons (Optional)</h2>
+            <p className="text-sm text-fg/60 mb-4">Select optional add-ons users can purchase with this package.</p>
+            {availableExtensions.length === 0 ? (
+              <p className="text-sm text-fg/50 italic">No add-ons available.</p>
+            ) : (
+              <div className="space-y-3">
+                {availableExtensions.map((ext) => (
+                  <button
+                    type="button"
+                    key={ext.id}
+                    onClick={() => toggleExtension(ext.id)}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition ${formData.extensionIds.includes(ext.id)
+                      ? "bg-primary/10 border-primary text-primary"
+                      : "border-border text-fg/70"
+                      }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-5 h-5 rounded-md border flex items-center justify-center transition ${formData.extensionIds.includes(ext.id)
+                          ? "bg-primary border-primary text-white"
+                          : "border-border"
+                          }`}
+                      >
+                        {formData.extensionIds.includes(ext.id) && "✓"}
+                      </div>
+                      <span>{ext.name}</span>
+                    </div>
+                    <span className="font-semibold text-sm">₦{Number(ext.price).toLocaleString()}</span>
+                  </button>
+                ))}
               </div>
             )}
           </section>

@@ -18,6 +18,7 @@ export const SettingsScreen = () => {
     email: user?.email || "",
     phone: user?.phone || "",
     companyName: user?.companyName || "",
+    stock_status: user?.stock_status || "In Stock",
   })
 
   const [passwordData, setPasswordData] = useState({
@@ -134,6 +135,20 @@ export const SettingsScreen = () => {
                 onChange={(e) => setProfileData({ ...profileData, companyName: e.target.value })}
                 required
               />
+
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-700">Stock Status (FX Directory)</label>
+                <select
+                  value={profileData.stock_status}
+                  onChange={(e) => setProfileData({ ...profileData, stock_status: e.target.value })}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                >
+                  <option value="In Stock">In Stock</option>
+                  <option value="Low Riyal Stock">Low Riyal Stock</option>
+                  <option value="Low Dollar Stock">Low Dollar Stock</option>
+                  <option value="Out of Stock">Out of Stock</option>
+                </select>
+              </div>
 
               <Button type="submit" disabled={saving}>
                 {saving ? "Saving..." : "Save Changes"}

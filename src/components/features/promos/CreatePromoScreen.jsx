@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { usePromos } from "../../../hooks/usePromos"
 import { usePackages } from "../../../hooks/usePackages"
+import { useAuth } from "../../../context/AuthContext"
 import { Input } from "../../common/Input"
 import { Button } from "../../common/Button"
 import { ArrowLeft } from "lucide-react"
@@ -12,6 +13,8 @@ export const CreatePromoScreen = () => {
   const navigate = useNavigate()
   const { createPromo } = usePromos()
   const { packages } = usePackages()
+  const { user } = useAuth()
+  const isFX = user?.partnerType === 'exchange-agent'
 
   const [formData, setFormData] = useState({
     code: "",
@@ -117,22 +120,24 @@ export const CreatePromoScreen = () => {
               required
             />
 
-            <div>
-              <label className="block text-sm font-medium text-fg mb-2">Apply To</label>
-              <select
-                name="packageId"
-                value={formData.packageId}
-                onChange={handleChange}
-                className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-fg"
-              >
-                <option value="">All Packages (Global Promo)</option>
-                {packages.map((pkg) => (
-                  <option key={pkg.id} value={pkg.id}>
-                    {pkg.title}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {!isFX && (
+              <div>
+                <label className="block text-sm font-medium text-fg mb-2">Apply To</label>
+                <select
+                  name="packageId"
+                  value={formData.packageId}
+                  onChange={handleChange}
+                  className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-fg"
+                >
+                  <option value="">All Packages (Global Promo)</option>
+                  {packages.map((pkg) => (
+                    <option key={pkg.id} value={pkg.id}>
+                      {pkg.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -165,14 +170,16 @@ export const CreatePromoScreen = () => {
               onChange={handleChange}
               placeholder="e.g 100 uses total"
             />
-            <Input
-              label="Min Pilgrims Required"
-              name="minPilgrimsRequired"
-              type="number"
-              value={formData.minPilgrimsRequired}
-              onChange={handleChange}
-              placeholder="e.g 2"
-            />
+            {!isFX && (
+              <Input
+                label="Min Pilgrims Required"
+                name="minPilgrimsRequired"
+                type="number"
+                value={formData.minPilgrimsRequired}
+                onChange={handleChange}
+                placeholder="e.g 2"
+              />
+            )}
           </div>
           
           <div className="flex items-center gap-3 p-4 bg-bg rounded-xl border border-border mt-4">

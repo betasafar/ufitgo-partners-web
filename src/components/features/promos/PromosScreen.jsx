@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { usePromos } from "../../../hooks/usePromos"
+import { useAuth } from "../../../context/AuthContext"
 import { Button } from "../../common/Button"
 import { Plus, Tag } from "lucide-react"
 
@@ -13,6 +14,9 @@ export const PromosScreen = () => {
   useEffect(() => {
     fetchPromos()
   }, [fetchPromos])
+
+  const { user } = useAuth()
+  const isFX = user?.partnerType === 'exchange-agent'
 
   return (
     <div className="space-y-6">
@@ -38,7 +42,9 @@ export const PromosScreen = () => {
           </div>
           <h3 className="text-lg font-semibold text-fg mb-2">No Promo Codes Yet</h3>
           <p className="text-fg/60 max-w-md mx-auto mb-6">
-            Create promotional codes to offer discounts to your pilgrims and boost your bookings.
+            {isFX
+              ? "Create promotional codes to offer special rates or fee discounts to your FX customers."
+              : "Create promotional codes to offer discounts to your pilgrims and boost your bookings."}
           </p>
           <Button onClick={() => navigate("/promos/create")}>
             Create Your First Promo

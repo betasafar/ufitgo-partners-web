@@ -43,6 +43,11 @@ export const packagesService = {
     return res.data
   },
 
+  getExtensions: async () => {
+    const res = await apiClient.get(ENDPOINTS.EXTENSIONS.LIST)
+    return res.data
+  },
+
   suggest: async (data) => {
     const res = await apiClient.post(ENDPOINTS.PACKAGES.SUGGEST, data);
     return res.data;

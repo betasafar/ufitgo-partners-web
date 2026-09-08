@@ -28,6 +28,9 @@ export const ENDPOINTS = {
     SERVICE_LEVELS: "/operator/packages/service-levels",
     SUGGEST: "/operator/packages/suggest",
   },
+  EXTENSIONS: {
+    LIST: "/operator/extensions",
+  },
   BOOKINGS: {
     LIST: "/operator/bookings",
     URGENT_TASKS: "/operator/bookings/urgent-tasks",

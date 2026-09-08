@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { DashboardLayout } from "../../components/layout/DashboardLayout"
 import { Card } from "../../components/common/Card"
-import commissionService from "../../api/services/commission.service"
+import { commissionService } from "../../api/services/commission.service"
 
 const PolicyAgreementScreen = () => {
   const [loading, setLoading] = useState(true)
@@ -72,9 +72,9 @@ const PolicyAgreementScreen = () => {
         <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
           <span className="text-3xl">📜</span>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Refund & Commission Dispute Policy</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">UfitGo Commercial & Payment Terms</h1>
         <p className="text-gray-500">
-          Please review and accept our commercial terms regarding commissions and disputes.
+          Please review and accept our commercial terms regarding commissions and payments.
         </p>
       </div>
 
@@ -84,64 +84,48 @@ const PolicyAgreementScreen = () => {
           <div className="flex gap-4">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">1</div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Referral Fee & Registration</h3>
-              <p className="text-sm">No upfront subscription fees. You only pay UfitGo when we bring you a customer. A small referral fee (₦6,000 for Umrah, ₦10,000 for Hajj) is deducted from the customer's initial registration payment.</p>
+              <h3 className="font-semibold text-gray-900 mb-1">No Subscription Fee</h3>
+              <p className="text-sm">UfitGo brings the customer, payment infrastructure, and booking technology. There are no upfront fees. We both make money when the transaction succeeds. You only pay UfitGo when we generate a booking.</p>
             </div>
           </div>
 
           <div className="flex gap-4">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">2</div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-1">When We Earn & PSP Fees</h3>
-              <p className="text-sm">The remainder of our fixed commission (₦75k total for Umrah, ₦150k total for Hajj) is earned on subsequent customer payments. UfitGo fully bears the Payment Service Provider (PSP) fees on all transactions.</p>
+              <h3 className="font-semibold text-gray-900 mb-1">Customer Acquisition</h3>
+              <p className="text-sm">A small referral component (₦6,000 for Umrah, ₦10,000 for Hajj) is deducted from the customer's initial registration payment to cover acquisition costs.</p>
             </div>
           </div>
 
           <div className="flex gap-4">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">3</div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Your Responsibility</h3>
-              <p className="text-sm">UfitGo is a marketplace platform. You remain fully responsible for delivering the booked service and managing ordinary customer refunds or service disputes.</p>
+              <h3 className="font-semibold text-gray-900 mb-1">Progressive Commission</h3>
+              <p className="text-sm">The remaining commission is earned progressively as the pilgrim pays for their package stages. Commission already earned on successfully delivered and consumed stages remains earned.</p>
             </div>
           </div>
 
           <div className="flex gap-4">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">4</div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Voluntary Refunds</h3>
-              <p className="text-sm">If you voluntarily refund a customer for a service, UfitGo's already earned commission is not automatically reversed.</p>
+              <h3 className="font-semibold text-gray-900 mb-1">Payment Infrastructure</h3>
+              <p className="text-sm">UfitGo bears all Payment Service Provider (PSP) fees on customer instalment payments, saving you transaction costs.</p>
             </div>
           </div>
 
           <div className="flex gap-4">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">5</div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Evidence Required</h3>
-              <p className="text-sm">Any claims for commission reversals require verifiable evidence (e.g., official refund receipts, payment gateway logs). A mere allegation is insufficient.</p>
+              <h3 className="font-semibold text-gray-900 mb-1">Unfulfilled Services</h3>
+              <p className="text-sm">If you refund a customer for an unfulfilled service because the service cannot be delivered, the corresponding unearned/future UfitGo commission for that stage is obviously not payable.</p>
             </div>
           </div>
 
           <div className="flex gap-4">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">6</div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Chargebacks & Reversals</h3>
-              <p className="text-sm">If a payment is subject to a formal chargeback or reversal by the customer's bank, we may reverse our commission after an investigation.</p>
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">7</div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Platform Protection</h3>
-              <p className="text-sm">We reserve the right to suspend or withhold amounts if there is credible, verifiable evidence of fraud, payment abuse, unauthorized transactions, or material misrepresentation.</p>
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">8</div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Set-off Rights</h3>
-              <p className="text-sm">UfitGo reserves the right to recover verified amounts owed through set-off against future settlements or commissions payable to you.</p>
+              <h3 className="font-semibold text-gray-900 mb-1">Disputes & Chargebacks</h3>
+              <p className="text-sm">Chargebacks and fraud cases are treated separately. In the event of a dispute, both parties will provide verifiable evidence (e.g., official receipts or payment logs) to reach a fair resolution.</p>
             </div>
           </div>
 
