@@ -118,18 +118,20 @@ export default function DashboardScreen() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard title="Total Bookings" value={totalBookings} subtitle="All time" icon="📅" />
+        <StatCard title="Total Bookings" value={totalBookings} subtitle="All time" icon="📅" to="/bookings" />
         <StatCard
           title="Active Packages"
           value={activePackages}
           subtitle={`${pendingBookings} pending approval`}
           icon="📦"
+          to="/packages"
         />
         <StatCard
           title="This Month"
           value={monthlyBookings}
           subtitle={`${confirmedBookings} confirmed`}
           icon="📊"
+          to="/bookings"
         />
       </div>
 
@@ -137,9 +139,16 @@ export default function DashboardScreen() {
         {/* Recent Activity */}
         <div className="lg:col-span-2">
           <div className="card">
-            <h3 className="text-lg font-semibold text-fg mb-4">
-              Recent Activity
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-fg">
+                Recent Activity
+              </h3>
+              {bookings.length > 0 && (
+                <button onClick={() => navigate("/bookings")} className="text-sm font-medium text-primary hover:underline">
+                  View all →
+                </button>
+              )}
+            </div>
 
             {bookings.length === 0 ? (
               <p className="text-fg/70">No recent bookings</p>
@@ -148,8 +157,9 @@ export default function DashboardScreen() {
                 {bookings.slice(0, 5).map((booking) => (
                   <div
                     key={booking.id}
+                    onClick={() => navigate("/bookings")}
                     className="flex justify-between items-center p-3 rounded-lg
-                               bg-bg border border-border"
+                               bg-bg border border-border cursor-pointer hover:border-primary/30 transition-colors"
                   >
                     <div>
                       <p className="font-medium text-fg">
@@ -182,7 +192,7 @@ export default function DashboardScreen() {
         </div>
 
         {/* Account Status */}
-        <div>
+        <div onClick={() => navigate("/verification")} className="cursor-pointer">
           <AccountStatusCard verification={verification} metrics={metrics} />
         </div>
       </div>

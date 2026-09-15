@@ -1,6 +1,13 @@
-export const StatCard = ({ title, value, subtitle, icon, trend }) => {
+import { useNavigate } from "react-router-dom"
+
+export const StatCard = ({ title, value, subtitle, icon, trend, to }) => {
+  const navigate = useNavigate()
+
   return (
-    <div className="card">
+    <div
+      onClick={to ? () => navigate(to) : undefined}
+      className={`card ${to ? "cursor-pointer hover:shadow-md hover:border-primary/30 transition-all" : ""}`}
+    >
       <div className="flex items-start justify-between">
         <div>
           {/* Title */}
@@ -38,5 +45,6 @@ export const StatCard = ({ title, value, subtitle, icon, trend }) => {
         </div>
       )}
     </div>
+
   )
 }

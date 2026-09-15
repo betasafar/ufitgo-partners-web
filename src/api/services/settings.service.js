@@ -2,13 +2,13 @@ import { apiClient } from "../client.js"
 import { ENDPOINTS } from "../endpoints"
 
 export const settingsService = {
-  updateProfile: async (data) => {
-    const response = await apiClient.put(ENDPOINTS.AUTH.PROFILE, data)
+  updateProfile: async (operatorId, data) => {
+    const response = await apiClient.put(ENDPOINTS.AUTH.PROFILE, data, { params: { operatorId } })
     return response.data
   },
 
-  changePassword: async (data) => {
-    const response = await apiClient.post(ENDPOINTS.SETTINGS.CHANGE_PASSWORD, data)
+  changePassword: async (operatorId, data) => {
+    const response = await apiClient.post(ENDPOINTS.SETTINGS.CHANGE_PASSWORD, { id: operatorId, ...data })
     return response.data
   },
 

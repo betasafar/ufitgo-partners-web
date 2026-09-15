@@ -5,7 +5,6 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: "📊" },
   { name: "Packages", href: "/packages", icon: "📦" },
   { name: "Pilgrims", href: "/bookings", icon: "👤" },
-  { name: "PTA Requests", href: "/pta-requests", icon: "✈️" },
   { name: "Verification", href: "/verification", icon: "🛡️" },
   { name: "Financial", href: "/financial", icon: "💰" },
   { name: "Commissions", href: "/financial/commissions", icon: "🤝" },
@@ -54,6 +53,7 @@ export const Sidebar = ({ open, onClose }) => {
             <NavLink
               key={item.name}
               to={item.href}
+              end
               onClick={onClose}
               className={({ isActive }) =>
                 `

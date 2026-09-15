@@ -57,7 +57,7 @@ export const ENDPOINTS = {
     BOOKINGS: "/operator/reports/bookings",
   },
   SETTINGS: {
-    CHANGE_PASSWORD: "/operator/settings/password",
+    CHANGE_PASSWORD: "/operator/auth/change-password",
     NOTIFICATIONS: "/operator/settings/notifications",
   },
 
