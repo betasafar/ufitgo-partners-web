@@ -33,6 +33,8 @@ export default function ResetPasswordScreen() {
             <div className="w-full max-w-md">
                 <div className="bg-card border border-border rounded-2xl shadow-card p-8">
 
+                    <img src="/ufitgo-brand-mark.svg" alt="UfitGo" className="w-12 h-12 mx-auto mb-4" />
+
                     <h1 className="text-2xl font-bold text-center">
                         Reset Password
                     </h1>

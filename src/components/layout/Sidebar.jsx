@@ -40,7 +40,8 @@ export const Sidebar = ({ open, onClose }) => {
         style={{ "--sidebar-width": "16rem" }}
       >
         {/* Header (fixed) */}
-        <div className="h-16 px-6 flex items-center border-b border-border shrink-0">
+        <div className="h-16 px-6 flex items-center gap-3 border-b border-border shrink-0">
+          <img src="/ufitgo-brand-mark.svg" alt="UfitGo" className="w-8 h-8 shrink-0" />
           <div>
             <h1 className="text-xl font-bold text-primary">UfitGo</h1>
             <p className="text-xs text-fg/70">Operator Portal</p>

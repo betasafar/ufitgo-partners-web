@@ -34,9 +34,12 @@ export function OnboardingLayout({
         <div className="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary via-[#0a1c12] to-[#0a1c12]" />
 
         <div className="relative z-10">
-          <div className="mb-16">
-            <h1 className="text-2xl font-bold">UfitGo</h1>
-            <p className="text-xs text-white/60 mt-1">Operator Portal</p>
+          <div className="mb-16 flex items-center gap-3">
+            <img src="/ufitgo-brand-mark.svg" alt="UfitGo" className="w-9 h-9" />
+            <div>
+              <h1 className="text-2xl font-bold">UfitGo</h1>
+              <p className="text-xs text-white/60 mt-1">Operator Portal</p>
+            </div>
           </div>
 
           <h2 className="font-serif text-4xl font-bold leading-tight mb-6 lg:text-5xl">

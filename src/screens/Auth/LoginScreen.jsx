@@ -40,6 +40,7 @@ function LoginScreen() {
 
           {/* Header */}
           <div className="text-center mb-8">
+            <img src="/ufitgo-brand-mark.svg" alt="UfitGo" className="w-12 h-12 mx-auto mb-3" />
             <h1 className="text-3xl font-bold">UfitGo</h1>
             <p className="text-sm opacity-70 mt-2">Operator Portal</p>
           </div>
