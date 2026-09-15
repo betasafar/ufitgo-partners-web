@@ -4,12 +4,13 @@ import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { usePromos } from "../../../hooks/usePromos"
 import { useAuth } from "../../../context/AuthContext"
+import { DashboardLayout } from "../../layout/DashboardLayout"
 import { Button } from "../../common/Button"
 import { Plus, Tag } from "lucide-react"
 
 export const PromosScreen = () => {
   const navigate = useNavigate()
-  const { promos, loading, fetchPromos, togglePromoStatus } = usePromos()
+  const { promos, loading, error, fetchPromos, togglePromoStatus } = usePromos()
 
   useEffect(() => {
     fetchPromos()
@@ -19,6 +20,7 @@ export const PromosScreen = () => {
   const isFX = user?.partnerType === 'exchange-agent'
 
   return (
+    <DashboardLayout title="Promo Codes">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -30,6 +32,12 @@ export const PromosScreen = () => {
           Create Promo Code
         </Button>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12">
@@ -75,7 +83,7 @@ export const PromosScreen = () => {
                     )}
                   </td>
                   <td className="py-4 px-6 font-medium">
-                    {promo.type === "PERCENTAGE" ? `${promo.value}%` : `₦${promo.value.toLocaleString()}`}
+                    {promo.type === "percentage" ? `${promo.value}%` : `₦${promo.value.toLocaleString()}`}
                   </td>
                   <td className="py-4 px-6">
                     <span className="text-sm">
@@ -111,5 +119,6 @@ export const PromosScreen = () => {
         </div>
       )}
     </div>
+    </DashboardLayout>
   )
 }

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { usePromos } from "../../../hooks/usePromos"
 import { usePackages } from "../../../hooks/usePackages"
 import { useAuth } from "../../../context/AuthContext"
+import { DashboardLayout } from "../../layout/DashboardLayout"
 import { Input } from "../../common/Input"
 import { Button } from "../../common/Button"
 import { ArrowLeft } from "lucide-react"
@@ -18,7 +19,7 @@ export const CreatePromoScreen = () => {
 
   const [formData, setFormData] = useState({
     code: "",
-    type: "PERCENTAGE", // or FIXED
+    type: "percentage", // or fixed
     value: "",
     packageId: "", // empty means global
     validFrom: "",
@@ -65,6 +66,7 @@ export const CreatePromoScreen = () => {
   }
 
   return (
+    <DashboardLayout title="Create Promo Code">
     <div className="max-w-3xl mx-auto space-y-6 pb-24">
       <div className="flex items-center gap-4">
         <button
@@ -103,20 +105,20 @@ export const CreatePromoScreen = () => {
                 className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-fg"
                 required
               >
-                <option value="PERCENTAGE">Percentage (%)</option>
-                <option value="FIXED">Fixed Amount (₦)</option>
+                <option value="percentage">Percentage (%)</option>
+                <option value="fixed">Fixed Amount (₦)</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label={formData.type === "PERCENTAGE" ? "Discount Percentage * (%)" : "Discount Amount * (₦)"}
+              label={formData.type === "percentage" ? "Discount Percentage * (%)" : "Discount Amount * (₦)"}
               name="value"
               type="number"
               value={formData.value}
               onChange={handleChange}
-              placeholder={formData.type === "PERCENTAGE" ? "e.g 10" : "e.g 50000"}
+              placeholder={formData.type === "percentage" ? "e.g 10" : "e.g 50000"}
               required
             />
 
@@ -213,5 +215,6 @@ export const CreatePromoScreen = () => {
         </div>
       </form>
     </div>
+    </DashboardLayout>
   )
 }

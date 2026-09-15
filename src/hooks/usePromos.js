@@ -11,7 +11,7 @@ export const usePromos = () => {
     setError(null)
     try {
       const data = await promosService.getPromos()
-      setPromos(data)
+      setPromos(Array.isArray(data) ? data : [])
     } catch (err) {
       setError(err.message || "Failed to fetch promos")
     } finally {

@@ -1,16 +1,15 @@
 import { apiClient } from "../client.js"
 
+// apiClient's response interceptor already unwraps axios's response.data,
+// and these operator promo endpoints return bare arrays/objects (no {success,data} wrapper).
 export const promosService = {
   getPromos: async () => {
-    const { data } = await apiClient.get("/operator/promos")
-    return data
+    return await apiClient.get("/operator/promos")
   },
   createPromo: async (promoData) => {
-    const { data } = await apiClient.post("/operator/promos", promoData)
-    return data
+    return await apiClient.post("/operator/promos", promoData)
   },
   togglePromoStatus: async (id) => {
-    const { data } = await apiClient.patch(`/operator/promos/${id}/toggle`)
-    return data
+    return await apiClient.patch(`/operator/promos/${id}/toggle`)
   },
 }
