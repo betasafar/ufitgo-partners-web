@@ -33,7 +33,7 @@ const PackagesScreen = () => {
   }
 
   const handleEdit = (id) => {
-    navigate(`/packages/edit/${id}`)
+    navigate(`/packages/${id}/edit`)
   }
 
   if (loading) {

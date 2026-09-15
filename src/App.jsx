@@ -11,6 +11,7 @@ import LoginScreen from "./screens/Auth/LoginScreen.jsx"
 import SignupScreen from "./screens/Auth/SignupScreen"
 import ForgotPasswordScreen from "./screens/Auth/ForgotPasswordScreen.jsx"
 import ResetPasswordScreen from "./screens/Auth/ResetPasswordScreen.jsx"
+import SetupPasswordScreen from "./screens/Auth/SetupPasswordScreen.jsx"
 import SignupSuccess from "./screens/Auth/SignupSuccess"
 
 
@@ -46,6 +47,7 @@ function App() {
             <Route path="/signup" element={<SignupScreen />} />
             <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
             <Route path="/reset-password" element={<ResetPasswordScreen />} />
+            <Route path="/setup-password" element={<SetupPasswordScreen />} />
             <Route path="/signup-success" element={<SignupSuccess />} />
 
             {/* ===================== */}
