@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { Input } from "../../common/Input"
 import { Button } from "../../common/Button"
 import { usePackages } from "../../../hooks/usePackages.js"
+import { mapFormPayloadToApiPayload } from "../../../utils/packageMapper.js"
 
 const INCLUSIONS_LIST = [
   { key: "visa", label: "Visa Processing" },
@@ -172,7 +173,7 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
     e.preventDefault()
     if (!installmentValid || totalPrice === 0) return
 
-    await onSubmit({
+    const payload = {
       ...formData,
       price: totalPrice,
       duration: Number(formData.duration),
@@ -188,7 +189,9 @@ export const PackageForm = ({ initialData, onSubmit, onCancel }) => {
       groupDiscountThreshold: formData.groupDiscountEnabled ? Number(formData.groupDiscountThreshold) : null,
       groupDiscountPercentage: formData.groupDiscountEnabled ? Number(formData.groupDiscountPercentage) : null,
       extensionIds: formData.extensionIds,
-    })
+    }
+
+    await onSubmit(mapFormPayloadToApiPayload(payload))
   }
 
   return (
