@@ -105,6 +105,9 @@ export default function SignupSuccess() {
               support@ufitgo.com
             </a>
           </p>
+          <p className="text-center text-[11px] opacity-40 mt-4">
+            Powered by Betaday Logistic Limited.
+          </p>
         </div>
       </div>
     </div>

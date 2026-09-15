@@ -66,6 +66,9 @@ export default function ForgotPasswordScreen() {
             </button>
           </div>
         </div>
+        <p className="text-center text-[11px] opacity-40 mt-6">
+          Powered by Betaday Logistic Limited.
+        </p>
       </div>
     </div>
   )

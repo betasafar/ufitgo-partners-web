@@ -81,6 +81,9 @@ export const Sidebar = ({ open, onClose }) => {
             <span className="text-lg">🚪</span>
             <span className="font-medium">Logout</span>
           </button>
+          <p className="text-center text-[10px] text-fg/40 mt-3">
+            Powered by Betaday Logistic Limited.
+          </p>
         </div>
       </aside>
     </>

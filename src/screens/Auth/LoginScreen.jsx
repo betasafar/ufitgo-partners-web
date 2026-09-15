@@ -110,6 +110,9 @@ function LoginScreen() {
           <p className="text-center text-xs opacity-60 mt-6">
             Need help? Contact support
           </p>
+          <p className="text-center text-[11px] opacity-40 mt-2">
+            Powered by Betaday Logistic Limited.
+          </p>
         </div>
       </div>
     </div>

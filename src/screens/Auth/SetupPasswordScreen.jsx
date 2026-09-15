@@ -45,9 +45,10 @@ export default function SetupPasswordScreen() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-bg text-fg px-4 py-10">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-bg text-fg px-4 py-10">
       <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-card p-8">
         <div className="text-center mb-7">
+          <img src="/ufitgo-brand-mark.svg" alt="UfitGo" className="w-10 h-10 mx-auto mb-3" />
           <p className="text-sm font-semibold text-primary">UfitGo Partner Portal</p>
           <h1 className="text-2xl font-bold mt-2">Create your password</h1>
           <p className="text-sm opacity-70 mt-2">Secure your account to complete your portal activation.</p>
@@ -102,6 +103,9 @@ export default function SetupPasswordScreen() {
           </form>
         )}
       </div>
+      <p className="text-center text-[11px] opacity-40 mt-6">
+        Powered by Betaday Logistic Limited.
+      </p>
     </main>
   )
 }

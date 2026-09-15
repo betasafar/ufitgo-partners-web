@@ -80,6 +80,9 @@ export function OnboardingLayout({
           <p className="text-xs text-white/50">
             &copy; {new Date().getFullYear()} UfitGo. All rights reserved.
           </p>
+          <p className="text-xs text-white/30 mt-1">
+            Powered by Betaday Logistic Limited.
+          </p>
         </div>
       </div>
 
