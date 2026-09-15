@@ -1,11 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Quote, Star } from "lucide-react"
 import { useAuth } from "../../context/AuthContext.jsx"
 import { Input } from "../../components/common/Input"
 import { Button } from "../../components/common/Button.jsx"
+
+const TESTIMONIALS = [
+  {
+    quote:
+      "Onboarding on UfitGo was seamless. Bookings, payouts, and package management all live in one place — it's completely changed how we run our pilgrimage packages.",
+    name: "Aisha Bello",
+    role: "Al-Amin Travels, Lagos",
+    initial: "A",
+  },
+  {
+    quote:
+      "I booked my Umrah package in minutes and could track my payment plan the whole way. It felt safe knowing everything was handled in one trusted place.",
+    name: "Ibrahim Suleiman",
+    role: "Pilgrim, Kano",
+    initial: "I",
+  },
+]
 
 function LoginScreen() {
   const [email, setEmail] = useState("")
@@ -13,9 +30,19 @@ function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [testimonialIndex, setTestimonialIndex] = useState(0)
 
   const { login } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTestimonialIndex((prev) => (prev + 1) % TESTIMONIALS.length)
+    }, 6000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const activeTestimonial = TESTIMONIALS[testimonialIndex]
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -122,28 +149,42 @@ function LoginScreen() {
 
         {/* Right: Testimonial panel */}
         <div className="hidden md:flex flex-col justify-between bg-[#f0ead9] p-12 relative overflow-hidden">
-          <div className="relative z-10">
+          <div key={testimonialIndex} className="relative z-10 animate-fade-in">
             <Quote className="w-9 h-9 text-primary" fill="currentColor" />
-            <p className="text-xl font-medium text-[#1a2e22] leading-relaxed mt-4">
-              Onboarding on UfitGo was seamless. Bookings, payouts, and package
-              management all live in one place — it's completely changed how
-              we run our pilgrimage packages.
+            <p className="text-xl font-medium text-[#1a2e22] leading-relaxed mt-4 min-h-[7rem]">
+              {activeTestimonial.quote}
             </p>
 
             <div className="flex items-center gap-3 mt-8">
               <div className="w-11 h-11 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold">
-                A
+                {activeTestimonial.initial}
               </div>
               <div>
-                <p className="font-semibold text-[#1a2e22] text-sm">Aisha Bello</p>
-                <p className="text-xs text-[#1a2e22]/60">Al-Amin Travels, Lagos</p>
+                <p className="font-semibold text-[#1a2e22] text-sm">{activeTestimonial.name}</p>
+                <p className="text-xs text-[#1a2e22]/60">{activeTestimonial.role}</p>
               </div>
             </div>
 
-            <div className="flex gap-1 mt-4">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} size={14} className="text-primary" fill="currentColor" />
-              ))}
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={14} className="text-primary" fill="currentColor" />
+                ))}
+              </div>
+
+              <div className="flex gap-1.5">
+                {TESTIMONIALS.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setTestimonialIndex(i)}
+                    aria-label={`Show testimonial ${i + 1}`}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === testimonialIndex ? "w-6 bg-primary" : "w-1.5 bg-primary/25"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
